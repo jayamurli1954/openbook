@@ -85,7 +85,7 @@ Book Doctor
 
 ## Follow-up actions
 
-- Create ADR-0005 for the formal EPUBCheck bundling/runtime decision.
+- ~~Create ADR-0005 for the formal EPUBCheck bundling/runtime decision.~~ Done: `docs/adr/0005-epubcheck-bundling-java-runtime-isolation.md` (Accepted, not Frozen for runtime versions).
 - Determine exact EPUBCheck 5.3.0 packaging requirements.
 - Evaluate Temurin runtime versions and platform matrix.
 - Build a `jlink` proof of concept and measure runtime size.
@@ -97,5 +97,7 @@ Book Doctor
 ## Related documents
 
 - `docs/adr/0004-publishing-engine-technology-architecture.md`
+- `docs/adr/0005-epubcheck-bundling-java-runtime-isolation.md`
 - `docs/governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md`
 - `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`
+- `docs/FOUNDATION-READINESS-REPORT.md`

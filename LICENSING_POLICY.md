@@ -31,52 +31,20 @@ This policy is an engineering and project-governance policy, not legal advice. M
 
 ## 3. OpenBook's Own License
 
-The final license for the OpenBook project has **not yet been frozen**.
+**Status:** Accepted (ADR-0003). The authoritative project license text is `LICENSE`.
 
-The project will make this decision deliberately after evaluating:
+OpenBook's original project code and other original works that the project explicitly places under its project license use the **Apache License 2.0**.
 
-- community adoption;
-- commercial redistribution;
-- hosted/service use;
-- plugin and extension ecosystem requirements;
-- contributor expectations;
-- compatibility with important dependencies;
-- trademark and brand protection;
-- long-term stewardship by SanMitra Tech Solutions.
+Apache-2.0 was selected for ecosystem and commercial adoption, an explicit patent license from contributors (subject to the license terms), and compatibility with a broad plugin/service ecosystem. AGPL-3.0-or-later was considered and **rejected as the default project license** (ADR-0003). AGPL remains possible only for a separately distributed component if a future ADR specifically calls for it.
 
-### Candidate directions
+Accepted is not an eternal freeze: changing the project license later requires a new ADR and maintainer approval. Until then:
 
-#### Option A — Apache-2.0
+- contributors and agents must not assume AGPL (or any other license) for OpenBook's own code;
+- new original source files must not embed contradictory license headers;
+- third-party components retain their own licenses; Apache-2.0 does not relicense them;
+- `NOTICE` and, when shipping third-party artefacts, `THIRD-PARTY-NOTICES.txt` must be maintained.
 
-Advantages:
-
-- highly permissive;
-- strong commercial and ecosystem adoption potential;
-- explicit patent provisions;
-- easy reuse by other projects.
-
-Trade-off: downstream proprietary forks can generally be created.
-
-#### Option B — AGPL-3.0-or-later
-
-Advantages:
-
-- strong copyleft;
-- modifications to software used over a network generally remain subject to source-sharing obligations under the license;
-- better protection against proprietary hosted forks.
-
-Trade-off: materially stronger obligations for downstream users and some commercial integrations.
-
-### Policy
-
-Until the final project license is approved:
-
-- no contributor or automated agent may assume a final OpenBook license;
-- all new source files should avoid embedding contradictory license headers;
-- dependency licenses must remain independent and documented;
-- repository-level licensing decisions require maintainer approval.
-
-A future `LICENSE` file will be the authoritative project license once the decision is frozen.
+See `CONTRIBUTOR_PROTECTION_AND_ATTRIBUTION.md` for copyright retention and attribution. CLA/DCO remains a pending contributor-agreement decision and does not alter Apache-2.0.
 
 ---
 
@@ -537,6 +505,7 @@ As the project matures, the repository should contain:
 
 ```text
 LICENSE
+NOTICE
 THIRD-PARTY-NOTICES.txt
 CONTRIBUTING.md
 CODE_OF_CONDUCT.md

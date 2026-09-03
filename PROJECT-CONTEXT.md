@@ -65,7 +65,7 @@ Book Model
 
 EPUBCheck is the authoritative EPUB conformance validator. OpenBook should not replace it with an unofficial JS/WASM port merely for convenience.
 
-Preferred EPUBCheck desktop strategy:
+Preferred EPUBCheck desktop strategy (ADR-0005, Accepted; runtime versions not Frozen):
 
 ```text
 Tauri/Rust ValidatorService
@@ -101,18 +101,20 @@ AI coding agents should read this file and the relevant ADRs before making mater
 ## Current known pending decisions
 
 - Final PDF renderer
-- Exact EPUBCheck runtime packaging
-- Exact Temurin/runtime version and supported platforms
+- Exact Temurin/runtime version, platforms, and `jlink` adoption (bundling *strategy* is Accepted in ADR-0005)
 - Bundled-font policy
 - Contributor agreement mechanism
 - Final dependency versions
-- Foundation governance readiness gate
+- Foundation governance readiness gate (see `docs/FOUNDATION-READINESS-REPORT.md` — not passed)
 
 ## Important existing documents
 
+- `docs/adr/0002-third-party-reference-and-licensing-boundary.md`
 - `docs/adr/0003-apache-2-license-and-contributor-protection.md`
 - `docs/adr/0004-publishing-engine-technology-architecture.md`
+- `docs/adr/0005-epubcheck-bundling-java-runtime-isolation.md`
 - `docs/governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md`
 - `docs/conversations/README.md`
 - `docs/conversations/2026-09-03-epubcheck-java-tauri.md`
 - `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`
+- `docs/FOUNDATION-READINESS-REPORT.md`
