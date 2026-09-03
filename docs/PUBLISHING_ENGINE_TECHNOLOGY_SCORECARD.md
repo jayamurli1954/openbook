@@ -60,7 +60,7 @@ The bake-off must compare both output quality and operational properties such as
 
 EPUBCheck is the authoritative conformance reference for generated EPUB files. The official project states that EPUBCheck is the official EPUB conformance checker, supports EPUB 2 and EPUB 3, and its current production-ready release is 5.3.0. It is distributed as a command-line tool or Java library and is licensed under the 3-Clause BSD License.
 
-OpenBook should hide the Java requirement from normal users where practical rather than replacing official validation with an unverified TypeScript/WASM port. A managed/bundled runtime or isolated process is preferred subject to redistribution and platform testing.
+OpenBook should hide the Java requirement from normal users where practical rather than replacing official validation with an unverified TypeScript/WASM port. The Accepted production architecture is official EPUBCheck plus a bundled/private Java runtime invoked through an isolated Tauri/Rust subprocess and a `ValidatorService` adapter (ADR-0005).
 
 ## Licensing gate
 
@@ -103,7 +103,7 @@ The Book Model must not depend on EPUB, PDF or renderer-specific structures. Ren
 ## Not yet frozen
 
 - PDF renderer
-- exact EPUBCheck packaging/runtime strategy
+- exact Temurin/Java version, architectures, and whether `jlink` is used (bundling *architecture* is Accepted in ADR-0005; not Frozen)
 - exact Tauri release
 - exact Tiptap package set
 - exact typography/native dependency set

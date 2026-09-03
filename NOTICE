@@ -1,0 +1,11 @@
+OpenBook Studio
+Copyright 2026 SanMitra Tech Solutions
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file in the repository root.
+
+Third-party components, when distributed with OpenBook, retain their own
+licenses. Required attribution will be listed in this NOTICE and/or in
+THIRD-PARTY-NOTICES.txt. No third-party runtime (including EPUBCheck and
+any bundled Java runtime) is licensed as Apache-2.0 merely by being
+redistributed alongside OpenBook.

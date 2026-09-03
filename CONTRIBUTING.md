@@ -701,7 +701,7 @@ A formal `CODE_OF_CONDUCT.md` should be added before the community grows signifi
 
 OpenBook is an open-source project maintained/stewarded by SanMitra Tech Solutions.
 
-The project's own source-code license is governed by the decision recorded in `LICENSING_POLICY.md` and the license files present in the repository.
+The project's own source-code license is **Apache License 2.0**, recorded in `LICENSE` and ADR-0003. `LICENSING_POLICY.md` governs third-party and contribution licensing practice. `NOTICE` carries project attribution.
 
 Unless a future contribution agreement states otherwise, contributors should retain ownership of their original contributions while granting the project the rights necessary to use, modify, reproduce and distribute those contributions under the project's applicable licensing model.
 
