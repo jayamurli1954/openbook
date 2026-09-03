@@ -210,7 +210,7 @@ Must be decided or explicitly deferred before implementation in that area. Items
 | O-28 | One MVP AI workflow | Before 1G | Optional outline and/or Doctor explain |
 | O-31 | PDF layout/renderer | Before Phase 2 | Unnamed on purpose |
 | O-32 | ADR numbering | Before `docs/adr/` | |
-| O-33 | EPUBCheck USE vs EMBED | Before shipping validator | Prefer USE/process first |
+| O-34 | chrome-devtools-mcp | **USE (agent only) / AVOID (product)** | See `docs/foss-research/chrome-devtools-mcp.md` |
 
 ---
 
