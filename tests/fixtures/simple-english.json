@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "title": "The Garden Path",
+    "subtitle": "",
+    "authors": ["Test Author"],
+    "contributors": [],
+    "language": "en",
+    "identifier": "",
+    "publisher": "",
+    "publishedAt": "",
+    "copyright": "",
+    "description": "A short English fixture.",
+    "subjects": ["fiction"],
+    "rights": ""
+  },
+  "frontMatter": [],
+  "chapters": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "kind": "main",
+      "role": "chapter",
+      "title": "Chapter 1",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "id": "22222222-2222-4222-8222-222222222222",
+          "inlines": [{ "type": "text", "text": "It was a quiet morning." }]
+        }
+      ]
+    }
+  ],
+  "backMatter": [],
+  "assets": [],
+  "styles": { "paragraphStyles": [], "characterStyles": [] },
+  "theme": { "id": "default", "name": "Default" },
+  "typography": {
+    "bodyFontFamily": "",
+    "headingFontFamily": "",
+    "bodySizePt": 11,
+    "lineHeight": 1.4
+  },
+  "publishing": { "intendedOutputs": ["epub", "pdf", "html"] }
+}

@@ -14,6 +14,7 @@ Numbering: files are `docs/adr/NNNN-slug.md`. **ADR-0001 was never issued on `ma
 | ADR-0003 | Apache-2.0 license and contributor protection | Accepted | Licensing / Governance | 2026-09-03 |
 | ADR-0004 | Publishing engine technology architecture | Accepted direction; renderer bake-off pending | Publishing / Architecture | 2026-09-03 |
 | ADR-0005 | EPUBCheck bundling, Java runtime isolation and compliance | Accepted; runtime version/`jlink` not Frozen | EPUB / Runtime / Compliance | 2026-09-03 |
+| ADR-0006 | Book Model executable specification and tests (no UI) | Accepted | Book Model / Foundation | 2026-09-03 |
 
 **Accepted is not Frozen.** Frozen means implementation must follow that decision unless a new ADR replaces it. Preferred stacks (Tauri, Tiptap, Typst-as-candidate) are Accepted directions or evaluation candidates until a later ADR freezes versions or winners.
 
@@ -33,7 +34,7 @@ See also `docs/FOUNDATION-READINESS-REPORT.md` and `docs/IMPLEMENTATION-BACKLOG.
 - Contributor agreement mechanism (CLA/DCO)
 - Final Tauri/editor dependency versions
 - Whether `FOUNDATION-GOVERNANCE-READY` / `ROADMAP.md` `FOUNDATION-READY` can be declared (audit: **not passed**)
-- How to merge or renumber the unmerged Book Model work on PR #1
+- ~~How to merge or renumber the unmerged Book Model work on PR #1~~ — resolved by ADR-0006: reused, reconciled, and landed as `@openbook/book-model` (PR #1's `docs/adr/0001` not used; 0001 stays reserved)
 
 ## Decision status meanings
 
