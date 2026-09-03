@@ -3,8 +3,7 @@
 **Project:** [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp)  
 **Reviewed:** 2026-09-03  
 **License (research):** Apache-2.0 — re-verify at any adoption  
-**Classification:** **USE** (Cursor / coding-agent toolchain only) · **AVOID** as an OpenBook product/EMBED dependency  
-**Legal review required:** No for agent-side USE; yes if we ever ship it with OpenBook
+**Classification:** **DEFERRED** — not used now. Product Owner will decide later. Until then: do not install, do not add to the OpenBook repo, do not use in this agent session.
 
 ## What it is
 
@@ -27,6 +26,6 @@ It is a **developer-agent tool**, not a publishing library.
 
 ## Decision
 
-Do **not** add `chrome-devtools-mcp` to the OpenBook repository, `package.json`, or architecture baseline.
+**Not now.** Do not add `chrome-devtools-mcp` to the OpenBook repository, `package.json`, architecture baseline, CI, or this agent's toolchain.
 
-Optional later: developers and Cursor Cloud Agents may **USE** it locally (or in CI with telemetry off) to inspect HTML preview. Product EPUB validation remains EPUBCheck. Product preview remains the architecture preview pipeline, not Chrome-as-source-of-truth.
+A later Product Owner decision may allow agent-side USE (HTML/preview debugging) with telemetry off. Product EPUB validation remains EPUBCheck. Product preview remains the architecture preview pipeline.
