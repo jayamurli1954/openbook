@@ -6,15 +6,12 @@ Open-source desktop and digital publishing studio — write, design, typeset, va
 
 ## Start here
 
-1. [Agent standing orders](AGENTS.md)
-2. [Document index](docs/README.md)
-3. [Constitution](docs/00-constitution.md)
-4. [Vision](docs/01-vision.md)
-5. [Product requirements](docs/02-product-requirements.md)
-6. [Core architecture](docs/03-architecture.md)
-7. [FOSS strategy](docs/04-foss-strategy.md)
-8. [Decision log](docs/05-decision-log.md)
-9. [Engineering review](docs/06-engineering-review.md)
+1. [Project vision](PROJECT_VISION.md) (canonical)
+2. [Product requirements](PRODUCT_REQUIREMENTS.md) (canonical; review pending)
+3. [Agent standing orders](AGENTS.md)
+4. [Document index](docs/README.md)
+5. [Vision review](docs/07-vision-review.md)
+6. [Decision log](docs/05-decision-log.md)
 
 ## Working relationship
 

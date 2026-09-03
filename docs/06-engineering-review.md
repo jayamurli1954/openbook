@@ -18,6 +18,8 @@ This review does **not** resolve the items it lists.
 
 The standing order “first read the constitution, product requirements and architecture documents” could not be obeyed against pre-existing files. Those documents are now in `docs/` and are the baseline for the next turn.
 
+**Follow-up (same day):** The Product Owner published [`PROJECT_VISION.md`](../PROJECT_VISION.md). That review lives in [`07-vision-review.md`](07-vision-review.md). Several items below are closed or reshaped there. Do not use this file as the current vision critique.
+
 ## 2. Ambiguities
 
 ### A1. “Desktop” vs the architecture diagram

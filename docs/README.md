@@ -8,13 +8,16 @@ These documents are the architectural constitution of OpenBook Studio. They exis
 
 | # | Document | Purpose |
 | --- | --- | --- |
+| — | [PROJECT_VISION.md](../PROJECT_VISION.md) | **Canonical** Product Owner vision |
+| — | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | **Canonical** Product Owner PRD (review pending) |
 | 00 | [Constitution](00-constitution.md) | Authority, standing orders, change control |
-| 01 | [Project Vision](01-vision.md) | What OpenBook is, who it is for, philosophies |
-| 02 | [Product Requirements](02-product-requirements.md) | Feature map by studio, mode, and quality gate |
-| 03 | [Core Architecture](03-architecture.md) | Book Model, studios, projections, Book Doctor |
-| 04 | [FOSS Strategy](04-foss-strategy.md) | USE / ADAPT / INSPIRE / EXTERNAL / AVOID |
+| 01 | [Vision pointer](01-vision.md) | Redirect only |
+| 02 | [Agent PRD draft](02-product-requirements.md) | Superseded as canonical by the root PRD |
+| 03 | [Core Architecture](03-architecture.md) | Interim notes; topology superseded by the vision diagram |
+| 04 | [FOSS Strategy](04-foss-strategy.md) | USE / ADAPT / INSPIRE / EXTERNAL / AVOID — see vision review for 4-class vs 5-class |
 | 05 | [Decision Log](05-decision-log.md) | DECIDED and OPEN architectural decisions |
-| 06 | [Engineering Review](06-engineering-review.md) | Ambiguities, contradictions, missing decisions |
+| 06 | [Engineering Review](06-engineering-review.md) | Pre-vision repository review |
+| 07 | [Vision review](07-vision-review.md) | Ambiguities and tensions in `PROJECT_VISION.md` |
 
 ## Status vocabulary
 

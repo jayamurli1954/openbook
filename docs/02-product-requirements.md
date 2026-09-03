@@ -1,6 +1,6 @@
 # 02 — Product Requirements
 
-**Status of this document:** Feature *presence* for the named studios and concerns is **DECIDED**. Depth, v1 cut, and interaction rules are **PROPOSED** or **OPEN**.
+**Status of this document:** **Not canonical.** The Product Owner file is [`PRODUCT_REQUIREMENTS.md`](../PRODUCT_REQUIREMENTS.md). This agent draft is retained only until that file is reviewed. Do not implement from this draft if it conflicts with the root PRD.
 
 This is a product map, not a sprint backlog. No requirement here authorizes implementation.
 

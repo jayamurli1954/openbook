@@ -1,10 +1,46 @@
 # 03 — Core Architecture
 
-**Status of this document:** The topology below is **DECIDED**. Component internals, persistence, and runtime are **OPEN** unless labelled otherwise.
+**Status of this document:** **SUPERSEDED at the topology layer** by [`PROJECT_VISION.md`](../PROJECT_VISION.md) §3. See [`07-vision-review.md`](07-vision-review.md). Component internals, persistence, and runtime remain **OPEN**. Do not implement from the old diagram below.
 
-This is a *conceptual* architecture. It does not choose a language, UI toolkit, database, or framework.
+This file is retained as an interim notes dump until the Product Owner `ARCHITECTURE.md` exists. The **current vision topology** is:
 
-## 1. Decided topology
+```text
+                    OPENBOOK STUDIO
+                           │
+                    ┌──────▼──────┐
+                    │  BOOK MODEL │
+                    │ Single Truth │
+                    └──────┬──────┘
+                           │
+       ┌───────────┬───────┼────────┬───────────┐
+       ▼           ▼       ▼        ▼           ▼
+   Writing       Design   DTP      AI       Book Doctor
+    Studio       Studio  Studio   Studio     /Preflight
+       │           │       │        │           │
+       └───────────┴───────┼────────┴───────────┘
+                           │
+                 ┌─────────▼─────────┐
+                 │ Publishing Engine │
+                 └─────────┬─────────┘
+                           │
+             ┌─────────────┼─────────────┐
+             ▼             ▼             ▼
+           EPUB           PDF          HTML
+             │             │
+             ▼             ▼
+         EPUBCheck       PDF
+         + Accessibility Preflight
+                           │
+                    ┌──────▼──────┐
+                    │   Preview   │
+                    └──────┬──────┘
+                           │
+                       Publish
+```
+
+Pipeline-order contradictions (journey vs diagram) are recorded in the vision review. They are **not** resolved here.
+
+## 1. Older topology (do not implement)
 
 ```text
                     OPENBOOK STUDIO
@@ -35,7 +71,7 @@ Studio   Studio   Studio                  │
                     PUBLISH READY
 ```
 
-**DECIDED implications:**
+**Historical implications of the old diagram (do not implement):**
 
 1. OpenBook Studio contains two pillars: **User Experience** and **Book Model**.
 2. Writing, Design, and DTP studios belong to User Experience. They are not independent documents.
