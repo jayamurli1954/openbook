@@ -67,7 +67,7 @@ The freeze covers:
 
 The freeze does **not** cover:
 
-- Product Owner foundation files at repo root (`PROJECT_VISION.md`, `PRODUCT_REQUIREMENTS.md`, `ARCHITECTURE.md`, and later named foundation docs).
+- Product Owner foundation files at repo root (`PROJECT_VISION.md`, `PRODUCT_REQUIREMENTS.md`, `ARCHITECTURE.md`, `FOSS_STRATEGY.md`, `LICENSING_POLICY.md`, `ROADMAP.md`, and later named foundation docs).
 - This `docs/` tree, `AGENTS.md`, and the root README.
 - Decision records, reviews, and FOSS research.
 - Licence *research* (not adoption).

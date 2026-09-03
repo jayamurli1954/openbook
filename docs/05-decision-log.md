@@ -82,7 +82,7 @@ Product Owner marks DECIDED. Engineering executors may add OPEN/PROPOSED records
 
 - **Status:** DECIDED (product intent)
 - **Decision:** `PRODUCT_REQUIREMENTS.md` is the product baseline. Executors must not invent major behaviour that conflicts with it without a documented change. Major implementation waits until `ARCHITECTURE.md`, `FOSS_STRATEGY.md`, `LICENSING_POLICY.md`, `ROADMAP.md`, and `CONTRIBUTING.md` are sufficiently stable (PRD §38–39).
-- **Consequences:** Agent draft `docs/02-product-requirements.md` is not canonical. Freeze remains in force.
+- **Consequences:** Agent draft `docs/02-product-requirements.md` is not canonical. Remaining before freeze-lift: Product Owner acceptance of `ROADMAP.md`, `CONTRIBUTING.md`, scorecards for first deps, freeze-lift ADR.
 
 ### ADR-013 — AI is optional for core product
 
@@ -118,7 +118,7 @@ Product Owner marks DECIDED. Engineering executors may add OPEN/PROPOSED records
 
 - **Status:** DECIDED as *initial recommendation*, not adoption
 - **Decision:** `ARCHITECTURE.md` §4: Tauri; React + TypeScript; Tiptap/ProseMirror or equivalent semantic editor; SQLite; TypeScript domain; Rust only where needed; Ollama as one AI adapter; EPUBCheck or equivalent; GitHub Actions including licence checks. Substitutions must preserve ADR-017.
-- **Consequences:** No package manifests until `FOSS_STRATEGY.md` / `LICENSING_POLICY.md` classify these. Tiptap vs ProseMirror licence split must be checked.
+- **Consequences:** No package manifests until FOSS scorecards exist for that package (`FOSS_STRATEGY.md` §19–21). Tiptap vs ProseMirror licence split must be checked.
 
 ### ADR-019 — Persistence shape
 
@@ -126,11 +126,29 @@ Product Owner marks DECIDED. Engineering executors may add OPEN/PROPOSED records
 - **Decision:** Local SQLite for project metadata/structured state. Portable project directory. Generated outputs and previews distinguishable from source. Schema versioned with migrations from first implementation. Conceptual `BookProject` in `ARCHITECTURE.md` §9–10. Exact schema still a separate spec.
 - **Consequences:** Do not git-init user books by default. Do not treat SQLite as the public interchange format without a schema document.
 
+### ADR-021 — FOSS classification and anti-merge
+
+- **Status:** DECIDED
+- **Decision:** `FOSS_STRATEGY.md`. Classes are USE / EMBED / ADAPT / INSPIRE / AVOID. OpenBook is built independently around the Book Model. Sigil and Scribus are INSPIRE. Calibre INSPIRE / selective USE. EPUBCheck is a primary validation integration (USE / EMBED candidate). Pandoc AST is not the Book Model. Strong-copyleft application code is not embedded casually. Standards beat copying application behaviour. Tools are invisible behind OpenBook UX.
+- **Consequences:** Agent five-class EXTERNAL table is superseded. USE = invoke; EMBED = incorporate.
+
+### ADR-022 — Project licence unfrozen; embedded preference
+
+- **Status:** DECIDED (process)
+- **Decision:** `LICENSING_POLICY.md`. OpenBook’s own licence is **not** frozen (Apache-2.0 vs AGPL-3.0-or-later). No agent may assume a final licence or add contradictory file headers. Preferred embedded licences: MIT, BSD, Apache-2.0. Users own manuscripts. Fonts/assets need provenance. AI output is not OpenBook IP. CLA/DCO deferred to `CONTRIBUTING.md`. SPDX and THIRD-PARTY-NOTICES.txt required when shipping code.
+- **Consequences:** Do not add `LICENSE` without Product Owner approval.
+
+### ADR-023 — Roadmap draft
+
+- **Status:** PROPOSED as Product Owner sequence (this agent drafted `ROADMAP.md` from the requested phases)
+- **Decision pending:** Product Owner accept/revise `ROADMAP.md`. Sequence: Foundation → MVP → Professional DTP → AI → Publishing → Ecosystem, with gates not dates.
+- **Consequences:** Not a freeze-lift. Phase 1 still needs scorecards + freeze-lift ADR.
+
 ### ADR-020 — Cursor implementation rules
 
 - **Status:** DECIDED
-- **Decision:** `ARCHITECTURE.md` §51 binds this agent when implementation is authorized. Engineering sequence is Phases A–I (§52). Sequence is not a freeze-lift.
-- **Consequences:** `AGENTS.md` points here. Major implementation still waits on remaining foundation docs (PRD §39) plus an explicit freeze-lift ADR.
+- **Decision:** `ARCHITECTURE.md` §51 and `FOSS_STRATEGY.md` §27 bind this agent when implementation is authorized. Engineering sequence A–I is how to build inside a product phase. `ROADMAP.md` is the product sequence.
+- **Consequences:** Freeze-lift ADR still required. `CONTRIBUTING.md` still due.
 
 ---
 
@@ -144,7 +162,7 @@ These are drafted for Product Owner accept/reject. They are **not** approved by 
 | P-02 | Freeze-lift requires named remaining OPEN items | `00-constitution.md` |
 | P-05 | Pagination vs reflow mapping even for MVP PDF | O-06 |
 | P-08 | Projectors / engines do not write the Book Model | PRD engines + vision AI loop |
-| P-09 | Validators as ports; invoke vs incorporate | Vision dropped EXTERNAL |
+| P-09 | ~~invoke vs incorporate~~ | **Superseded** by USE vs EMBED (`FOSS_STRATEGY.md`) |
 | P-10 | HTML/CSS typesetting engines must not become the Book Model | Still valid; EPUB-oriented preview increases the risk |
 | P-12 | UX copy: Book Doctor before “done”; artefact preview after generate+validate | Architecture vs PRD journey |
 | P-13 | ~~Semantic editor~~ | **Superseded** by `ARCHITECTURE.md` §15 / §4 |
@@ -162,39 +180,37 @@ Must be decided or explicitly deferred before implementation in that area. Items
 
 | ID | Question | Blocking for any code? | Notes |
 | --- | --- | --- | --- |
-| O-01 | **Project licence** (SPDX) | **Yes** | PRD assumes `LICENSING_POLICY.md` |
-| O-02 | **Public product name / trademark** | Branding | Collision with existing “OpenBook Studio” uses |
-| O-03 | Desktop shell | Recommended: Tauri | **Not adopted** until FOSS/licence pass |
-| O-04 | UI / language | Recommended: React + TypeScript; Rust as needed | Same |
-| O-05 | Persistence | Recommended: SQLite + portable folder | Exact Book Model schema still separate |
-| O-11 | Publishing engines | **Closed** | Three engines (ADR-017) |
-| O-06 | Pagination vs reflow mapping | Before honest dual output | Still missing |
-| O-07 | Default AI provider / model-weight licences | Before AI calls | Optional cloud; local path |
-| O-08 | **MVP book-type cut** | Before wizard themes | PRD catalogues many types; children’s/textbook “where supported” |
-| O-09 | **MVP PDF meaning** | Before PDF engine | “Appropriate initial level” undefined |
-| O-10 | How Beginner/Expert combines with assistance levels | Before UI shell | Same domain (ADR-017); UI map still open |
-| O-12 | HTML in MVP, plus HTML QA engine | Before HTML engine | QA is a port; tool unnamed |
-| O-13 | PDF preflight engine (post-MVP vs foundation) | Before strong preflight | Post-MVP in §33; Doctor still mentions PDF issues |
-| O-14 | EPUB profile (3.3?) | Before EPUB engine | |
-| O-15 | Which Indic language in the first fixture | Before i18n tests | PRD: EN + Indic + mixed-script |
-| O-16 | Accessibility standard and level | Before Doctor a11y bar | |
-| O-17 | MVP import formats | Before importers | Progressive; MD/HTML/DOCX/EPUB named |
-| O-18 | Collaboration / sync / accounts | **Deferred** | PRD post-MVP |
-| O-19 | Plugin/script API | **Deferred** | PRD future; G9 must not force MVP ABI |
-| O-20 | Font and dictionary licence policy | Before default themes | PRD: font licensing must be respected |
-| O-21 | Governance (DCO/CLA, committers, CoC) | Before community push | Next: `CONTRIBUTING.md` |
-| O-22 | Maths, citations, audio/video, children’s layout | Treat as out of MVP unless type picker says otherwise | |
-| O-23 | Export with Book Doctor Errors | Before export UI | Waive exists; Ready label rules unclear |
-| O-24 | Cover | **Product intent closed** | Guided import + type + position (ADR-015) |
-| O-25 | EPUB vs PDF preview in which phase | Before Phase H | Architecture allows both; sequence puts preview last |
-| O-26 | Unify FOSS classes (invoke vs incorporate) | **Yes** before any USE | Next document: `FOSS_STRATEGY.md` |
-| O-27 | Studio vs panel map for extra PRD modules | UI architecture | Treat as presentation until contradicted |
-| O-31 | PDF layout/renderer choice | Before PDF engine | Highest FOSS/licence risk; unnamed on purpose |
-| O-32 | `docs/adr/` numbering vs this log | Before first ADR file | Collision with ADR-001 |
-| O-27 | Studio vs panel map for extra PRD modules | `ARCHITECTURE.md` | R-A1 |
-| O-28 | The one MVP AI workflow | Before AI Studio | R-A5 |
-| O-29 | Readiness state owner (user vs Doctor) | Before readiness UI | R-A6 |
-| O-30 | Requirement IDs (`FR-…`) | Helpful for PRs | R-A10 |
+| O-01 | **Project licence** (Apache-2.0 vs AGPL-3.0-or-later) | **Yes** to EMBED copyleft; not required to keep writing docs | `LICENSING_POLICY.md` §3 — do not add `LICENSE` |
+| O-02 | **Public product name / trademark** | Branding | Policy: trademark separate; still no search on file |
+| O-03 | Desktop shell | Recommended: Tauri | Scorecard before EMBED; not adopted |
+| O-04 | UI / language | Recommended: React + TypeScript | Same; ProseMirror vs Tiptap scorecard |
+| O-05 | Persistence | Recommended: SQLite + portable folder | Exact schema still separate |
+| O-06 | Pagination vs reflow mapping | Before honest dual output | Phase 2 DTP gate |
+| O-07 | Default AI provider / model-weight licences | Before AI calls | Tracked separately from app licence |
+| O-08 | **MVP book-type cut** | Before wizard themes | |
+| O-09 | **MVP PDF meaning** | Before PDF engine | |
+| O-10 | Beginner/Expert × assistance levels | Before UI shell | Same domain |
+| O-11 | Publishing engines | **Closed** | Three engines |
+| O-12 | HTML in MVP | Before HTML engine | Roadmap allows slip to Phase 4 |
+| O-13 | PDF preflight engine | Before strong preflight | USE adapter until EMBED justified |
+| O-14 | EPUB profile (3.3?) | Before EPUB engine | EPUBCheck is the conformance tool |
+| O-15 | Which Indic language in first fixture | Before i18n tests | Architecture names Kannada fixture |
+| O-16 | Accessibility standard and level | Phase 4 publishing | |
+| O-17 | MVP import formats | Phase 4 default | Progressive |
+| O-18 | Collaboration / sync | **Deferred** | Phase 5 |
+| O-19 | Plugin runtime | **Deferred** | Phase 5 |
+| O-20 | Font provenance process | **Policy exists** | Still need actual font picks |
+| O-21 | CLA/DCO | Before community programme | `CONTRIBUTING.md` |
+| O-22 | Maths, citations, audio/video, children’s | Out of MVP unless picker lies | |
+| O-23 | Export with Errors | Roadmap **default**: Errors block Ready | Change if you disagree |
+| O-24 | Cover | **Closed** | Guided import + type |
+| O-25 | Preview in MVP vs later | MVP: EPUB-oriented + PDF before export | |
+| O-26 | USE vs EMBED | **Closed** | `FOSS_STRATEGY.md` |
+| O-27 | Studio vs panel map | UI | Presentation until contradicted |
+| O-28 | One MVP AI workflow | Before 1G | Optional outline and/or Doctor explain |
+| O-31 | PDF layout/renderer | Before Phase 2 | Unnamed on purpose |
+| O-32 | ADR numbering | Before `docs/adr/` | |
+| O-33 | EPUBCheck USE vs EMBED | Before shipping validator | Prefer USE/process first |
 
 ---
 
