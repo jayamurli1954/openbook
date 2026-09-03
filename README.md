@@ -7,11 +7,12 @@ Open-source desktop and digital publishing studio — write, design, typeset, va
 ## Start here
 
 1. [Project vision](PROJECT_VISION.md) (canonical)
-2. [Product requirements](PRODUCT_REQUIREMENTS.md) (canonical; review pending)
+2. [Product requirements](PRODUCT_REQUIREMENTS.md) (canonical)
 3. [Agent standing orders](AGENTS.md)
 4. [Document index](docs/README.md)
 5. [Vision review](docs/07-vision-review.md)
-6. [Decision log](docs/05-decision-log.md)
+6. [PRD review](docs/08-prd-review.md)
+7. [Decision log](docs/05-decision-log.md)
 
 ## Working relationship
 

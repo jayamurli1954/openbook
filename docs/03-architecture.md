@@ -38,7 +38,7 @@ This file is retained as an interim notes dump until the Product Owner `ARCHITEC
                        Publish
 ```
 
-Pipeline-order contradictions (journey vs diagram) are recorded in the vision review. They are **not** resolved here.
+Pipeline-order contradictions (journey vs diagram) are recorded in the vision review. The PRD user journey is Doctor → Preview → Validate → Publish; extra modules (Structure, Typography Assistant, Cover, Metadata) are reviewed in [`08-prd-review.md`](08-prd-review.md). They are **not** resolved here.
 
 ## 1. Older topology (do not implement)
 

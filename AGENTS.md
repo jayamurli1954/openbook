@@ -21,6 +21,7 @@ This file is binding on every Cursor Cloud Agent and human contributor acting as
    - [`docs/04-foss-strategy.md`](docs/04-foss-strategy.md)
    - [`docs/05-decision-log.md`](docs/05-decision-log.md)
    - [`docs/07-vision-review.md`](docs/07-vision-review.md)
+   - [`docs/08-prd-review.md`](docs/08-prd-review.md)
 3. **Identify** ambiguities, contradictions, and missing decisions. Record them; do not paper over them in code.
 4. **Do not make architectural decisions** without documenting them in [`docs/05-decision-log.md`](docs/05-decision-log.md) and waiting for Product Owner approval unless the decision is already marked **DECIDED**.
 5. **Do not introduce dependencies** without checking their licences against [`docs/04-foss-strategy.md`](docs/04-foss-strategy.md) and recording the classification.

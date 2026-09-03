@@ -78,44 +78,55 @@ Product Owner marks DECIDED. Engineering executors may add OPEN/PROPOSED records
 - **Decision:** SanMitra Tech Solutions stewards brand, identity, original code, roadmap, and official releases. Contributors retain rights in original work while granting project permissions. Third-party FOSS keeps its licences. Authors own their manuscripts. Project licence, contributor agreement, and trademark policy remain to be documented.
 - **Consequences:** No CLA/LICENSE file until Product Owner publishes `LICENSING_POLICY.md`.
 
+### ADR-012 — Product requirements baseline
+
+- **Status:** DECIDED (product intent)
+- **Decision:** `PRODUCT_REQUIREMENTS.md` is the product baseline. Executors must not invent major behaviour that conflicts with it without a documented change. Major implementation waits until `ARCHITECTURE.md`, `FOSS_STRATEGY.md`, `LICENSING_POLICY.md`, `ROADMAP.md`, and `CONTRIBUTING.md` are sufficiently stable (PRD §38–39).
+- **Consequences:** Agent draft `docs/02-product-requirements.md` is not canonical. Freeze remains in force.
+
+### ADR-013 — AI is optional for core product
+
+- **Status:** DECIDED
+- **Decision:** AI must not be a hard dependency for writing, editing, EPUB generation, PDF generation, validation, or project open. Provider abstraction; Ollama is an integration *path* in MVP, not a required runtime. Cloud must not receive manuscript content without an action or configuration that permits it.
+- **Consequences:** MVP journey must complete with AI unavailable.
+
+### ADR-014 — Book Doctor and readiness
+
+- **Status:** DECIDED (product UX)
+- **Decision:** Book Doctor is the findings surface (structure, design, accessibility, metadata, EPUB, PDF) with Error / Warning / Suggestion / Information and Fix / Guide / Show / Waive. Publication readiness is Draft → Writing Complete → Design Complete → Preflight → Validation → Ready to Publish. A health score and AI opinion cannot declare ready.
+- **Open inside this decision:** dual-phase (model vs artefact) checks; who advances states; export with Errors (O-23).
+
+### ADR-015 — MVP shape
+
+- **Status:** DECIDED (product cut, not a stack)
+- **Decision:** MVP is a complete guided journey: desktop shell, Book Model, wizard, beginner mode, structured writing, basic themes and typography assistant, cover basics, TOC from model, metadata wizard, EPUB generation, PDF at an initial level, HTML where feasible, Book Doctor foundation, EPUB validation, publication readiness, EPUB-oriented preview, AI provider abstraction plus one practical workflow, Unicode and multilingual fixtures. Post-MVP: advanced DTP, stronger preflight, plugins, collab/cloud, adapters.
+- **Open inside this decision:** meaning of “PDF at an appropriate initial level”; HTML in or out; which one AI workflow; which wizard book types are first-class.
+
+### ADR-016 — Preview reflects publishing outputs
+
+- **Status:** DECIDED (intent)
+- **Decision:** Preview must reflect the actual publishing model, not an editor-only approximation. PDF must be visually previewable before final export. User-visible journey is Doctor → Preview → Validate → Publish.
+- **Consequences:** EPUB-oriented preview must remain a projection. Do not edit the preview artefact as the Book Model.
+
 ---
 
 ## PROPOSED
 
-These are drafted in the constitution documents for Product Owner accept/reject. They are **not** approved by being written down.
+These are drafted for Product Owner accept/reject. They are **not** approved by being written down.
 
 | ID | Proposal | Where |
 | --- | --- | --- |
 | P-01 | Document conflict rule (root Product Owner files beat `docs/` drafts; freeze still binds) | `00-constitution.md` |
 | P-02 | Freeze-lift requires named remaining OPEN items | `00-constitution.md` |
-| P-03 | ~~Personas~~ | **Superseded** by `PROJECT_VISION.md` §4 |
-| P-04 | ~~AI propose/accept~~ | **Superseded** by `PROJECT_VISION.md` §9 and ADR-010 |
-| P-05 | Pagination vs reflow as first-class conflict | Still needed; vision chooses EPUB reflowable + PDF fixed but not the mapping |
-| P-06 | Publishing v1 = write artefacts to disk only | Pending PRD review |
-| P-07 | Design Studio = reflow-surviving intent; DTP = paginated realisation | Pending PRD / architecture |
-| P-08 | Projectors do not write the Book Model | Fits vision “deterministic engines publish” |
-| P-09 | Validators as ports; invoke vs incorporate | Needed because vision dropped EXTERNAL |
-| P-10 | HTML/CSS typesetting engines risk making HTML the real model | Still valid |
-| P-11 | Preview = model preview during authoring + artefact preview after generate | Vision review V-A1 |
-
----
-
-## PROPOSED
-
-These are drafted in the constitution documents for Product Owner accept/reject. They are **not** approved by being written down.
-
-| ID | Proposal | Where |
-| --- | --- | --- |
-| P-01 | Document conflict rule (constitution > architecture > PRD > vision) | `00-constitution.md` |
-| P-02 | Freeze-lift requires named remaining OPEN items | `00-constitution.md` |
-| P-03 | Personas and primary v1 user ranking | `01-vision.md` |
-| P-04 | AI propose/accept + provenance | `01-vision.md`, `03-architecture.md` |
-| P-05 | Pagination vs reflow as first-class conflict, not exporter magic | `01-vision.md`, `03-architecture.md` |
-| P-06 | Publishing v1 = write artefacts to disk only | `02-product-requirements.md` |
-| P-07 | Design Studio = reflow-surviving intent; DTP = paginated realisation | `02-product-requirements.md` |
-| P-08 | Projectors do not write the Book Model | `03-architecture.md` |
-| P-09 | Validators as ports; EPUBCheck EXTERNAL-by-default | `04-foss-strategy.md` |
-| P-10 | HTML/CSS typesetting engines risk making HTML the real model | `04-foss-strategy.md` |
+| P-05 | Pagination vs reflow mapping even for MVP PDF | O-06 |
+| P-08 | Projectors / engines do not write the Book Model | PRD engines + vision AI loop |
+| P-09 | Validators as ports; invoke vs incorporate | Vision dropped EXTERNAL |
+| P-10 | HTML/CSS typesetting engines must not become the Book Model | Still valid; EPUB-oriented preview increases the risk |
+| P-12 | Dual-phase Book Doctor + Preview-then-Validate as user order | `08-prd-review.md` R-C1 |
+| P-13 | Writing surface is a semantic editor, not visual rich-text as source | `08-prd-review.md` R-A4 |
+| P-14 | MVP AI = optional Wizard outline and/or Doctor explain | `08-prd-review.md` R-A5 |
+| P-15 | MVP PDF = flowing pages, page size, margins, header/footer, numbers, cover; no facing-page masters | `08-prd-review.md` R-A3 |
+| P-16 | Extra PRD modules (Structure, Type, Cover, Metadata, Wizard) are panels/modes unless architecture says otherwise | `08-prd-review.md` R-A1 |
 
 ---
 
@@ -125,32 +136,36 @@ Must be decided or explicitly deferred before implementation in that area. Items
 
 | ID | Question | Blocking for any code? | Notes |
 | --- | --- | --- | --- |
-| O-01 | **Project licence** (SPDX) | **Yes** | No USE/ADAPT without this |
-| O-02 | **Public product name / trademark** | **Yes** for public branding; not for private docs | Collision with existing “OpenBook Studio” uses |
-| O-03 | Runtime: desktop-only vs desktop+web; native vs embedded web | **Yes** | README says “desktop”; not a stack |
-| O-04 | Implementation language(s) and UI toolkit | **Yes** | Follows O-03 and a11y/script needs |
-| O-05 | Book Model on-disk format | **Yes** | Conceptual schema ≠ file format |
-| O-06 | Pagination vs reflow mapping | **Yes** for honest DTP+EPUB | Vision: EPUB reflowable, PDF fixed-layout; degradation rules still missing |
-| O-07 | AI data boundary (default local vs cloud; model-weight licences) | Before AI Studio code | Local first-class + Ollama intended; default and ToS still OPEN |
-| O-08 | v1 book types | Before templates/themes | Vision requires a type picker; list not in vision |
-| O-09 | v1 DTP subset | Before DTP Studio / PDF engine | Not InDesign on day one; §6–7 list is still full-professional |
-| O-10 | How Beginner/Expert combines with I'll-do-it / Guide-me / Do-it-for-me | Before UI shell | Three axes in the vision |
-| O-11 | Publishing Engine definition + destinations | Before Publishing | New component, undefined |
-| O-12 | HTML checker + preview vs site | Before HTML projector | Diagram has no HTML validator |
-| O-13 | PDF preflight engine and profiles (PDF/X, PDF/UA, …) | Before preflight implementation | Also: live Book Doctor vs post-PDF preflight |
-| O-14 | EPUB profile (3.3?) | Before EPUB projector | Vision: reflowable; FXL not in vision |
-| O-15 | v1 script cut and test corpus | Before typography claims | Kannada/Hindi/Indic **early**; RTL long-term |
-| O-16 | Accessibility standard and level | Before Book Doctor a11y | WCAG / EPUB Accessibility |
-| O-17 | Import formats and fidelity | Before importers | DOCX, ODT, MD, EPUB |
-| O-18 | Collaboration / sync / accounts | Explicit deferral OK | Vision §18: future, not MVP |
-| O-19 | Plugin/script API in v1 vs later | Explicit deferral OK | Principle 10 vs §18 marketplace-later |
-| O-20 | Font and dictionary licence policy | Before default themes | |
-| O-21 | Governance (DCO/CLA, committers, CoC) | Before community push | Vision defers to contribution terms + LICENSING_POLICY |
-| O-22 | Maths, citations, indexes, audiobooks, comics | Explicit deferral OK | Confirm against PRD |
-| O-23 | Whether export of non-publish-ready works is allowed | Before export UI | |
-| O-24 | Cover creation in-app vs asset drop | Before Design Studio cover work | |
-| O-25 | Preview: model preview vs artefact preview | **Yes** for UX/engine | Journey vs diagram contradiction (vision review V-A1) |
-| O-26 | Unify FOSS classes (4 vs 5 / invoke vs incorporate) | Before any USE | Vision dropped EXTERNAL |
+| O-01 | **Project licence** (SPDX) | **Yes** | PRD assumes `LICENSING_POLICY.md` |
+| O-02 | **Public product name / trademark** | Branding | Collision with existing “OpenBook Studio” uses |
+| O-03 | Runtime: desktop-first vs also web; native vs embedded web | **Yes** | PRD: desktop-first; also an a11y framework choice |
+| O-04 | Implementation language(s) and UI toolkit | **Yes** | Do not infer from “desktop-first” |
+| O-05 | Book Model on-disk format | **Yes** | PRD lists contents, not serialization |
+| O-06 | Pagination vs reflow mapping | Before honest dual output | Still missing |
+| O-07 | Default AI provider / model-weight licences | Before AI calls | Optional cloud; local path |
+| O-08 | **MVP book-type cut** | Before wizard themes | PRD catalogues many types; children’s/textbook “where supported” |
+| O-09 | **MVP PDF meaning** | Before PDF engine | “Appropriate initial level” undefined |
+| O-10 | How Beginner/Expert combines with assistance levels | Before UI shell | |
+| O-11 | Publishing Engine = family of three engines? | `ARCHITECTURE.md` | PRD names EPUB/PDF/HTML engines |
+| O-12 | HTML in MVP, plus HTML checker | Before HTML engine | “Where feasible” |
+| O-13 | PDF preflight engine (post-MVP vs foundation) | Before strong preflight | Post-MVP in §33; Doctor still mentions PDF issues |
+| O-14 | EPUB profile (3.3?) | Before EPUB engine | |
+| O-15 | Which Indic language in the first fixture | Before i18n tests | PRD: EN + Indic + mixed-script |
+| O-16 | Accessibility standard and level | Before Doctor a11y bar | |
+| O-17 | MVP import formats | Before importers | Progressive; MD/HTML/DOCX/EPUB named |
+| O-18 | Collaboration / sync / accounts | **Deferred** | PRD post-MVP |
+| O-19 | Plugin/script API | **Deferred** | PRD future; G9 must not force MVP ABI |
+| O-20 | Font and dictionary licence policy | Before default themes | PRD: font licensing must be respected |
+| O-21 | Governance (DCO/CLA, committers, CoC) | Before community push | Next: `CONTRIBUTING.md` |
+| O-22 | Maths, citations, audio/video, children’s layout | Treat as out of MVP unless type picker says otherwise | |
+| O-23 | Export with Book Doctor Errors | Before export UI | Waive exists; Ready label rules unclear |
+| O-24 | Cover | **Product intent closed** | Guided import + type + position (ADR-015) |
+| O-25 | Preview pipelines (EPUB vs PDF vs live) | Before preview | See `08-prd-review.md` R-A2 |
+| O-26 | Unify FOSS classes (invoke vs incorporate) | Before any USE | |
+| O-27 | Studio vs panel map for extra PRD modules | `ARCHITECTURE.md` | R-A1 |
+| O-28 | The one MVP AI workflow | Before AI Studio | R-A5 |
+| O-29 | Readiness state owner (user vs Doctor) | Before readiness UI | R-A6 |
+| O-30 | Requirement IDs (`FR-…`) | Helpful for PRs | R-A10 |
 
 ---
 

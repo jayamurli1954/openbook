@@ -17,7 +17,7 @@ It is **not** yet an architecture specification. Pipeline order, the meaning of 
 
 **Canonical vision is `PROJECT_VISION.md`.** Agent draft `docs/01-vision.md` is a pointer only.
 
-`PRODUCT_REQUIREMENTS.md` is also on `main`. It is **not reviewed in this note**. It should be reviewed next, against this vision, before `ARCHITECTURE.md` is rewritten.
+`PRODUCT_REQUIREMENTS.md` is also on `main`. Reviewed in [`08-prd-review.md`](08-prd-review.md).
 
 ---
 
@@ -122,7 +122,7 @@ Journey: “Add a cover.” Non-goals: not a general-purpose graphic design plat
 
 ### V-A10. Book types
 
-Journey step 3: “Select the intended type of book.” Types are not listed in this vision (they may be in `PRODUCT_REQUIREMENTS.md`, unread here).
+Journey step 3: “Select the intended type of book.” Types are catalogued in `PRODUCT_REQUIREMENTS.md` §7; the MVP cut is still OPEN.
 
 ### V-A11. Community Edition
 
@@ -218,7 +218,6 @@ Do **not** treat `docs/03-architecture.md` (older UX-vs-model split, Book Doctor
 - Will not invent a Publishing Engine design.
 - Will not pick a project licence.
 - Will not rewrite `ARCHITECTURE.md` as if pipeline order were settled.
-- Will not review `PRODUCT_REQUIREMENTS.md` until asked (file is present on `main`).
 
 ---
 
@@ -233,4 +232,4 @@ Short answers would close the dangerous gaps:
 5. **v1 DTP subset** and **v1 book types**.
 6. Confirm the implementation freeze until `ARCHITECTURE.md`, `FOSS_STRATEGY.md`, and `LICENSING_POLICY.md` exist — not only “implementation not final.”
 
-After that, the next review should be `PRODUCT_REQUIREMENTS.md` against this vision.
+After that, the next review was `PRODUCT_REQUIREMENTS.md` — see [`08-prd-review.md`](08-prd-review.md). The next foundation document to write (not code) is `ARCHITECTURE.md`, after the short Product Owner answers in that review.
