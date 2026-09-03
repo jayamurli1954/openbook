@@ -104,9 +104,33 @@ Product Owner marks DECIDED. Engineering executors may add OPEN/PROPOSED records
 
 ### ADR-016 — Preview reflects publishing outputs
 
-- **Status:** DECIDED (intent)
-- **Decision:** Preview must reflect the actual publishing model, not an editor-only approximation. PDF must be visually previewable before final export. User-visible journey is Doctor → Preview → Validate → Publish.
-- **Consequences:** EPUB-oriented preview must remain a projection. Do not edit the preview artefact as the Book Model.
+- **Status:** DECIDED (refined by ADR-017)
+- **Decision:** Preview must reflect the actual publishing model, not an editor-only approximation. Generated preview files are not the Book Model.
+- **Note:** PRD user journey listed Preview before Validate. Architecture §29/§35 places artefact preview on engine output and E2E as Generate → Validate → Preview. Book Doctor remains the user-facing findings surface across both domain and output checks.
+
+### ADR-017 — Frozen publishing chain
+
+- **Status:** DECIDED (frozen)
+- **Decision:** `ARCHITECTURE.md` §54–60. Book Model → separate EPUB/PDF/HTML engines → EPUBCheck / PDF Preflight / HTML QA → Publication Ready. AI sits beside: Suggest/Explain → User/Command → Book Model → Engine → Validator. Local-first core. Beginner/Expert share domain. Plugins deferred. Book Model must not depend on UI, SQLite, Ollama, EPUB, or PDF renderer.
+- **Consequences:** Agent draft `docs/03-architecture.md` is a pointer only. This decision is not to be casually changed.
+
+### ADR-018 — Recommended technology baseline
+
+- **Status:** DECIDED as *initial recommendation*, not adoption
+- **Decision:** `ARCHITECTURE.md` §4: Tauri; React + TypeScript; Tiptap/ProseMirror or equivalent semantic editor; SQLite; TypeScript domain; Rust only where needed; Ollama as one AI adapter; EPUBCheck or equivalent; GitHub Actions including licence checks. Substitutions must preserve ADR-017.
+- **Consequences:** No package manifests until `FOSS_STRATEGY.md` / `LICENSING_POLICY.md` classify these. Tiptap vs ProseMirror licence split must be checked.
+
+### ADR-019 — Persistence shape
+
+- **Status:** DECIDED (requirements; packaging may vary)
+- **Decision:** Local SQLite for project metadata/structured state. Portable project directory. Generated outputs and previews distinguishable from source. Schema versioned with migrations from first implementation. Conceptual `BookProject` in `ARCHITECTURE.md` §9–10. Exact schema still a separate spec.
+- **Consequences:** Do not git-init user books by default. Do not treat SQLite as the public interchange format without a schema document.
+
+### ADR-020 — Cursor implementation rules
+
+- **Status:** DECIDED
+- **Decision:** `ARCHITECTURE.md` §51 binds this agent when implementation is authorized. Engineering sequence is Phases A–I (§52). Sequence is not a freeze-lift.
+- **Consequences:** `AGENTS.md` points here. Major implementation still waits on remaining foundation docs (PRD §39) plus an explicit freeze-lift ADR.
 
 ---
 
@@ -122,11 +146,13 @@ These are drafted for Product Owner accept/reject. They are **not** approved by 
 | P-08 | Projectors / engines do not write the Book Model | PRD engines + vision AI loop |
 | P-09 | Validators as ports; invoke vs incorporate | Vision dropped EXTERNAL |
 | P-10 | HTML/CSS typesetting engines must not become the Book Model | Still valid; EPUB-oriented preview increases the risk |
-| P-12 | Dual-phase Book Doctor + Preview-then-Validate as user order | `08-prd-review.md` R-C1 |
-| P-13 | Writing surface is a semantic editor, not visual rich-text as source | `08-prd-review.md` R-A4 |
+| P-12 | UX copy: Book Doctor before “done”; artefact preview after generate+validate | Architecture vs PRD journey |
+| P-13 | ~~Semantic editor~~ | **Superseded** by `ARCHITECTURE.md` §15 / §4 |
 | P-14 | MVP AI = optional Wizard outline and/or Doctor explain | `08-prd-review.md` R-A5 |
 | P-15 | MVP PDF = flowing pages, page size, margins, header/footer, numbers, cover; no facing-page masters | `08-prd-review.md` R-A3 |
-| P-16 | Extra PRD modules (Structure, Type, Cover, Metadata, Wizard) are panels/modes unless architecture says otherwise | `08-prd-review.md` R-A1 |
+| P-16 | Extra PRD modules are presentation panels over commands | `ARCHITECTURE.md` §3, §6 |
+| P-17 | Classify ProseMirror as the editor contract; Tiptap optional UI | Tiptap Pro licence trap |
+| P-18 | Unify ADR numbers before `docs/adr/` | `ARCHITECTURE.md` §50 vs this log |
 
 ---
 
@@ -138,16 +164,16 @@ Must be decided or explicitly deferred before implementation in that area. Items
 | --- | --- | --- | --- |
 | O-01 | **Project licence** (SPDX) | **Yes** | PRD assumes `LICENSING_POLICY.md` |
 | O-02 | **Public product name / trademark** | Branding | Collision with existing “OpenBook Studio” uses |
-| O-03 | Runtime: desktop-first vs also web; native vs embedded web | **Yes** | PRD: desktop-first; also an a11y framework choice |
-| O-04 | Implementation language(s) and UI toolkit | **Yes** | Do not infer from “desktop-first” |
-| O-05 | Book Model on-disk format | **Yes** | PRD lists contents, not serialization |
+| O-03 | Desktop shell | Recommended: Tauri | **Not adopted** until FOSS/licence pass |
+| O-04 | UI / language | Recommended: React + TypeScript; Rust as needed | Same |
+| O-05 | Persistence | Recommended: SQLite + portable folder | Exact Book Model schema still separate |
+| O-11 | Publishing engines | **Closed** | Three engines (ADR-017) |
 | O-06 | Pagination vs reflow mapping | Before honest dual output | Still missing |
 | O-07 | Default AI provider / model-weight licences | Before AI calls | Optional cloud; local path |
 | O-08 | **MVP book-type cut** | Before wizard themes | PRD catalogues many types; children’s/textbook “where supported” |
 | O-09 | **MVP PDF meaning** | Before PDF engine | “Appropriate initial level” undefined |
-| O-10 | How Beginner/Expert combines with assistance levels | Before UI shell | |
-| O-11 | Publishing Engine = family of three engines? | `ARCHITECTURE.md` | PRD names EPUB/PDF/HTML engines |
-| O-12 | HTML in MVP, plus HTML checker | Before HTML engine | “Where feasible” |
+| O-10 | How Beginner/Expert combines with assistance levels | Before UI shell | Same domain (ADR-017); UI map still open |
+| O-12 | HTML in MVP, plus HTML QA engine | Before HTML engine | QA is a port; tool unnamed |
 | O-13 | PDF preflight engine (post-MVP vs foundation) | Before strong preflight | Post-MVP in §33; Doctor still mentions PDF issues |
 | O-14 | EPUB profile (3.3?) | Before EPUB engine | |
 | O-15 | Which Indic language in the first fixture | Before i18n tests | PRD: EN + Indic + mixed-script |
@@ -160,8 +186,11 @@ Must be decided or explicitly deferred before implementation in that area. Items
 | O-22 | Maths, citations, audio/video, children’s layout | Treat as out of MVP unless type picker says otherwise | |
 | O-23 | Export with Book Doctor Errors | Before export UI | Waive exists; Ready label rules unclear |
 | O-24 | Cover | **Product intent closed** | Guided import + type + position (ADR-015) |
-| O-25 | Preview pipelines (EPUB vs PDF vs live) | Before preview | See `08-prd-review.md` R-A2 |
-| O-26 | Unify FOSS classes (invoke vs incorporate) | Before any USE | |
+| O-25 | EPUB vs PDF preview in which phase | Before Phase H | Architecture allows both; sequence puts preview last |
+| O-26 | Unify FOSS classes (invoke vs incorporate) | **Yes** before any USE | Next document: `FOSS_STRATEGY.md` |
+| O-27 | Studio vs panel map for extra PRD modules | UI architecture | Treat as presentation until contradicted |
+| O-31 | PDF layout/renderer choice | Before PDF engine | Highest FOSS/licence risk; unnamed on purpose |
+| O-32 | `docs/adr/` numbering vs this log | Before first ADR file | Collision with ADR-001 |
 | O-27 | Studio vs panel map for extra PRD modules | `ARCHITECTURE.md` | R-A1 |
 | O-28 | The one MVP AI workflow | Before AI Studio | R-A5 |
 | O-29 | Readiness state owner (user vs Doctor) | Before readiness UI | R-A6 |

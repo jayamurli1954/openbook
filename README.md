@@ -2,45 +2,32 @@
 
 Open-source desktop and digital publishing studio — write, design, typeset, validate and publish books.
 
-**Application implementation is frozen.** This repository currently holds the project constitution, not an application.
+**Application implementation is frozen.** Foundation documents so far: vision, requirements, architecture. Next: `FOSS_STRATEGY.md`.
 
 ## Start here
 
-1. [Project vision](PROJECT_VISION.md) (canonical)
-2. [Product requirements](PRODUCT_REQUIREMENTS.md) (canonical)
-3. [Agent standing orders](AGENTS.md)
-4. [Document index](docs/README.md)
-5. [Vision review](docs/07-vision-review.md)
-6. [PRD review](docs/08-prd-review.md)
-7. [Decision log](docs/05-decision-log.md)
+1. [Project vision](PROJECT_VISION.md)
+2. [Product requirements](PRODUCT_REQUIREMENTS.md)
+3. [Architecture](ARCHITECTURE.md)
+4. [Agent standing orders](AGENTS.md)
+5. [Architecture review](docs/09-architecture-review.md)
+6. [Decision log](docs/05-decision-log.md)
+7. [Document index](docs/README.md)
 
-## Working relationship
+## Frozen publishing chain
 
 ```text
-                 ┌──────────────────────────┐
-                 │        YOU               │
-                 │ Product Owner / Vision   │
-                 └────────────┬─────────────┘
-                              │
-                              ▼
-                 ┌──────────────────────────┐
-                 │     Cursor Cloud Agent   │
-                 │ AI Development / Coding  │
-                 └────────────┬─────────────┘
-                              │
-                              ▼
-                 ┌──────────────────────────┐
-                 │ GitHub: jayamurli1954/   │
-                 │         openbook         │
-                 │ Source of Truth          │
-                 └──────────────────────────┘
+BOOK MODEL → EPUB / PDF / HTML → EPUBCheck / Preflight / QA → PUBLICATION READY
+
+AI → Suggest / Explain → User/Command → Book Model → Engine → Validator
 ```
 
 ## Status
 
 | Item | State |
 | --- | --- |
-| Product licence | OPEN (no `LICENSE` yet) |
-| Runtime / language / UI toolkit | OPEN |
-| Third-party dependencies | None |
+| Vision / PRD / Architecture | Canonical drafts on `main` |
+| FOSS strategy / licensing / roadmap / contributing | Not yet at repo root |
+| Product licence | OPEN (no `LICENSE`) |
+| Recommended stack | Tauri + React/TS + SQLite — **not adopted** |
 | Application source | None — freeze in force |

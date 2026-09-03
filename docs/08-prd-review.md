@@ -23,6 +23,8 @@ This review does not rewrite the PRD. It records what the PRD decides, where it 
 
 It is still not an architecture document. Several vision tensions are improved; a few are sharper. The MVP is a **complete guided product**, not a thin vertical slice. That is a product choice, but it is a large first engineering surface.
 
+**Follow-up:** Canonical architecture is now [`ARCHITECTURE.md`](../ARCHITECTURE.md); review in [`09-architecture-review.md`](09-architecture-review.md).
+
 **Canonical PRD is `PRODUCT_REQUIREMENTS.md`.** Agent draft `docs/02-product-requirements.md` remains non-canonical.
 
 ---

@@ -48,10 +48,10 @@ Chat, notes, and agent transcripts are not the source of truth. If it is not in 
 These orders apply to every agent turn and every contributor PR until amended here.
 
 1. **Do not begin application implementation yet.** No application source tree, runtime scaffold, UI kit, or package manifest that selects a stack. Constitution, requirements, architecture, FOSS strategy, and decision-log work are allowed.
-2. **Read the Product Owner vision, constitution, product requirements, and architecture documents first.** Reading order is in [`AGENTS.md`](../AGENTS.md) and [`README.md`](README.md). Canonical vision is [`PROJECT_VISION.md`](../PROJECT_VISION.md).
-3. **Identify ambiguities, contradictions, and missing decisions.** Record them in [`07-vision-review.md`](07-vision-review.md), [`08-prd-review.md`](08-prd-review.md), or a successor review. Do not resolve them silently.
+2. **Read the Product Owner vision, product requirements, and architecture first.** Reading order is in [`AGENTS.md`](../AGENTS.md). Canonical files: `PROJECT_VISION.md`, `PRODUCT_REQUIREMENTS.md`, `ARCHITECTURE.md`.
+3. **Identify ambiguities, contradictions, and missing decisions.** Record them in the numbered reviews under `docs/` (`07`–`09` and successors). Do not resolve them silently.
 4. **Do not make architectural decisions without documenting them.** A decision is not made because code compiled. It is made when an entry in [`05-decision-log.md`](05-decision-log.md) is marked **DECIDED** by the Product Owner (or the Product Owner explicitly accepts a proposed ADR in a PR review).
-5. **Do not introduce dependencies without checking their licences.** Classify every candidate per [`04-foss-strategy.md`](04-foss-strategy.md) and `PROJECT_VISION.md` §13. Re-verify the upstream licence at the time of the proposal. Do not copy code from INSPIRE projects. Naming a tool in the vision (EPUBCheck, Ollama) is not permission to add it to the tree.
+5. **Do not introduce dependencies without checking their licences.** Classify every candidate per the FOSS strategy. Naming Tauri, Tiptap, Ollama, or EPUBCheck in `ARCHITECTURE.md` is a recommendation, not permission to add it to the tree.
 
 ## 4. Implementation freeze
 
@@ -67,7 +67,7 @@ The freeze covers:
 
 The freeze does **not** cover:
 
-- Product Owner foundation files at repo root (`PROJECT_VISION.md`, `PRODUCT_REQUIREMENTS.md`, and later named foundation docs).
+- Product Owner foundation files at repo root (`PROJECT_VISION.md`, `PRODUCT_REQUIREMENTS.md`, `ARCHITECTURE.md`, and later named foundation docs).
 - This `docs/` tree, `AGENTS.md`, and the root README.
 - Decision records, reviews, and FOSS research.
 - Licence *research* (not adoption).
@@ -109,7 +109,7 @@ Unlabelled prose in these documents is explanatory, not a decision.
 If two documents disagree:
 
 1. **DECIDED** beats **PROPOSED** beats **OPEN**.
-2. Product Owner root files (`PROJECT_VISION.md`, `PRODUCT_REQUIREMENTS.md`, and later `ARCHITECTURE.md` / `FOSS_STRATEGY.md` / `LICENSING_POLICY.md`) beat agent drafts under `docs/`.
+2. Product Owner root files (`PROJECT_VISION.md`, `PRODUCT_REQUIREMENTS.md`, `ARCHITECTURE.md`, and later `FOSS_STRATEGY.md` / `LICENSING_POLICY.md`) beat agent drafts under `docs/`.
 3. Among remaining constitution files, [`00-constitution.md`](00-constitution.md) (standing orders and freeze) still binds executors even when vision §20 uses weaker “not final” language.
 4. Record the conflict in a review document instead of picking a winner in code.
 
