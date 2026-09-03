@@ -27,6 +27,7 @@ These documents are the architectural constitution of OpenBook Studio. They exis
 | 09 | [Architecture review](09-architecture-review.md) | `ARCHITECTURE.md` |
 | 10 | [FOSS and licensing review](10-foss-licensing-review.md) | `FOSS_STRATEGY.md`, `LICENSING_POLICY.md` |
 | 11 | [Roadmap and contributing review](11-roadmap-contributing-review.md) | `ROADMAP.md`, `CONTRIBUTING.md` |
+| — | [FOSS research notes](foss-research/) | Per-project classification records |
 
 ## Status vocabulary
 
