@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "title": "ಕನ್ನಡ ಕಥೆ",
+    "subtitle": "",
+    "authors": ["ಪರೀಕ್ಷಾ ಲೇಖಕ"],
+    "contributors": [],
+    "language": "kn",
+    "identifier": "",
+    "publisher": "",
+    "publishedAt": "",
+    "copyright": "",
+    "description": "Indic-script fixture for Unicode-safe Book Model tests.",
+    "subjects": [],
+    "rights": ""
+  },
+  "frontMatter": [],
+  "chapters": [
+    {
+      "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "kind": "main",
+      "role": "chapter",
+      "title": "ಮೊದಲನೆಯ ಅಧ್ಯಾಯ",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+          "inlines": [{ "type": "text", "text": "ನಮಸ್ಕಾರ. ಇದು ಪುಸ್ತಕ ಮಾದರಿ." }]
+        }
+      ]
+    }
+  ],
+  "backMatter": [],
+  "assets": [],
+  "styles": { "paragraphStyles": [], "characterStyles": [] },
+  "theme": { "id": "default", "name": "Default" },
+  "typography": {
+    "bodyFontFamily": "",
+    "headingFontFamily": "",
+    "bodySizePt": 11,
+    "lineHeight": 1.4
+  },
+  "publishing": { "intendedOutputs": ["epub", "pdf", "html"] }
+}

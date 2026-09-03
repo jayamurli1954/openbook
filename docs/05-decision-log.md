@@ -24,9 +24,9 @@ Product Owner marks DECIDED. Engineering executors may add OPEN/PROPOSED records
 
 ### ADR-003 — Implementation freeze
 
-- **Status:** DECIDED
+- **Status:** DECIDED, **partially superseded by ADR-024**
 - **Decision:** Do not begin application implementation until the Product Owner explicitly lifts this freeze in this log (or an equivalent written instruction that is then recorded here).
-- **Consequences:** This repository remains constitution-only until then.
+- **Consequences:** Full application work stayed constitution-only until ADR-024. UI, persistence, and engines remain frozen.
 
 ### ADR-004 — Single Book Model
 
@@ -150,6 +150,16 @@ Product Owner marks DECIDED. Engineering executors may add OPEN/PROPOSED records
 - **Decision:** `ARCHITECTURE.md` §51, `FOSS_STRATEGY.md` §27, and `CONTRIBUTING.md` §17–18 bind agents and human contributors. Roadmap phases are the product sequence.
 - **Consequences:** Uploading foundation docs is not a freeze-lift. Phase 0 still needs schema spec, ADR process, CI, and a reproducible build to pass FOUNDATION-READY.
 
+### ADR-024 — Lift freeze for Phase 0 skeleton + Book Model only
+
+- **Status:** DECIDED (Product Owner: implement repository skeleton and Book Model with tests, before any UI)
+- **Decision:** STEP 1 + STEP 2 of the implementation sequence may proceed: npm workspaces layout under `apps/` and `packages/`, `@openbook/book-model` schema v1, fixtures, domain tests, and GitHub Actions CI. File ADR: [`adr/0001-phase-0-skeleton-and-book-model.md`](adr/0001-phase-0-skeleton-and-book-model.md). DevDependencies: `typescript` (Apache-2.0, EMBED/dev), `@types/node` (MIT, EMBED/dev).
+- **Still forbidden:** React, Tauri, SQLite, Writing Studio, EPUB/PDF/HTML engines, EPUBCheck, Book Doctor, Preview, `LICENSE`, chrome-devtools-mcp, embedding Sigil/Scribus/Calibre/Pandoc/Tiptap/Ollama.
+- **Authoring rule:** No EPUB package structure (OPF, manifest, spine, NCX, nav document) in the Book Model.
+- **OPEN items deferred:** O-01 licence, O-03/O-04 desktop stack, O-05 persistence schema, O-09/O-12 PDF/HTML in MVP (roadmap wins: Phase 2), O-31 PDF renderer, O-33 EPUBCheck USE vs EMBED.
+- **O-15:** Kannada fixture shipped for schema v1 tests (does not freeze a product language catalogue).
+- **Consequences:** `FOUNDATION-READY` is still not passed. Next authorized slice requires a new freeze-lift (STEP 3 persistence, not UI).
+
 ---
 
 ## PROPOSED
@@ -194,7 +204,7 @@ Must be decided or explicitly deferred before implementation in that area. Items
 | O-12 | HTML in MVP | **Out of MVP** (ROADMAP Phase 2) | Confirm vs PRD §32 |
 | O-13 | PDF preflight engine | Before strong preflight | USE adapter until EMBED justified |
 | O-14 | EPUB profile (3.3?) | Before EPUB engine | EPUBCheck is the conformance tool |
-| O-15 | Which Indic language in first fixture | Before i18n tests | Architecture names Kannada fixture |
+| O-15 | Which Indic language in first fixture | **Closed for v1 tests** | Kannada fixture in `tests/fixtures/kannada-indic.json` |
 | O-16 | Accessibility standard and level | Phase 4 publishing | |
 | O-17 | MVP import formats | Phase 4 default | Progressive |
 | O-18 | Collaboration / sync | **Deferred** | Phase 5 |
@@ -209,7 +219,7 @@ Must be decided or explicitly deferred before implementation in that area. Items
 | O-27 | Studio vs panel map | UI | Presentation until contradicted |
 | O-28 | One MVP AI workflow | Before 1G | Optional outline and/or Doctor explain |
 | O-31 | PDF layout/renderer | Before Phase 2 | Unnamed on purpose |
-| O-32 | ADR numbering | Before `docs/adr/` | |
+| O-32 | ADR numbering | Process | File ADRs use `docs/adr/NNNN`; decision-log uses ADR-NNN. Phase 0 file is `0001-phase-0-…` and does not collide with log ADR-001 |
 | O-33 | EPUBCheck USE vs EMBED | Before shipping validator | Prefer USE/process first |
 | O-34 | chrome-devtools-mcp | **Deferred — not now** | Later Product Owner decision. See `docs/foss-research/chrome-devtools-mcp.md` |
 

@@ -16,10 +16,10 @@ Implementation rules: `ARCHITECTURE.md` §51, `FOSS_STRATEGY.md` §27, `CONTRIBU
 
 ## Mandatory sequence
 
-1. **Do not begin application implementation** until a freeze-lift ADR names the allowed work. `FOUNDATION-READY` is **not** passed (no CI, no Book Model spec, no reproducible app build). Uploading the roadmap is not a freeze-lift.
-2. **Read first:** the seven canonical files above, then [`docs/00-constitution.md`](docs/00-constitution.md), [`docs/05-decision-log.md`](docs/05-decision-log.md), [`docs/11-roadmap-contributing-review.md`](docs/11-roadmap-contributing-review.md).
+1. **Implementation freeze is partially lifted** (ADR-024 / [`docs/adr/0001-phase-0-skeleton-and-book-model.md`](docs/adr/0001-phase-0-skeleton-and-book-model.md)): monorepo skeleton, `@openbook/book-model`, and CI tests only. **Do not** start UI, Tauri, SQLite, Writing Studio, EPUB/PDF/HTML engines, EPUBCheck, Book Doctor, Preview, or `LICENSE`. `FOUNDATION-READY` is **not** passed (no desktop app build).
+2. **Read first:** the seven canonical files above, then [`docs/00-constitution.md`](docs/00-constitution.md), [`docs/05-decision-log.md`](docs/05-decision-log.md), [`docs/book-model.md`](docs/book-model.md), [`docs/12-foundation-gaps.md`](docs/12-foundation-gaps.md).
 3. **Identify** ambiguities. Record them. Do not paper over them in code.
-4. **Do not violate** the frozen Book Model chain or FOSS classes.
+4. **Do not violate** the frozen Book Model chain or FOSS classes. No EPUB package fields in the authoring Book.
 5. **Do not introduce dependencies** without USE / EMBED / ADAPT / INSPIRE / AVOID, licence + transitives, and inventory. If unclear, **stop**.
 
 ## Frozen chain

@@ -2,7 +2,7 @@
 
 These documents are the architectural constitution of OpenBook Studio. They exist so the project does not accidentally become a conventional EPUB editor, a licence-incompatible FOSS collage, or an implementation that outruns product decisions.
 
-**Application implementation is frozen** until the Product Owner lifts that freeze in [`05-decision-log.md`](05-decision-log.md). See [`00-constitution.md`](00-constitution.md) and the root [`AGENTS.md`](../AGENTS.md).
+The implementation freeze is **partially lifted** for Phase 0 skeleton + Book Model ([ADR-024](05-decision-log.md), [`adr/0001-phase-0-skeleton-and-book-model.md`](adr/0001-phase-0-skeleton-and-book-model.md)). UI, persistence, and publishing engines remain frozen. See [`00-constitution.md`](00-constitution.md) and the root [`AGENTS.md`](../AGENTS.md).
 
 ## Read in this order
 
@@ -27,6 +27,9 @@ These documents are the architectural constitution of OpenBook Studio. They exis
 | 09 | [Architecture review](09-architecture-review.md) | `ARCHITECTURE.md` |
 | 10 | [FOSS and licensing review](10-foss-licensing-review.md) | `FOSS_STRATEGY.md`, `LICENSING_POLICY.md` |
 | 11 | [Roadmap and contributing review](11-roadmap-contributing-review.md) | `ROADMAP.md`, `CONTRIBUTING.md` |
+| 12 | [Foundation gaps](12-foundation-gaps.md) | Remaining ambiguities across the seven Product Owner docs |
+| — | [Book Model](book-model.md) | Schema v1 human contract (`packages/book-model`) |
+| — | [ADRs](adr/) | File ADRs (0001 = Phase 0 skeleton; does not replace numbered log ADR-001) |
 | — | [FOSS research notes](foss-research/) | Per-project classification records |
 
 ## Status vocabulary
@@ -39,4 +42,4 @@ Every requirement, principle, and decision in this tree is labelled:
 
 ## What this repository is today
 
-A constitution-only repository. There is no application source. OpenBook’s own licence is not frozen. No approved third-party dependencies.
+A Phase 0 foundation: the seven Product Owner documents, a npm workspaces skeleton, and the `@openbook/book-model` library with tests. There is no desktop UI. OpenBook’s own licence is not frozen. Runtime product dependencies are not adopted. Dev-only: TypeScript (Apache-2.0) and `@types/node` (MIT).

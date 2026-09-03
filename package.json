@@ -1,0 +1,19 @@
+{
+  "name": "openbook",
+  "private": true,
+  "description": "OpenBook Studio monorepo — Book Model first. Not an EPUB editor.",
+  "workspaces": [
+    "packages/book-model"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm run build -w @openbook/book-model",
+    "test": "npm test -w @openbook/book-model"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
+}

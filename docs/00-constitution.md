@@ -47,7 +47,7 @@ Chat, notes, and agent transcripts are not the source of truth. If it is not in 
 
 These orders apply to every agent turn and every contributor PR until amended here.
 
-1. **Do not begin application implementation yet.** No application source tree, runtime scaffold, UI kit, or package manifest that selects a stack. Constitution, requirements, architecture, FOSS strategy, and decision-log work are allowed.
+1. **Do not begin unauthorized implementation.** The freeze is lifted only for the scope in ADR-024 (monorepo skeleton + `@openbook/book-model` + CI). No UI kit, Tauri, SQLite, publishing engines, or extra runtime dependencies.
 2. **Read the Product Owner vision, product requirements, and architecture first.** Reading order is in [`AGENTS.md`](../AGENTS.md). Canonical files: `PROJECT_VISION.md`, `PRODUCT_REQUIREMENTS.md`, `ARCHITECTURE.md`.
 3. **Identify ambiguities, contradictions, and missing decisions.** Record them in the numbered reviews under `docs/` (`07`–`09` and successors). Do not resolve them silently.
 4. **Do not make architectural decisions without documenting them.** A decision is not made because code compiled. It is made when an entry in [`05-decision-log.md`](05-decision-log.md) is marked **DECIDED** by the Product Owner (or the Product Owner explicitly accepts a proposed ADR in a PR review).
@@ -55,15 +55,17 @@ These orders apply to every agent turn and every contributor PR until amended he
 
 ## 4. Implementation freeze
 
-**DECIDED.** Application implementation is frozen.
+**DECIDED, then partially lifted by ADR-024.** Desktop UI, persistence, and publishing engines remain frozen.
 
-The freeze covers:
+The remaining freeze covers:
 
-- Application source (`src/`, `app/`, `lib/` or equivalent).
-- Runtime or UI framework selection (Electron, Tauri, Qt, web app, etc.).
-- Language/toolchain selection as a project default.
-- Package manifests that pin a stack (`package.json`, `Cargo.toml`, `pyproject.toml`, etc.), except later and only when an ADR authorizes a scaffold.
+- React / Tauri / any UI shell.
+- SQLite and project-folder persistence.
+- Writing Studio, EPUB/PDF/HTML engines, EPUBCheck, Book Doctor, Preview.
+- Runtime or UI framework selection beyond the Book Model TypeScript package.
+- Package manifests that pin a desktop/UI stack (`Cargo.toml`, React app, etc.).
 - Assets that imply a product UI beyond documentary diagrams.
+- Adding `LICENSE` (project licence still unfrozen).
 
 The freeze does **not** cover:
 
@@ -71,6 +73,7 @@ The freeze does **not** cover:
 - This `docs/` tree, `AGENTS.md`, and the root README.
 - Decision records, reviews, and FOSS research.
 - Licence *research* (not adoption).
+- The Phase 0 slice in ADR-024: monorepo placeholders and `@openbook/book-model` with tests.
 
 **To lift the freeze:** the Product Owner adds or accepts an ADR in the decision log that states what may be implemented, the bounds of that work, and which OPEN decisions remain out of scope.
 

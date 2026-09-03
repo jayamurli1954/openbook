@@ -284,6 +284,15 @@ For major architectural changes, an ADR may be required.
 
 ## 9. Development Workflow
 
+Phase 0 currently contains `@openbook/book-model` only. From the repository root (Node.js 22+):
+
+```text
+npm install
+npm test
+```
+
+Placeholder packages under `apps/desktop` and `packages/*` are layout only — do not implement them until a freeze-lift ADR names that step.
+
 The preferred workflow is:
 
 ```text

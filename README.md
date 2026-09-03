@@ -2,7 +2,16 @@
 
 Open-source desktop and digital publishing studio — write, design, typeset, validate and publish books.
 
-**Application implementation is frozen** until a freeze-lift ADR. `FOUNDATION-READY` is not yet satisfied.
+Phase 0 has started: **repository skeleton + Book Model** only. There is no editor UI yet. `FOUNDATION-READY` is not passed (no desktop application build).
+
+## Run tests
+
+Requires Node.js 22+.
+
+```text
+npm install
+npm test
+```
 
 ## Canonical documents
 
@@ -14,7 +23,8 @@ Open-source desktop and digital publishing studio — write, design, typeset, va
 6. [Roadmap](ROADMAP.md)
 7. [Contributing](CONTRIBUTING.md)
 8. [Agent standing orders](AGENTS.md)
-9. [Reviews and decision log](docs/README.md)
+9. [Book Model](docs/book-model.md)
+10. [Reviews, gaps, and decision log](docs/README.md)
 
 ## Product sequence
 
@@ -29,6 +39,7 @@ MVP is the smallest complete author journey to a **validated EPUB**. Professiona
 | Item | State |
 | --- | --- |
 | Foundation markdown | Vision, PRD, architecture, FOSS, licensing, roadmap, contributing |
-| `FOUNDATION-READY` | **Not passed** (no schema spec, CI, or reproducible build) |
+| Book Model | `@openbook/book-model` schema v1 + tests (English + Kannada fixtures) |
+| `FOUNDATION-READY` | **Not passed** (no Tauri/React app build) |
 | OpenBook `LICENSE` | Not frozen |
-| Application source | None |
+| UI / persistence / EPUB engine | Not started |
