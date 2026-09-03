@@ -1,0 +1,4 @@
+{
+  "name": "OpenBook Studio — Constitution Docs",
+  "install": "python3 --version && git --version && python3 .cursor/validate-docs.py"
+}
