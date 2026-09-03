@@ -138,17 +138,17 @@ Product Owner marks DECIDED. Engineering executors may add OPEN/PROPOSED records
 - **Decision:** `LICENSING_POLICY.md`. OpenBook’s own licence is **not** frozen (Apache-2.0 vs AGPL-3.0-or-later). No agent may assume a final licence or add contradictory file headers. Preferred embedded licences: MIT, BSD, Apache-2.0. Users own manuscripts. Fonts/assets need provenance. AI output is not OpenBook IP. CLA/DCO deferred to `CONTRIBUTING.md`. SPDX and THIRD-PARTY-NOTICES.txt required when shipping code.
 - **Consequences:** Do not add `LICENSE` without Product Owner approval.
 
-### ADR-023 — Roadmap draft
+### ADR-023 — Official roadmap and contributing
 
-- **Status:** PROPOSED as Product Owner sequence (this agent drafted `ROADMAP.md` from the requested phases)
-- **Decision pending:** Product Owner accept/revise `ROADMAP.md`. Sequence: Foundation → MVP → Professional DTP → AI → Publishing → Ecosystem, with gates not dates.
-- **Consequences:** Not a freeze-lift. Phase 1 still needs scorecards + freeze-lift ADR.
+- **Status:** DECIDED (product sequence and community process)
+- **Decision:** Canonical `ROADMAP.md` and `CONTRIBUTING.md` on `main`. Phases 0–4 with gates FOUNDATION-READY, MVP-READY, PRO-DTP-READY, AI-ASSISTED-READY, ECOSYSTEM-READY. MVP is a complete guided journey to a validated EPUB; professional DTP is Phase 2. PDF and HTML are Phase 2. CONTRIBUTING welcomes non-programmers; CLA/DCO and CoC remain future; SanMitra stewards the project; no automatic copyright assignment.
+- **Consequences:** Agent-drafted roadmap is discarded. `FOUNDATION-READY` is not yet passed. Freeze-lift still required before application source. Where PRD MVP listed initial PDF/HTML, **stop** until Product Owner confirms the roadmap cut.
 
 ### ADR-020 — Cursor implementation rules
 
 - **Status:** DECIDED
-- **Decision:** `ARCHITECTURE.md` §51 and `FOSS_STRATEGY.md` §27 bind this agent when implementation is authorized. Engineering sequence A–I is how to build inside a product phase. `ROADMAP.md` is the product sequence.
-- **Consequences:** Freeze-lift ADR still required. `CONTRIBUTING.md` still due.
+- **Decision:** `ARCHITECTURE.md` §51, `FOSS_STRATEGY.md` §27, and `CONTRIBUTING.md` §17–18 bind agents and human contributors. Roadmap phases are the product sequence.
+- **Consequences:** Uploading foundation docs is not a freeze-lift. Phase 0 still needs schema spec, ADR process, CI, and a reproducible build to pass FOUNDATION-READY.
 
 ---
 
@@ -167,7 +167,7 @@ These are drafted for Product Owner accept/reject. They are **not** approved by 
 | P-12 | UX copy: Book Doctor before “done”; artefact preview after generate+validate | Architecture vs PRD journey |
 | P-13 | ~~Semantic editor~~ | **Superseded** by `ARCHITECTURE.md` §15 / §4 |
 | P-14 | MVP AI = optional Wizard outline and/or Doctor explain | `08-prd-review.md` R-A5 |
-| P-15 | MVP PDF = flowing pages, page size, margins, header/footer, numbers, cover; no facing-page masters | `08-prd-review.md` R-A3 |
+| P-15 | ~~MVP PDF in Phase 1~~ | **Superseded** by ROADMAP Phase 2 |
 | P-16 | Extra PRD modules are presentation panels over commands | `ARCHITECTURE.md` §3, §6 |
 | P-17 | Classify ProseMirror as the editor contract; Tiptap optional UI | Tiptap Pro licence trap |
 | P-18 | Unify ADR numbers before `docs/adr/` | `ARCHITECTURE.md` §50 vs this log |
@@ -188,10 +188,10 @@ Must be decided or explicitly deferred before implementation in that area. Items
 | O-06 | Pagination vs reflow mapping | Before honest dual output | Phase 2 DTP gate |
 | O-07 | Default AI provider / model-weight licences | Before AI calls | Tracked separately from app licence |
 | O-08 | **MVP book-type cut** | Before wizard themes | |
-| O-09 | **MVP PDF meaning** | Before PDF engine | |
+| O-09 | MVP PDF | **Out of MVP** (ROADMAP Phase 2) | Confirm vs PRD §32 |
 | O-10 | Beginner/Expert × assistance levels | Before UI shell | Same domain |
 | O-11 | Publishing engines | **Closed** | Three engines |
-| O-12 | HTML in MVP | Before HTML engine | Roadmap allows slip to Phase 4 |
+| O-12 | HTML in MVP | **Out of MVP** (ROADMAP Phase 2) | Confirm vs PRD §32 |
 | O-13 | PDF preflight engine | Before strong preflight | USE adapter until EMBED justified |
 | O-14 | EPUB profile (3.3?) | Before EPUB engine | EPUBCheck is the conformance tool |
 | O-15 | Which Indic language in first fixture | Before i18n tests | Architecture names Kannada fixture |

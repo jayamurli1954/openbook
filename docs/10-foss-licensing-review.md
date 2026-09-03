@@ -29,7 +29,7 @@ FOSS ECOSYSTEM → study/reuse/learn → OPENBOOK DESIGN → BOOK MODEL
   → EPUBCheck → Book Doctor
 ```
 
-Cursor rules in `FOSS_STRATEGY.md` §27 bind this agent. They do **not** lift the implementation freeze. `ROADMAP.md` and `CONTRIBUTING.md` remain, then an explicit freeze-lift ADR.
+Cursor rules in `FOSS_STRATEGY.md` §27 bind this agent. They do **not** lift the implementation freeze. Official `ROADMAP.md` and `CONTRIBUTING.md` are reviewed in [`11-roadmap-contributing-review.md`](11-roadmap-contributing-review.md).
 
 ---
 

@@ -13,7 +13,8 @@ These documents are the architectural constitution of OpenBook Studio. They exis
 | — | [ARCHITECTURE.md](../ARCHITECTURE.md) | **Canonical** technical architecture |
 | — | [FOSS_STRATEGY.md](../FOSS_STRATEGY.md) | **Canonical** FOSS strategy |
 | — | [LICENSING_POLICY.md](../LICENSING_POLICY.md) | **Canonical** licensing policy |
-| — | [ROADMAP.md](../ROADMAP.md) | Sequence and gates (draft until Product Owner accepts) |
+| — | [ROADMAP.md](../ROADMAP.md) | **Canonical** capability roadmap and gates |
+| — | [CONTRIBUTING.md](../CONTRIBUTING.md) | **Canonical** contributor guide |
 | 00 | [Constitution](00-constitution.md) | Authority, standing orders, change control |
 | 01 | [Vision pointer](01-vision.md) | Redirect only |
 | 02 | [PRD pointer](02-product-requirements.md) | Redirect only |
@@ -25,6 +26,7 @@ These documents are the architectural constitution of OpenBook Studio. They exis
 | 08 | [PRD review](08-prd-review.md) | `PRODUCT_REQUIREMENTS.md` |
 | 09 | [Architecture review](09-architecture-review.md) | `ARCHITECTURE.md` |
 | 10 | [FOSS and licensing review](10-foss-licensing-review.md) | `FOSS_STRATEGY.md`, `LICENSING_POLICY.md` |
+| 11 | [Roadmap and contributing review](11-roadmap-contributing-review.md) | `ROADMAP.md`, `CONTRIBUTING.md` |
 
 ## Status vocabulary
 
