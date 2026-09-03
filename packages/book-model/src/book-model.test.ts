@@ -36,6 +36,17 @@ test("createBook uses schema v1 and semantic structure, not EPUB package fields"
   }
 });
 
+test("createBook is format-neutral: no implicit publishing output (not EPUB)", () => {
+  const book = createBook({ title: "Neutral", language: "en" });
+  assert.equal(book.publishing.intendedOutputs.length, 0);
+  assert.equal(book.publishing.intendedOutputs.includes("epub"), false);
+});
+
+test("createBook preserves explicitly supplied intendedOutputs", () => {
+  const book = createBook({ language: "en", intendedOutputs: ["pdf", "html"] });
+  assert.deepEqual(book.publishing.intendedOutputs, ["pdf", "html"]);
+});
+
 test("missing language is a domain error; empty title is a warning", () => {
   const book = createBook({ title: "", language: "" });
   const issues = validateBook(book);

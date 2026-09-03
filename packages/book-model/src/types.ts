@@ -131,4 +131,6 @@ export interface CreateBookInput {
   authors?: string[];
   language?: string;
   withOpeningChapter?: boolean;
+  /** Explicit publishing intent. Omitted means format-neutral (no outputs preselected). */
+  intendedOutputs?: PublishingOutput[];
 }

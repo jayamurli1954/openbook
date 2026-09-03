@@ -64,7 +64,9 @@ export function createBook(input: CreateBookInput = {}): Book {
       lineHeight: 1.4,
     },
     publishing: {
-      intendedOutputs: ["epub"],
+      // Format-neutral by default: do not implicitly preselect EPUB. Callers
+      // choose projections explicitly (see ADR-0006 and ADR-0004).
+      intendedOutputs: [...(input.intendedOutputs ?? [])],
     },
   };
 }
