@@ -17,16 +17,23 @@ Write-Host "=== 1. ACQUIRING EPUBCHECK 5.3.0 ==="
 $EpubCheckZipUrl = "https://github.com/w3c/epubcheck/releases/download/v5.3.0/epubcheck-5.3.0.zip"
 $EpubCheckZipPath = Join-Path $SpikeDir "epubcheck-5.3.0.zip"
 $EpubCheckExtractPath = Join-Path $SpikeDir "epubcheck-5.3.0"
+$ExpectedEpubCheckSha256 = "6c07e68584b2e2ce2f89fe06e1246dfead3eb36b46b340e7d93524f29dcff6c5"
 
 if (-not (Test-Path $EpubCheckZipPath)) {
-    Write-Host "Downloading EPUBCheck 5.3.0 from: $EpubCheckZipUrl"
+    Write-Host "Downloading official EPUBCheck 5.3.0 from: $EpubCheckZipUrl"
     Invoke-WebRequest -Uri $EpubCheckZipUrl -OutFile $EpubCheckZipPath
 }
 
 $EpubCheckHash = (Get-FileHash -Path $EpubCheckZipPath -Algorithm SHA256).Hash.ToLower()
 $EpubCheckZipSize = (Get-Item $EpubCheckZipPath).Length
 Write-Host "EPUBCheck 5.3.0 ZIP Size: $EpubCheckZipSize bytes ($([math]::Round($EpubCheckZipSize/1MB, 2)) MB)"
-Write-Host "EPUBCheck 5.3.0 SHA-256 (local calculation): $EpubCheckHash"
+Write-Host "EPUBCheck 5.3.0 Calculated SHA-256: $EpubCheckHash"
+Write-Host "EPUBCheck 5.3.0 Expected SHA-256:   $ExpectedEpubCheckSha256"
+
+if ($EpubCheckHash -ne $ExpectedEpubCheckSha256) {
+    throw "SECURITY ALERT: EPUBCheck 5.3.0 SHA-256 checksum mismatch! Calculated: $EpubCheckHash, Expected: $ExpectedEpubCheckSha256. Failing closed."
+}
+Write-Host "EPUBCheck 5.3.0 Checksum Verification: PASSED (Verified Match)"
 
 if (-not (Test-Path $EpubCheckExtractPath)) {
     Write-Host "Extracting EPUBCheck 5.3.0..."
@@ -39,19 +46,27 @@ $EpubCheckDirSize = (Get-ChildItem $EpubCheckExtractPath -Recurse | Measure-Obje
 Write-Host "EPUBCheck 5.3.0 Unpacked Directory Size: $EpubCheckDirSize bytes ($([math]::Round($EpubCheckDirSize/1MB, 2)) MB)"
 
 Write-Host "`n=== 2. ACQUIRING CANDIDATE TEMURIN JDK 21 LTS (WINDOWS x64) ==="
-$TemurinZipUrl = "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jdk/hotspot/normal/eclipse"
+# Pinned to exact candidate release: jdk-21.0.12.1+1 for deterministic spike repeatability
+$TemurinZipUrl = "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jdk_x64_windows_hotspot_21.0.12.1_1.zip"
 $TemurinZipPath = Join-Path $SpikeDir "temurin-21-jdk.zip"
 $TemurinExtractDir = Join-Path $SpikeDir "temurin-21-jdk-extracted"
+$ExpectedTemurinSha256 = "f9d6e191ab098c0d416e7d588a24420a8621cd2f4720dab2459b8b7b2d2d8b4e"
 
 if (-not (Test-Path $TemurinZipPath)) {
-    Write-Host "Downloading Eclipse Temurin JDK 21 from Adoptium API..."
+    Write-Host "Downloading Eclipse Temurin JDK 21.0.12.1+1 from: $TemurinZipUrl"
     Invoke-WebRequest -Uri $TemurinZipUrl -OutFile $TemurinZipPath
 }
 
 $TemurinHash = (Get-FileHash -Path $TemurinZipPath -Algorithm SHA256).Hash.ToLower()
 $TemurinZipSize = (Get-Item $TemurinZipPath).Length
 Write-Host "Temurin 21 JDK ZIP Size: $TemurinZipSize bytes ($([math]::Round($TemurinZipSize/1MB, 2)) MB)"
-Write-Host "Temurin 21 JDK SHA-256 (local calculation): $TemurinHash"
+Write-Host "Temurin 21 JDK Calculated SHA-256: $TemurinHash"
+Write-Host "Temurin 21 JDK Expected SHA-256:   $ExpectedTemurinSha256"
+
+if ($TemurinHash -ne $ExpectedTemurinSha256) {
+    throw "SECURITY ALERT: Temurin JDK 21 SHA-256 checksum mismatch! Calculated: $TemurinHash, Expected: $ExpectedTemurinSha256. Failing closed."
+}
+Write-Host "Temurin JDK 21 Checksum Verification: PASSED (Verified Match)"
 
 if (-not (Test-Path $TemurinExtractDir)) {
     Write-Host "Extracting Temurin JDK 21..."

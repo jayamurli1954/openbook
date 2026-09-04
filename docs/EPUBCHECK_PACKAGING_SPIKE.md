@@ -26,14 +26,14 @@ ValidatorService adapter boundary
 
 ## 2. ADR-0005 Relationship & Governance
 
-[ADR-0005](file:///d:/MyProjects/openbook/docs/conversations/2026-09-03-epubcheck-java-tauri.md) establishes:
+[ADR-0005](file:///d:/MyProjects/openbook/docs/conversations/2026-09-03-epubcheck-java-tauri.md) is already Accepted on `main` and establishes:
 1. Official EPUBCheck is the authoritative EPUB 3.3 conformance validator (unofficial JavaScript/WASM ports are rejected as authoritative validators).
 2. End users must **not** be required to install Java manually on their machines (`JAVA_HOME` dependency rejected).
 3. The preferred production strategy is an isolated subprocess invoking a private bundled runtime.
 4. `jlink` must be evaluated empirically before freezing the packaging architecture.
 5. Exact runtime versions and platform packaging matrices remain open until evidence is produced.
 
-This report provides the empirical evidence required to transition ADR-0005 from `PROPOSED` to `ACCEPTED`.
+This spike provides empirical evidence for the implementation choices established by ADR-0005 and identifies the remaining items that must be frozen before production packaging.
 
 ---
 
@@ -50,7 +50,7 @@ This report provides the empirical evidence required to transition ADR-0005 from
 - **Vendor / Distribution:** Eclipse Adoptium — Eclipse Temurin OpenJDK.
 - **Candidate Release Evaluated:** OpenJDK 21 LTS GA (`openjdk version "21.0.12.1" 2026-08-18 LTS`, build `21.0.12.1+1-LTS`, Hotspot).
 - **Target Architecture:** Windows x64 (tested); macOS and Linux x64/aarch64 (packaging analysis).
-- **Artifact Source URL:** `https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jdk/hotspot/normal/eclipse`
+- **Pinned Artifact Source URL:** `https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jdk_x64_windows_hotspot_21.0.12.1_1.zip` (pinned candidate for spike repeatability).
 - **License:** GNU General Public License version 2 with Classpath Exception (GPLv2+CE).
 
 ---
@@ -221,7 +221,7 @@ The empirical evidence confirms that packaging official EPUBCheck 5.3.0 behind a
 ### Satisfied Criteria:
 1. `jlink` reduces the runtime footprint from **327.90 MB to 59.07 MB** (an **82.0% reduction**).
 2. End users are **not** required to install Java.
-3. Official EPUBCheck 5.3.0 executes with 100% fidelity on both valid and invalid EPUB 3.3 fixtures.
+3. EPUBCheck 5.3.0 successfully validated the supplied valid and deliberately invalid EPUB 3.3 spike fixtures, with expected exit codes and diagnostics.
 4. The `-j <tempFile>` file-based output protocol provides clean, structured diagnostic reporting without stdout stream contamination.
 5. All 11 existing Book Model tests and 3 new validator smoke tests pass cleanly (`14 passed, 0 failed`).
 
@@ -234,6 +234,5 @@ The empirical evidence confirms that packaging official EPUBCheck 5.3.0 behind a
 
 ## 13. Next-Step Recommendation
 
-1. Formalize and approve **ADR-0005** based on the empirical evidence in this report.
-2. Update the Architecture Decision Index to reflect ADR-0005 status as `Accepted`.
-3. Proceed to the next foundation gate (`FOUNDATION-READY` sign-off and implementation backlog).
+1. Use the empirical evidence in this report to guide future Phase 1 Tauri/Rust validator subprocess implementation.
+2. Proceed to the next foundation gate (`FOUNDATION-READY` sign-off and implementation backlog).
