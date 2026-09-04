@@ -10,7 +10,9 @@
   },
   "scripts": {
     "build": "npm run build -w @openbook/book-model",
-    "test": "npm test -w @openbook/book-model"
+    "test": "npm test -w @openbook/book-model",
+    "audit": "npm audit --audit-level=high",
+    "audit:prod": "npm audit --omit=dev --audit-level=high"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
