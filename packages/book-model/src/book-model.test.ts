@@ -87,6 +87,59 @@ test("English and Kannada fixture files parse as schema v1", () => {
   assert.equal(validateBook(kn).filter((i) => i.severity === "error").length, 0);
 });
 
+test("PDF bake-off fixtures parse as schema v1 Book Models with no domain errors", () => {
+  const names = [
+    "english-prose.json",
+    "kannada-prose.json",
+    "mixed-english-kannada.json",
+    "indic-conjunct-shaping.json",
+  ];
+  const forbidden = [
+    "opf",
+    "manifest",
+    "spine",
+    "ncx",
+    "nav",
+    "navDoc",
+    "container",
+    "packageDocument",
+  ];
+  for (const name of names) {
+    const book = parseBook(
+      readFileSync(join(repoRoot, "tests/fixtures/pdf-bakeoff", name), "utf8"),
+    );
+    assert.equal(book.schemaVersion, 1, `${name} schemaVersion`);
+    assert.equal(
+      validateBook(book).filter((i) => i.severity === "error").length,
+      0,
+      `${name} must have zero validation errors`,
+    );
+    for (const key of forbidden) {
+      assert.equal(
+        Object.prototype.hasOwnProperty.call(book, key),
+        false,
+        `${name} must not contain EPUB packaging key ${key}`,
+      );
+    }
+  }
+  const kn = parseBook(
+    readFileSync(join(repoRoot, "tests/fixtures/pdf-bakeoff/kannada-prose.json"), "utf8"),
+  );
+  assert.equal(kn.metadata.language, "kn");
+  assert.match(kn.metadata.title, /ನದಿಯ/);
+  const conj = parseBook(
+    readFileSync(
+      join(repoRoot, "tests/fixtures/pdf-bakeoff/indic-conjunct-shaping.json"),
+      "utf8",
+    ),
+  );
+  const body = conj.chapters[0]?.blocks.find((b) => b.type === "paragraph");
+  assert.ok(body && body.type === "paragraph");
+  const text = body.inlines[0] && body.inlines[0].type === "text" ? body.inlines[0].text : "";
+  assert.match(text, /ಕ್ಷಮೆ/);
+  assert.match(text, /ಜ್ಞಾನ/);
+});
+
 test("EPUB packaging/container/navigation keys on a Book are domain errors", () => {
   for (const leak of ["opf", "manifest", "spine", "ncx", "nav", "navDoc", "container", "packageDocument"]) {
     const book = createBook({ language: "en", title: "Leak" }) as Book & Record<string, unknown>;

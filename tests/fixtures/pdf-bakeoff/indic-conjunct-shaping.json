@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "title": "ಅಕ್ಷರಗಳ ಒತ್ತು — Conjunct Stress",
+    "subtitle": "Indic conjunct and combining-mark stress fixture",
+    "authors": ["OpenBook Typography Fixtures"],
+    "contributors": [],
+    "language": "kn",
+    "identifier": "urn:openbook:fixture:pdf-bakeoff:indic-conjunct-shaping",
+    "publisher": "OpenBook Fixture Press",
+    "publishedAt": "2026-09-04",
+    "copyright": "Copyright 2026 OpenBook fixtures (test material).",
+    "description": "Kannada conjunct clusters, reph/virama sequences, and combining marks for PDF bake-off shaping review. Includes NFC-normalized text and a documented NFD sample for renderer comparison. Not Typst/PDF/HTML markup.",
+    "subjects": ["typography", "indic", "fixture"],
+    "rights": "Apache-2.0 test fixture; not a published work."
+  },
+  "frontMatter": [],
+  "chapters": [
+    {
+      "id": "d4000000-0000-4000-8000-000000000101",
+      "kind": "main",
+      "role": "chapter",
+      "title": "ಅಧ್ಯಾಯ — ಸಂಯುಕ್ತಾಕ್ಷರಗಳು",
+      "blocks": [
+        {
+          "type": "heading",
+          "id": "d4000000-0000-4000-8000-000000000111",
+          "level": 2,
+          "inlines": [{ "type": "text", "text": "ಸಾಮಾನ್ಯ ಸಂಯುಕ್ತಗಳು" }]
+        },
+        {
+          "type": "paragraph",
+          "id": "d4000000-0000-4000-8000-000000000112",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "ಈ ವಾಕ್ಯಗಳಲ್ಲಿ ವಾಸ್ತವಿಕ ಕನ್ನಡ ಪದಗಳಿವೆ: ಕ್ಷಮೆ, ಜ್ಞಾನ, ಪ್ರೀತಿ, ಸ್ತ್ರೀ, ಶ್ರೀರಾಮ, ತ್ರಿಕೋನ, ದ್ರಾಕ್ಷಿ, ಬ್ರಹ್ಮ, ಕ್ರಮ, ಗ್ರಹ, ಚಂದ್ರ, ವ್ಯಾಕರಣ, ಸ್ವಾತಂತ್ರ್ಯ, ರಾಷ್ಟ್ರ, ಪಟ್ಟಣ, ಮತ್ತು ಉತ್ಕೃಷ್ಟ."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "d4000000-0000-4000-8000-000000000113",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "ಮತ್ತಷ್ಟು ಉದಾಹರಣೆಗಳು: ಅಕ್ಷರ, ಪಕ್ಷಿ, ಲಕ್ಷ್ಮಿ, ಯಕ್ಷ, ರಕ್ಷಣೆ, ವಿಕ್ಷೇಪ, ಸಂಸ್ಕೃತಿ, ಸಂಸ್ಕರಣ, ಉಪ್ಪು, ತಪ್ಪು, ಮುಪ್ಪು, ಮತ್ತು ಕಷ್ಟ."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "id": "d4000000-0000-4000-8000-000000000114",
+          "level": 2,
+          "inlines": [{ "type": "text", "text": "ದೀರ್ಘ ಸಂಯುಕ್ತ ಸರಣಿ" }]
+        },
+        {
+          "type": "paragraph",
+          "id": "d4000000-0000-4000-8000-000000000115",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "ಶಾಸ್ತ್ರೀಯ ಸಂಗೀತದಲ್ಲಿ ಶ್ರುತಿ ಮತ್ತು ಸ್ವರಗಳು ಮುಖ್ಯ. ಪ್ರತ್ಯೇಕವಾಗಿ: ಕ್ಷೇತ್ರ, ಪ್ರಜ್ಞೆ, ವ್ಯಕ್ತಿ, ಸ್ಮೃತಿ, ತ್ವರಿತ, ದ್ವೀಪ, ತ್ರಯೋದಶಿ, ಚತುಷ್ಪಾದ, ಪಂಚಪ್ರಾಣ, ಷಷ್ಠಿ, ಸಪ್ತಸ್ವರ, ಅಷ್ಟಾದಶ, ನವಗ್ರಹ."
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "id": "d4000000-0000-4000-8000-000000000116",
+          "ordered": true,
+          "items": [
+            [{ "type": "text", "text": "ಕ್ಷ — ಕ್ಷಮೆ, ಕ್ಷೇತ್ರ, ಲಕ್ಷ್ಮಿ" }],
+            [{ "type": "text", "text": "ಜ್ಞ — ಜ್ಞಾನ, ಪ್ರಜ್ಞೆ, ವಿಜ್ಞಾನ" }],
+            [{ "type": "text", "text": "ಪ್ರ / ಸ್ತ್ರ / ಶ್ರ — ಪ್ರೀತಿ, ಸ್ತ್ರೀ, ಶ್ರೀ" }],
+            [{ "type": "text", "text": "ತ್ರ / ದ್ರ / ಬ್ರ / ಕ್ರ / ಗ್ರ — ತ್ರಿಕೋನ, ದ್ರಾಕ್ಷಿ, ಬ್ರಹ್ಮ, ಕ್ರಮ, ಗ್ರಹ" }]
+          ]
+        },
+        {
+          "type": "quote",
+          "id": "d4000000-0000-4000-8000-000000000117",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "«ಸ್ವಾತಂತ್ರ್ಯವು ಕೇವಲ ಪದವಲ್ಲ; ಅದು ಸಂಸ್ಕೃತಿ ಮತ್ತು ಪ್ರಜ್ಞೆಯ ಸಂಗಮ.» — ಪರೀಕ್ಷಾ ಉಲ್ಲೇಖ"
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "id": "d4000000-0000-4000-8000-000000000118",
+          "level": 3,
+          "inlines": [{ "type": "text", "text": "Unicode normalization note" }]
+        },
+        {
+          "type": "paragraph",
+          "id": "d4000000-0000-4000-8000-000000000119",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "NFC sample (preferred storage): ಕ್ಷಮೆ ಜ್ಞಾನ ಪ್ರೀತಿ. Bake-off runners should confirm visual identity after NFC normalization of fixture text."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "d4000000-0000-4000-8000-000000000120",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "NFD comparison sample (explicitly decomposed ka+virama+ssa sequence for shaping labs): ಕ\u0CCDಷಮೆ — if a renderer mishapes this relative to NFC ಕ್ಷಮೆ, record a Q-CONJ defect."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "d4000000-0000-4000-8000-000000000121",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Numerals in context: ಅಧ್ಯಾಯ ೧೨, ಪುಟ ೧೨೮, ವರ್ಷ ೨೦೨೬, ಮತ್ತು Arabic 12 / 128 / 2026."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "d4000000-0000-4000-8000-000000000122",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Closing sentence with multiple clusters in one line: ಶ್ರೀಮತಿ ಲಕ್ಷ್ಮಿ ಅವರು ವ್ಯಾಕರಣ ಮತ್ತು ಸ್ವಾತಂತ್ರ್ಯದ ಬಗ್ಗೆ ಪ್ರಜ್ಞಾಪೂರ್ವಕ ಚರ್ಚೆ ನಡೆಸಿದರು."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backMatter": [],
+  "assets": [],
+  "styles": { "paragraphStyles": [], "characterStyles": [] },
+  "theme": { "id": "default", "name": "Default" },
+  "typography": {
+    "bodyFontFamily": "",
+    "headingFontFamily": "",
+    "bodySizePt": 11,
+    "lineHeight": 1.4
+  },
+  "publishing": { "intendedOutputs": ["epub", "pdf", "html"] }
+}

@@ -28,7 +28,7 @@ See also `docs/FOUNDATION-READINESS-REPORT.md` and `docs/IMPLEMENTATION-BACKLOG.
 
 ## Pending decisions
 
-- Final PDF renderer after Typst/pdf-lib/Chromium bake-off
+- Final PDF renderer after Typst/pdf-lib/Chromium bake-off (plan + multilingual fixtures: `docs/PDF_RENDERER_BAKEOFF_PLAN.md`; **selection still PENDING**)
 - Exact Temurin (or other OpenJDK) version, architectures, and whether `jlink` is used (strategy is Accepted in ADR-0005)
 - Bundled-font policy
 - Contributor agreement mechanism (CLA/DCO)
