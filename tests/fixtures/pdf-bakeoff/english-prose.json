@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "title": "Morning Light on the River",
+    "subtitle": "A short English publishing fixture",
+    "authors": ["Elena Marquez"],
+    "contributors": ["Sam Okonkwo"],
+    "language": "en",
+    "identifier": "urn:openbook:fixture:pdf-bakeoff:english-prose",
+    "publisher": "OpenBook Fixture Press",
+    "publishedAt": "2026-09-04",
+    "copyright": "Copyright 2026 OpenBook fixtures (test material).",
+    "description": "English-only Book Model fixture for PDF bake-off: headings, long paragraphs, lists, quotations, and numerals.",
+    "subjects": ["fiction", "fixture"],
+    "rights": "Apache-2.0 test fixture; not a published work."
+  },
+  "frontMatter": [
+    {
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "kind": "front",
+      "role": "preface",
+      "title": "Preface",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "id": "a1000000-0000-4000-8000-000000000011",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "This fixture exists so OpenBook can compare PDF renderers against realistic English prose without committing to a renderer. Page geometry is not encoded here."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "a1000000-0000-4000-8000-000000000101",
+      "kind": "main",
+      "role": "chapter",
+      "title": "Chapter 1 — The Landing",
+      "blocks": [
+        {
+          "type": "heading",
+          "id": "a1000000-0000-4000-8000-000000000111",
+          "level": 2,
+          "inlines": [{ "type": "text", "text": "Before the fog lifted" }]
+        },
+        {
+          "type": "paragraph",
+          "id": "a1000000-0000-4000-8000-000000000112",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "At 6:15 a.m. on 3 September 2026, Mira counted 47 wooden steps down to the quay. The river smelled of wet rope and coffee. She carried a notebook with 128 blank pages and a pencil marked No. 2."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "a1000000-0000-4000-8000-000000000113",
+          "inlines": [
+            { "type": "text", "text": "She told herself three rules: " },
+            { "type": "emphasis", "children": [{ "type": "text", "text": "observe first" }] },
+            { "type": "text", "text": ", " },
+            { "type": "strong", "children": [{ "type": "text", "text": "write second" }] },
+            { "type": "text", "text": ", and never invent a page layout while drafting." }
+          ]
+        },
+        {
+          "type": "quote",
+          "id": "a1000000-0000-4000-8000-000000000114",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "\"Stories keep their shape when the typesetter is honest,\" her editor had said. \"Typography is a servant, not the author.\""
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "a1000000-0000-4000-8000-000000000115",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "The ferry schedule listed departures at 07:00, 07:30, 08:00, 09:15, and 12:45. Ticket prices were $3.50 for walkers and $12.00 for bicycles. Mira paid with a card ending in 4419 and kept the receipt numbered 908877."
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "id": "a1000000-0000-4000-8000-000000000116",
+          "ordered": true,
+          "items": [
+            [{ "type": "text", "text": "Check the tide chart for the morning swell." }],
+            [{ "type": "text", "text": "Interview the harbour master before noon." }],
+            [{ "type": "text", "text": "Draft 1,200 words without opening any PDF preview." }]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "a1000000-0000-4000-8000-000000000117",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "By late afternoon the fog had thinned into pale ribbons. Gulls argued over a crate of fish. Mira wrote until her hand ached, then numbered her pages 1 through 19. She closed the notebook and walked home along a road that was 2.4 kilometres long, humming a tune she could not name."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "id": "a1000000-0000-4000-8000-000000000118",
+          "level": 3,
+          "inlines": [{ "type": "text", "text": "Notes for later" }]
+        },
+        {
+          "type": "list",
+          "id": "a1000000-0000-4000-8000-000000000119",
+          "ordered": false,
+          "items": [
+            [{ "type": "text", "text": "Describe the sound of the gangplank." }],
+            [{ "type": "text", "text": "Confirm spelling of the ferry company name." }],
+            [{ "type": "text", "text": "Keep numerals as Arabic digits for this English fixture." }]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a1000000-0000-4000-8000-000000000201",
+      "kind": "main",
+      "role": "chapter",
+      "title": "Chapter 2 — A Longer Stretch",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "id": "a1000000-0000-4000-8000-000000000211",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "The next morning she returned with a thermos and a second notebook. She wrote about warehouses painted the colour of old coins, about a boy selling newspapers for 25 cents, and about a woman who swept the pier with a broom missing three bristles. The paragraph that follows is intentionally long so pagination engines have continuous prose to break: the river kept its secrets under a skin of light, and every boat that passed left a soft argument of waves against the pilings, and Mira listened until the arguments became a single low chord, and she wrote that chord into words as carefully as she could, knowing that later a publishing engine—not this Book Model—would decide where the pages turned."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "a1000000-0000-4000-8000-000000000212",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "She ended the chapter with a plain sentence. Night came. The lamps numbered 1 to 12 lit one after another along the quay."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backMatter": [
+    {
+      "id": "a1000000-0000-4000-8000-000000000301",
+      "kind": "back",
+      "role": "about-author",
+      "title": "About the author",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "id": "a1000000-0000-4000-8000-000000000311",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Elena Marquez is a fictional author invented for OpenBook PDF bake-off fixtures."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assets": [],
+  "styles": { "paragraphStyles": [], "characterStyles": [] },
+  "theme": { "id": "default", "name": "Default" },
+  "typography": {
+    "bodyFontFamily": "",
+    "headingFontFamily": "",
+    "bodySizePt": 11,
+    "lineHeight": 1.4
+  },
+  "publishing": { "intendedOutputs": ["epub", "pdf", "html"] }
+}

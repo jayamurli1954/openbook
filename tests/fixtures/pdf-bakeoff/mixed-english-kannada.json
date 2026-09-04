@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "title": "Two Shores / ಎರಡು ದಡಗಳು",
+    "subtitle": "Mixed English and Kannada publishing fixture",
+    "authors": ["Priya Santos", "ಪ್ರಿಯಾ ಸಾಂಟೋಸ್"],
+    "contributors": [],
+    "language": "en",
+    "identifier": "urn:openbook:fixture:pdf-bakeoff:mixed-english-kannada",
+    "publisher": "OpenBook Fixture Press",
+    "publishedAt": "2026-09-04",
+    "copyright": "Copyright 2026 OpenBook fixtures (test material).",
+    "description": "Mixed-script Book Model fixture: English and Kannada in the same work — headings, paragraphs, lists, quotations, and numerals.",
+    "subjects": ["multilingual", "fixture"],
+    "rights": "Apache-2.0 test fixture; not a published work."
+  },
+  "frontMatter": [
+    {
+      "id": "c3000000-0000-4000-8000-000000000001",
+      "kind": "front",
+      "role": "introduction",
+      "title": "Introduction / ಪರಿಚಯ",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "id": "c3000000-0000-4000-8000-000000000011",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "This book switches between English and Kannada in the same chapter. A PDF renderer must keep both scripts intact without corrupting either. ಈ ಪುಸ್ತಕದಲ್ಲಿ ಇಂಗ್ಲಿಷ್ ಮತ್ತು ಕನ್ನಡ ಒಂದೇ ಅಧ್ಯಾಯದಲ್ಲಿ ಬರುತ್ತವೆ."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "c3000000-0000-4000-8000-000000000101",
+      "kind": "main",
+      "role": "chapter",
+      "title": "Chapter 1 — Bridge Day / ಸೇತುವೆಯ ದಿನ",
+      "blocks": [
+        {
+          "type": "heading",
+          "id": "c3000000-0000-4000-8000-000000000111",
+          "level": 2,
+          "inlines": [{ "type": "text", "text": "Morning notes / ಬೆಳಗಿನ ಟಿಪ್ಪಣಿಗಳು" }]
+        },
+        {
+          "type": "paragraph",
+          "id": "c3000000-0000-4000-8000-000000000112",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "At 7:00 a.m. Anika met her cousin near the old bridge. ಅನಿಕಾ ತನ್ನ ಚಿಕ್ಕಮ್ಮನ ಮಗಳನ್ನು ಹಳೆಯ ಸೇತುವೆಯ ಬಳಿ ಭೇಟಿಯಾದಳು. They counted 12 arches and wrote the number ೧೨ in both scripts."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "c3000000-0000-4000-8000-000000000113",
+          "inlines": [
+            { "type": "text", "text": "She said, " },
+            { "type": "emphasis", "children": [{ "type": "text", "text": "listen first" }] },
+            { "type": "text", "text": " — " },
+            { "type": "strong", "children": [{ "type": "text", "text": "ಮೊದಲು ಕೇಳು" }] },
+            { "type": "text", "text": " — then write." }
+          ]
+        },
+        {
+          "type": "quote",
+          "id": "c3000000-0000-4000-8000-000000000114",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "\"A bilingual page is not two books stapled together.\" — «ದ್ವಿಭಾಷಾ ಪುಟವು ಎರಡು ಪುಸ್ತಕಗಳನ್ನು ಜೋಡಿಸಿದ್ದಲ್ಲ.»"
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "id": "c3000000-0000-4000-8000-000000000115",
+          "ordered": true,
+          "items": [
+            [
+              { "type": "text", "text": "Photograph the bridge at 08:30 / ಸೇತುವೆಯ ಛಾಯಾಚಿತ್ರ ೦೮:೩೦ಕ್ಕೆ." }
+            ],
+            [
+              { "type": "text", "text": "Interview one shopkeeper / ಒಬ್ಬ ಅಂಗಡಿ ಮಾಲೀಕರನ್ನು ಸಂದರ್ಶಿಸಿ." }
+            ],
+            [
+              { "type": "text", "text": "Draft 800 words in mixed script / ಮಿಶ್ರ ಲಿಪಿಯಲ್ಲಿ ೮೦೦ ಪದಗಳ ಕರಡು." }
+            ]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "id": "c3000000-0000-4000-8000-000000000116",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "Prices on the stall sign: tea ₹20, coffee ₹35, bun ₹12.50. English label: Tea 20, Coffee 35, Bun 12.50. The receipt said No. 4419 / ರಶೀದಿ ಸಂಖ್ಯೆ ೪೪೧೯."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "id": "c3000000-0000-4000-8000-000000000117",
+          "level": 3,
+          "inlines": [{ "type": "text", "text": "Later / ನಂತರ" }]
+        },
+        {
+          "type": "paragraph",
+          "id": "c3000000-0000-4000-8000-000000000118",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "They walked 2.4 km home. ಅವರು ೨.೪ ಕಿ.ಮೀ. ನಡೆದು ಮನೆಗೆ ಹೋದರು. Night lamps numbered 1–12 / ದೀಪಗಳು ೧–೧೨."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "backMatter": [],
+  "assets": [],
+  "styles": { "paragraphStyles": [], "characterStyles": [] },
+  "theme": { "id": "default", "name": "Default" },
+  "typography": {
+    "bodyFontFamily": "",
+    "headingFontFamily": "",
+    "bodySizePt": 11,
+    "lineHeight": 1.4
+  },
+  "publishing": { "intendedOutputs": ["epub", "pdf", "html"] }
+}

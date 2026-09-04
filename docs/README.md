@@ -9,6 +9,7 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [Conversation-to-knowledge policy](governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md) | How chat becomes repository knowledge |
 | [Conversation archive](conversations/) | Level-1 records; not specifications |
 | [Publishing engine scorecard](PUBLISHING_ENGINE_TECHNOLOGY_SCORECARD.md) | Technology/license evaluation baseline |
+| [PDF renderer bake-off plan](PDF_RENDERER_BAKEOFF_PLAN.md) | Evaluation methodology + fixtures; **no winner selected** |
 | [Foundation readiness report](FOUNDATION-READINESS-REPORT.md) | Current gate assessment |
 | [Implementation backlog](IMPLEMENTATION-BACKLOG.md) | Future work; not an authorization to code |
 
