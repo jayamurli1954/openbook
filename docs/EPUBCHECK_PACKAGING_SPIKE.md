@@ -3,7 +3,7 @@
 - **Document:** `docs/EPUBCHECK_PACKAGING_SPIKE.md`
 - **Status:** Complete / Evaluated
 - **Date:** 2026-09-04
-- **Governing Decision:** [ADR-0005](file:///d:/MyProjects/openbook/docs/conversations/2026-09-03-epubcheck-java-tauri.md) — EPUBCheck Bundling, Java Runtime Isolation & Compliance
+- **Governing Decision:** [ADR-0005](conversations/2026-09-03-epubcheck-java-tauri.md) — EPUBCheck Bundling, Java Runtime Isolation & Compliance
 - **Engineering Agent:** Antigravity
 
 ---
@@ -26,7 +26,7 @@ ValidatorService adapter boundary
 
 ## 2. ADR-0005 Relationship & Governance
 
-[ADR-0005](file:///d:/MyProjects/openbook/docs/conversations/2026-09-03-epubcheck-java-tauri.md) is already Accepted on `main` and establishes:
+[ADR-0005](conversations/2026-09-03-epubcheck-java-tauri.md) is already Accepted on `main` and establishes:
 1. Official EPUBCheck is the authoritative EPUB 3.3 conformance validator (unofficial JavaScript/WASM ports are rejected as authoritative validators).
 2. End users must **not** be required to install Java manually on their machines (`JAVA_HOME` dependency rejected).
 3. The preferred production strategy is an isolated subprocess invoking a private bundled runtime.
@@ -162,20 +162,20 @@ An empirical investigation of the EPUBCheck 5.3.0 CLI behavior revealed critical
    - Writing directly to a file via `-j <path>` generates a pristine, complete JSON document conforming to the EPUBCheck schema.
    - Stdout/stderr during `-j` execution receive only high-level status messages (`EPUBCheck completed`, `Check finished with errors`), completely isolating the JSON file from text pollution.
 3. **Adapter Strategy:**
-   - The adapter generates a temporary file path for `-j <tempFile>`, executes the process, reads the parsed JSON, and deletes the temporary file. This ensures 100% deterministic report generation without fragile regex scraping of console streams.
+   - The adapter generates a temporary file path for `-j <tempFile>`, executes the process, reads the parsed JSON, and deletes the temporary file. This provides structured diagnostic report extraction without fragile regex scraping of console streams.
 
 ---
 
 ## 9. Validation Smoke Tests
 
-The minimal adapter proof in [`packages/validator`](file:///d:/MyProjects/openbook/packages/validator) was tested against two validation-spike fixtures:
+The minimal adapter proof in [`packages/validator`](../packages/validator) was tested against two validation-spike fixtures:
 
-### 9.1 Valid EPUB 3.3 Fixture ([`valid-minimal.epub`](file:///d:/MyProjects/openbook/tests/fixtures/validation-spike/valid-minimal.epub))
+### 9.1 Valid EPUB 3.3 Fixture ([`valid-minimal.epub`](../tests/fixtures/validation-spike/valid-minimal.epub))
 - **Structure:** `mimetype`, `META-INF/container.xml`, `EPUB/package.opf`, `EPUB/nav.xhtml`, `EPUB/chapter1.xhtml`.
 - **Exit Code:** `0`.
 - **Validation Result:** `isValid: true`, `totalErrors: 0`, `totalFatal: 0`, `totalWarnings: 0`.
 
-### 9.2 Deliberately Invalid EPUB Fixture ([`invalid-missing-nav.epub`](file:///d:/MyProjects/openbook/tests/fixtures/validation-spike/invalid-missing-nav.epub))
+### 9.2 Deliberately Invalid EPUB Fixture ([`invalid-missing-nav.epub`](../tests/fixtures/validation-spike/invalid-missing-nav.epub))
 - **Faults Injected:** Missing nav element declaration in manifest, broken spine itemref `nonexistent-item`, invalid UUID format.
 - **Exit Code:** `1`.
 - **Validation Result:** `isValid: false`, `totalErrors: 3`, `totalWarnings: 1`.
