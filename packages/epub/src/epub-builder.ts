@@ -11,6 +11,7 @@ import type {
   EpubPackageMetadata,
 } from "./types.js";
 import { serializeSectionDocument } from "./xhtml-serializer.js";
+import { buildEpubArchive } from "./archive/epub-archive.js";
 
 const DEFAULT_DETERMINISTIC_TIMESTAMP = "2026-01-01T00:00:00Z";
 
@@ -281,3 +282,19 @@ export function buildEpubPackage(
     spine,
   };
 }
+
+/**
+ * Compiles a canonical Book Model into a complete, deterministic EPUB 3.3 binary (.epub) as a Uint8Array.
+ *
+ * Internally runs the two-stage pipeline:
+ * 1. buildEpubPackage(book, options) -> EpubPackage (content projection)
+ * 2. buildEpubArchive(pkg, options)   -> Uint8Array  (OCF ZIP packaging)
+ */
+export function buildEpub(
+  book: Readonly<Book>,
+  options?: EpubBuildOptions,
+): Uint8Array {
+  const pkg = buildEpubPackage(book, options);
+  return buildEpubArchive(pkg, { archiveDate: options?.modifiedDate });
+}
+
