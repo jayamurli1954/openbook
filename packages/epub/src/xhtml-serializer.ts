@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ContentBlock, InlineSpan, StructuralSection } from "@openbook/book-model";
+import { UnsupportedContentError } from "./types.js";
 import { escapeXmlAttr, escapeXmlText } from "./xml-utils.js";
 
 /**
@@ -53,13 +54,8 @@ export function serializeBlock(block: ContentBlock): string {
       return `      <${tag}${idAttr}>\n${items}\n      </${tag}>`;
     }
 
-    case "image": {
-      const caption =
-        block.caption.length > 0
-          ? `\n        <figcaption>${serializeInlines(block.caption)}</figcaption>`
-          : "";
-      return `      <figure${idAttr}>\n        <img src="../assets/${escapeXmlAttr(block.assetId)}" alt="" />${caption}\n      </figure>`;
-    }
+    case "image":
+      throw new UnsupportedContentError("image", block.id);
 
     default:
       return "";

@@ -8,6 +8,7 @@ export type {
   EpubPackageMetadata,
 } from "./types.js";
 
+export { UnsupportedContentError } from "./types.js";
 export { buildEpubPackage } from "./epub-builder.js";
 export { escapeXmlAttr, escapeXmlText } from "./xml-utils.js";
 export { serializeSectionDocument } from "./xhtml-serializer.js";

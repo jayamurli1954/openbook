@@ -57,3 +57,23 @@ export interface EpubBuildOptions {
    */
   modifiedDate?: string | Date;
 }
+
+/**
+ * Thrown when encountering content block types that are not supported in Gate 1
+ * (e.g. image blocks before the asset pipeline is authorized).
+ */
+export class UnsupportedContentError extends Error {
+  readonly blockType: string;
+  readonly blockId?: string;
+
+  constructor(blockType: string, blockId?: string, message?: string) {
+    super(
+      message ??
+        `Unsupported content block: "${blockType}"${blockId ? ` (id: "${blockId}")` : ""} is not supported in EPUB Gate 1. Asset packaging is deferred.`,
+    );
+    this.name = "UnsupportedContentError";
+    this.blockType = blockType;
+    this.blockId = blockId;
+  }
+}
+

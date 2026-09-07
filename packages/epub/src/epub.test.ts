@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createBook, type StructuralSection } from "@openbook/book-model";
 import { buildEpubPackage } from "./epub-builder.js";
+import { UnsupportedContentError } from "./types.js";
 
 describe("@openbook/epub: EPUB 3.3 Engine Gate 1", () => {
   it("generates minimum conforming EPUB 3.3 package structure", () => {
@@ -411,5 +412,46 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1", () => {
 
     const opf = String(pkg.files.find((f) => f.path === "EPUB/package.opf")?.content);
     assert.doesNotMatch(opf, /toc="ncx"/, "Spine must not declare toc attribute for NCX");
+  });
+
+  it("explicitly and deterministically rejects Book containing unsupported image blocks", () => {
+    const book = createBook({
+      title: "Book With Image",
+      language: "en",
+      withOpeningChapter: false,
+    });
+
+    book.chapters = [
+      {
+        id: "ch-img",
+        kind: "main",
+        role: "chapter",
+        title: "Chapter With Image",
+        blocks: [
+          {
+            type: "paragraph",
+            id: "p-before",
+            inlines: [{ type: "text", text: "Before image." }],
+          },
+          {
+            type: "image",
+            id: "img-1",
+            assetId: "asset-cover-art",
+            caption: [{ type: "text", text: "Cover illustration" }],
+          },
+        ],
+      },
+    ];
+
+    assert.throws(
+      () => buildEpubPackage(book),
+      (err: unknown) => {
+        assert.ok(err instanceof UnsupportedContentError, "Error must be instance of UnsupportedContentError");
+        assert.equal(err.blockType, "image");
+        assert.equal(err.blockId, "img-1");
+        assert.match(err.message, /image.*not supported in EPUB Gate 1/i);
+        return true;
+      },
+    );
   });
 });
