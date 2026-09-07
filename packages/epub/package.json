@@ -10,12 +10,18 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/epub.test.js"
   },
   "dependencies": {
-    "@openbook/book-model": "*"
+    "@openbook/book-model": "*",
+    "fflate": "^0.8.3"
+  },
+  "devDependencies": {
+    "@openbook/validator": "*"
   }
 }

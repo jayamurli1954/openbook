@@ -59,6 +59,18 @@ export interface EpubBuildOptions {
 }
 
 /**
+ * Options for OCF ZIP archive packaging.
+ */
+export interface EpubArchiveOptions {
+  /**
+   * Override timestamp for archive entries.
+   * Defaults to pkg.metadata.modified.
+   * Never calls the system clock / new Date().
+   */
+  archiveDate?: string | Date;
+}
+
+/**
  * Thrown when encountering content block types that are not supported in Gate 1
  * (e.g. image blocks before the asset pipeline is authorized).
  */

@@ -69,7 +69,7 @@ function getSectionSemantics(section: StructuralSection): { epubType: string; ro
   switch (section.kind) {
     case "front":
       if (section.role === "title-page") {
-        return { epubType: "frontmatter titlepage", role: "doc-titlepage" };
+        return { epubType: "frontmatter titlepage" };
       }
       if (section.role === "dedication") {
         return { epubType: "frontmatter dedication", role: "doc-dedication" };

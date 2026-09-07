@@ -30,11 +30,8 @@ export function serializeNavDocument(options: NavDocumentOptions): string {
     })
     .join("\n");
 
-  // 2. Generate Landmarks based solely on supported Book Model semantics
+  // 2. Generate Landmarks based solely on supported Book Model semantics (spine items only)
   const landmarkEntries: string[] = [];
-
-  // TOC landmark itself is always supported within this document
-  landmarkEntries.push(`        <li><a epub:type="toc" href="#toc">Table of Contents</a></li>`);
 
   // Title page landmark (if a section has role 'title-page')
   const titlePageEntry = options.sections.find(
