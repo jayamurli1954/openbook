@@ -8,11 +8,13 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "test": "tsc -p tsconfig.domain.json && node --test dist-domain/semanticDocumentBoundary.test.js",
     "tauri": "tauri",
     "tauri:build": "tauri build"
   },
   "dependencies": {
     "@openbook/book-model": "*",
+    "@openbook/semantic-document": "*",
     "@tauri-apps/api": "2.11.1",
     "@tauri-apps/plugin-sql": "2.4.1",
     "react": "19.2.8",

@@ -6,6 +6,8 @@
  */
 import { useEffect, useState } from "react";
 import { BOOK_MODEL_SCHEMA_VERSION } from "@openbook/book-model";
+import { SEMANTIC_DOCUMENT_SCHEMA_VERSION } from "@openbook/semantic-document";
+import { createSemanticDocument, projectSemanticDocumentToBook } from "./domain/semanticDocumentBoundary";
 import { proveSqliteConnectivity } from "./sqliteConnectivity";
 import "./App.css";
 
@@ -14,6 +16,8 @@ type Status = "idle" | "running" | "ok" | "error";
 export default function App() {
   const [sqliteStatus, setSqliteStatus] = useState<Status>("idle");
   const [sqliteDetail, setSqliteDetail] = useState("Not run yet");
+  const [sdmStatus, setSdmStatus] = useState<Status>("idle");
+  const [sdmDetail, setSdmDetail] = useState("Not run yet");
 
   useEffect(() => {
     let cancelled = false;
@@ -33,12 +37,36 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    setSdmStatus("running");
+    try {
+      const doc = createSemanticDocument({
+        title: "Desktop shell SDM smoke",
+        language: "en",
+        authors: ["OpenBook"],
+      });
+      const result = projectSemanticDocumentToBook(doc);
+      if (!result.ok) {
+        setSdmStatus("error");
+        setSdmDetail(`${result.stage}: ${result.error}`);
+        return;
+      }
+      setSdmStatus("ok");
+      setSdmDetail(
+        `Desktop → SDM v${doc.schemaVersion} → Book v${result.book.schemaVersion} (${result.book.metadata.title})`,
+      );
+    } catch (err) {
+      setSdmStatus("error");
+      setSdmDetail(err instanceof Error ? err.message : String(err));
+    }
+  }, []);
+
   return (
     <main className="shell">
       <h1>OpenBook Studio</h1>
       <p className="lede">
-        Desktop foundation shell (ADR-0007). Book Model is canonical; SQLite is
-        infrastructure only.
+        Desktop foundation shell. Book Model is canonical; Semantic Document is
+        the editor contract; SQLite is infrastructure only.
       </p>
 
       <section>
@@ -57,6 +85,31 @@ export default function App() {
             <dd>Canonical format-neutral domain model (not SQLite)</dd>
           </div>
         </dl>
+      </section>
+
+      <section>
+        <h2>Semantic Document boundary</h2>
+        <dl>
+          <div>
+            <dt>Package</dt>
+            <dd>@openbook/semantic-document</dd>
+          </div>
+          <div>
+            <dt>schemaVersion</dt>
+            <dd>{SEMANTIC_DOCUMENT_SCHEMA_VERSION}</dd>
+          </div>
+          <div>
+            <dt>Path</dt>
+            <dd>Desktop → SDM → Book (in-memory)</dd>
+          </div>
+        </dl>
+        <p className={`status status-${sdmStatus}`} data-testid="sdm-status">
+          {sdmStatus}
+        </p>
+        <p className="detail">{sdmDetail}</p>
+        <p className="note">
+          No editor UI, persistence, or publishing engines in this slice.
+        </p>
       </section>
 
       <section>
