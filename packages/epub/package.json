@@ -1,0 +1,21 @@
+{
+  "name": "@openbook/epub",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure TypeScript EPUB 3.3 engine for OpenBook. Projections from canonical Book Model.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/epub.test.js"
+  },
+  "dependencies": {
+    "@openbook/book-model": "*"
+  }
+}
