@@ -26,7 +26,10 @@
 | PDF generation | Chromium via Puppeteer | HTML/CSS print-to-PDF candidate | Puppeteer Apache-2.0; Chromium distribution has additional third-party components | Mature layout engine; larger footprint and print-layout constraints | **Evaluate** |
 | DTP reference | Scribus | Functional/quality reference; possible external-process integration later | GPL family; exact components require review | Excellent professional DTP reference; avoid casual embedding | **Reference / possible process boundary** |
 | Editor | Tiptap + ProseMirror | Semantic authoring UI | ProseMirror core is MIT; exact Tiptap package/version licenses must be verified | Strong semantic editor architecture | **Preferred, license-scorecard required** |
-| Desktop shell | Tauri 2.x | Desktop application shell/native bridge | License must be verified for exact release | Good fit for local-first desktop architecture | **Preferred, license-scorecard required** |
+| Desktop shell | Tauri **2.11.5** (`@tauri-apps/api` **2.11.1**, CLI **2.11.4**) | Desktop application shell/native bridge | Apache-2.0 OR MIT (exact release recorded in ADR-0007) | Good fit for local-first desktop architecture | **Frozen baseline (ADR-0007)** |
+| UI | React **19.2.8** + `react-dom` **19.2.8** | Desktop WebView UI | MIT | Matches ADR-0004/PROJECT-CONTEXT direction | **Frozen baseline (ADR-0007)** |
+| Language | TypeScript **5.9.3** | Primary product/domain TypeScript | Apache-2.0 | Compatible with existing workspace `^5.8.2` packages | **Frozen baseline (ADR-0007)** |
+| Local DB | SQLite via `tauri-plugin-sql` **2.4.1** (`sqlite`) | Project persistence infrastructure only | Plugin MIT OR Apache-2.0; SQLite public domain | Must not become the Book Model (ADR-0006/0007) | **Frozen baseline (ADR-0007)** |
 | Text shaping | HarfBuzz | Indic/Unicode glyph shaping where required | Permissive open-source licensing; exact bundled version to be recorded | Important for multilingual publishing | **Evaluate / likely foundational native dependency** |
 | Text layout | Pango | Text layout candidate where required | LGPL family; integration boundary requires review | Mature multilingual text layout | **Evaluate carefully** |
 | Image processing | ImageMagick / equivalent | Asset conversion/normalization | License varies by exact component/version; review required | Useful but should remain behind asset adapter | **Evaluate** |
@@ -102,13 +105,22 @@ The Book Model must not depend on EPUB, PDF or renderer-specific structures. Ren
 
 ## Not yet frozen
 
-- PDF renderer
+- PDF renderer (**UNDECIDED**; bake-off plan exists)
 - exact Temurin/Java version, architectures, and whether `jlink` is used (bundling *architecture* is Accepted in ADR-0005; not Frozen)
-- exact Tauri release
 - exact Tiptap package set
 - exact typography/native dependency set
 - font distribution strategy
 - PDF/X and professional print workflow scope
+- frontend bundler exact version (deferred to ADR-0007 next-PR scaffold inventory)
+
+## Frozen by ADR-0007 (desktop baseline only)
+
+- Tauri **2.11.5** / `@tauri-apps/api` **2.11.1** / `@tauri-apps/cli` **2.11.4**
+- React / `react-dom` **19.2.8**
+- TypeScript **5.9.3**
+- SQLite via `tauri-plugin-sql` **2.4.1** (`sqlite`) as persistence infrastructure (not the Book Model)
+
+See `docs/adr/0007-desktop-foundation-technology-baseline-and-freeze-lift.md` for platform scope, package boundaries, and the next-PR freeze-lift hard stops.
 
 ## Gate
 

@@ -39,18 +39,18 @@ It must remain independent of EPUB OPF/manifest/spine structures and independent
 
 ## Preferred technology direction
 
-- Desktop shell: Tauri 2.x
-- Primary product language: TypeScript
-- UI: React
-- Semantic editor: Tiptap/ProseMirror direction
-- Local database: SQLite
-- Native/system layer: Rust selectively
-- Local AI: Ollama
+- Desktop shell: Tauri **2.11.5** (Frozen baseline, ADR-0007); `@tauri-apps/api` **2.11.1**, CLI **2.11.4**
+- Primary product language: TypeScript **5.9.3** (Frozen baseline, ADR-0007)
+- UI: React **19.2.8** / `react-dom` **19.2.8** (Frozen baseline, ADR-0007)
+- Semantic editor: Tiptap/ProseMirror direction (not Frozen)
+- Local database: SQLite via `tauri-plugin-sql` **2.4.1** (`sqlite`) — persistence infrastructure only; **not** the Book Model (ADR-0007)
+- Native/system layer: Rust selectively (within Tauri)
+- Local AI: Ollama (intent only; not authorized by ADR-0007)
 - Cloud AI: optional
 - EPUB generation: OpenBook TypeScript engine
 - HTML generation: OpenBook semantic HTML/CSS engine
-- PDF: renderer adapter; final renderer pending bake-off
-- EPUB validation: official EPUBCheck; bundled/private Java runtime strategy preferred
+- PDF: renderer adapter; final renderer **UNDECIDED** (bake-off pending)
+- EPUB validation: official EPUBCheck; bundled/private Java runtime strategy preferred (ADR-0005; unchanged by ADR-0007)
 
 ## Publishing architecture
 
@@ -100,11 +100,11 @@ AI coding agents should read this file and the relevant ADRs before making mater
 
 ## Current known pending decisions
 
-- Final PDF renderer
+- Final PDF renderer (**UNDECIDED**)
 - Exact Temurin/runtime version, platforms, and `jlink` adoption (bundling *strategy* is Accepted in ADR-0005)
 - Bundled-font policy
 - Contributor agreement mechanism
-- Final dependency versions
+- Exact Tiptap/editor and frontend-bundler versions (desktop shell versions Frozen in ADR-0007)
 - Foundation governance readiness gate (see `docs/FOUNDATION-READINESS-REPORT.md` — not passed)
 
 ## Important existing documents
@@ -113,6 +113,8 @@ AI coding agents should read this file and the relevant ADRs before making mater
 - `docs/adr/0003-apache-2-license-and-contributor-protection.md`
 - `docs/adr/0004-publishing-engine-technology-architecture.md`
 - `docs/adr/0005-epubcheck-bundling-java-runtime-isolation.md`
+- `docs/adr/0006-book-model-executable-specification.md`
+- `docs/adr/0007-desktop-foundation-technology-baseline-and-freeze-lift.md`
 - `docs/governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md`
 - `docs/conversations/README.md`
 - `docs/conversations/2026-09-03-epubcheck-java-tauri.md`

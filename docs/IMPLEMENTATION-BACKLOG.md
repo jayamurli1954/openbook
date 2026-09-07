@@ -2,17 +2,17 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-09-03
-- **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not select a final PDF renderer. Do not replace official EPUBCheck. Do not start Tauri/React until a freeze-lift ADR names that slice.
+- **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not select a final PDF renderer. Do not replace official EPUBCheck. Do not start Tauri/React/SQLite implementation except within the ADR-0007 next-PR freeze-lift hard stops.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`.
 
 ```text
 FOUNDATION
-├── Project scaffolding          [gate: freeze-lift ADR; NOT STARTED on main]
-├── Tauri 2.x                    [ACCEPTED direction; license-scorecard + exact version PENDING]
-├── React + TypeScript           [ACCEPTED direction; exact versions PENDING]
-├── SQLite                       [ACCEPTED direction; schema PENDING]
-├── Book Model                   [ACCEPTED principle; executable spec NOT STARTED on main]
+├── Project scaffolding          [gate: ADR-0007 freeze-lift; next PR only — NOT STARTED on main]
+├── Tauri 2.11.5                 [FROZEN baseline in ADR-0007; app scaffold NOT STARTED]
+├── React 19.2.8 + TS 5.9.3      [FROZEN baseline in ADR-0007; UI NOT STARTED]
+├── SQLite (tauri-plugin-sql 2.4.1) [FROZEN technology in ADR-0007; schema/impl NOT STARTED]
+├── Book Model                   [ACCEPTED; executable `@openbook/book-model` on main (ADR-0006)]
 │
 PUBLISHING
 ├── EPUB engine                  [ACCEPTED: OpenBook TypeScript EPUB 3.3; NOT STARTED]
@@ -48,7 +48,7 @@ Do not execute this list in the current audit.
 2. **CI** that runs those tests.
 3. **PDF bake-off plan + fixtures** (no production renderer).
 4. **EPUBCheck packaging spike** (checksums, `jlink` measurement) behind `ValidatorService` — still not a desktop app.
-5. **Desktop shell freeze-lift** (Tauri/React/SQLite) only after Product Owner accepts the governance gate remaining items they consider mandatory.
+5. **Desktop shell freeze-lift** — governance baseline recorded in **ADR-0007**. Next engineering PR may scaffold empty Tauri/React/SQLite shell only within ADR-0007 §6 hard stops (no PDF/engines/AI/EPUBCheck redesign).
 
 ## Explicitly out of order
 
