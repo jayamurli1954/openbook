@@ -3,12 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "OpenBook Studio desktop shell (Tauri 2 + React). Foundation scaffold only — no editor, engines, or production persistence.",
+  "description": "OpenBook Studio desktop shell (Tauri 2 + React). First Tiptap editor surface; no publishing engines or production persistence schema.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "tsc -p tsconfig.domain.json && node --test dist-domain/semanticDocumentBoundary.test.js",
+    "test": "tsc -p tsconfig.domain.json && node --test dist-domain/semanticDocumentBoundary.test.js dist-domain/editorAdapter.test.js",
     "tauri": "tauri",
     "tauri:build": "tauri build"
   },
@@ -17,6 +17,11 @@
     "@openbook/semantic-document": "*",
     "@tauri-apps/api": "2.11.1",
     "@tauri-apps/plugin-sql": "2.4.1",
+    "@tiptap/core": "3.31.3",
+    "@tiptap/extension-link": "3.31.3",
+    "@tiptap/pm": "3.31.3",
+    "@tiptap/react": "3.31.3",
+    "@tiptap/starter-kit": "3.31.3",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

@@ -1,0 +1,58 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 1 },
+      "content": [{ "type": "text", "text": "ಮೊದಲ ಅಧ್ಯಾಯ" }]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        { "type": "text", "text": "ಇದು ಕನ್ನಡ ಪ್ಯಾರಾಗ್ರಾಫ್. " },
+        { "type": "text", "marks": [{ "type": "italic" }], "text": "ಗುರುತು" },
+        { "type": "text", "text": " ಮತ್ತು " },
+        { "type": "text", "marks": [{ "type": "bold" }], "text": "ದಪ್ಪ" },
+        { "type": "text", "text": " ಪಠ್ಯ. " },
+        {
+          "type": "text",
+          "marks": [{ "type": "link", "attrs": { "href": "https://example.org/kn" } }],
+          "text": "ಕೊಂಡಿ"
+        },
+        { "type": "text", "text": "." }
+      ]
+    },
+    {
+      "type": "bulletList",
+      "content": [
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [{ "type": "text", "text": "ಒಂದು" }]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [{ "type": "text", "text": "ಎರಡು" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [{ "type": "text", "text": "ಕನ್ನಡ ಉಲ್ಲೇಖ." }]
+        }
+      ]
+    }
+  ]
+}

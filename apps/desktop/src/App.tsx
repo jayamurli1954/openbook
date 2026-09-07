@@ -2,12 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  * Minimal OpenBook desktop shell UI.
- * Hard stops: no editor, engines, AI, publishing workflow, or production DB schema.
+ * Hard stops: no engines, AI, publishing workflow, or production DB schema.
+ * Editor transport is Tiptap JSON only; Book Model remains canonical via SDM.
  */
 import { useEffect, useState } from "react";
 import { BOOK_MODEL_SCHEMA_VERSION } from "@openbook/book-model";
 import { SEMANTIC_DOCUMENT_SCHEMA_VERSION } from "@openbook/semantic-document";
 import { createSemanticDocument, projectSemanticDocumentToBook } from "./domain/semanticDocumentBoundary";
+import EditorSurface from "./EditorSurface";
 import { proveSqliteConnectivity } from "./sqliteConnectivity";
 import "./App.css";
 
@@ -108,9 +110,11 @@ export default function App() {
         </p>
         <p className="detail">{sdmDetail}</p>
         <p className="note">
-          No editor UI, persistence, or publishing engines in this slice.
+          No persistence or publishing engines in this slice.
         </p>
       </section>
+
+      <EditorSurface />
 
       <section>
         <h2>SQLite connectivity</h2>
