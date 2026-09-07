@@ -2,8 +2,8 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-09-07
-- **Reconciled to:** `main` after PR #16 (`b749a72`)
-- **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not select a final PDF renderer. Do not replace official EPUBCheck. Do not expand beyond authorized editor slices without a new authorization.
+- **Reconciled to:** `main` after PR #17 (`452fda0`)
+- **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not select a final PDF renderer. Do not replace official EPUBCheck. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0008-editor-technology-tiptap-prosemirror.md`.
 
@@ -18,11 +18,21 @@ FOUNDATION
 ├── Semantic Document Model      [DONE on main: `@openbook/semantic-document` (PR #11)]
 ├── Desktop SDM boundary         [DONE on main: in-memory Desktop → SDM → Book (PR #12)]
 │
-PUBLISHING
-├── EPUB engine                  [ACCEPTED: OpenBook TypeScript EPUB 3.3; NOT STARTED]
+EDITOR & PERSISTENCE
+├── Editor technology decision   [DONE: ADR-0008 — Tiptap/ProseMirror selected; OSS versions Frozen]
+├── Tiptap / ProseMirror         [DONE on main: ADR-0008 pins installed in PR #14]
+├── EditorAdapter (PM ↔ SDM)     [DONE on main: PR #14 bidirectional TipTap JSON ↔ SDM]
+├── First editor surface         [DONE on main: PR #14 minimal Tiptap UI + EN/KN round-trips]
+├── Book/chapter operations      [DONE on main: in-memory multi-chapter session (PR #15)]
+├── Project persistence arch.    [DONE on main: ProjectPersistence + SQLite DTOs (PR #16)]
+├── Save/Open project workflow   [DONE on main: session ↔ ProjectPersistence UI (PR #17)]
+├── semantic document model      [DONE (PR #11); maps to Book Model]
+│
+PUBLISHING (NEXT ARCHITECTURAL DECISION POINTS)
+├── EPUB engine                  [ACCEPTED direction: OpenBook TypeScript EPUB 3.3; NOT STARTED]
 ├── HTML engine                  [ACCEPTED direction; NOT STARTED — do not stub]
 ├── PDF renderer bake-off plan   [DONE: docs/PDF_RENDERER_BAKEOFF_PLAN.md + multilingual fixtures (PR #6)]
-├── PDF renderer selection       [PENDING / UNDECIDED]
+├── PDF renderer selection       [PENDING / UNDECIDED — requires bake-off execution & selection ADR]
 ├── PDF renderer implementation  [NOT STARTED]
 │
 VALIDATION
@@ -31,17 +41,7 @@ VALIDATION
 ├── Java runtime packaging       [SPIKE evaluated (`jlink` evidence in docs/EPUBCHECK_PACKAGING_SPIKE.md); exact Temurin/`jlink` production freeze still PENDING]
 ├── Book Doctor                  [ACCEPTED product concept; NOT STARTED]
 │
-EDITOR
-├── Editor technology decision   [DONE: ADR-0008 — Tiptap/ProseMirror selected; OSS versions Frozen]
-├── Tiptap / ProseMirror         [DONE on main: ADR-0008 pins installed in PR #14]
-├── EditorAdapter (PM ↔ SDM)     [DONE on main: PR #14 bidirectional TipTap JSON ↔ SDM]
-├── First editor surface         [DONE on main: PR #14 minimal Tiptap UI + EN/KN round-trips]
-├── Book/chapter operations      [DONE on main: in-memory multi-chapter session (PR #15)]
-├── Project persistence arch.    [DONE on main: ProjectPersistence + SQLite DTOs (PR #16)]
-├── Save/Open project workflow   [IN PROGRESS / this PR: session ↔ ProjectPersistence UI]
-├── semantic document model      [DONE (PR #11); maps to Book Model]
-│
-DTP
+DTP & TYPOGRAPHY
 ├── page model                   [requirements exist; NOT STARTED]
 ├── typography                   [HarfBuzz/Pango/fonts PENDING; NOT STARTED]
 ├── layout                       [NOT STARTED]
@@ -66,10 +66,40 @@ Status against the original ordered list:
 8. **Editor technology evaluation and decision** — **DONE** (ADR-0008).
 9. **First Tiptap editor implementation** — **DONE** (PR #14; EditorAdapter + minimal UI).
 10. **Editor book/chapter operations** — **DONE** (PR #15; in-memory select/create/rename/delete; no persistence).
-11. **SQLite project persistence architecture** — **DONE** (PR #16: `ProjectPersistence` contract, minimal schema, DTOs, test driver).
-12. **Save/Open project workflow** — **authorized slice** (PR #17: editor session ↔ ProjectPersistence; no autosave/cloud/import-export).
+11. **SQLite project persistence architecture** — **DONE** (PR #16: `ProjectPersistence` contract, minimal schema, DTOs, atomic save transactions, foreign keys, test driver).
+12. **Save/Open project workflow** — **DONE** (PR #17: session ↔ `ProjectPersistence` UI, English & Kannada round-trip coverage, persistence error reporting).
 
-Remaining foundation / product work (not authorized by backlog presence alone): autosave; cloud sync; filesystem project packages; EPUB/HTML/PDF engines; PDF renderer choice and implementation; DTP; AI/Ollama.
+**Current Test Suite State:**
+- **58 / 58 automated tests passing** across all 4 monorepo packages:
+  - `@openbook/book-model`: 11 tests passing
+  - `@openbook/validator`: 3 tests passing
+  - `@openbook/semantic-document`: 8 tests passing
+  - `@openbook/desktop`: 36 tests passing (19 domain + 11 persistence + 6 workflow)
+
+## Next architectural decision points
+
+The editor-to-persistence foundation is now established:
+`Tiptap → EditorAdapter → SemanticDocument → Desktop Domain → Book Model → ProjectPersistence → SQLite`
+
+The next engineering slices must address one of the following distinct architectural decision points (none of which are authorized yet):
+
+1. **EPUB 3.3 engine architecture & implementation:**
+   - Defining the OpenBook TypeScript EPUB 3.3 engine package (`@openbook/epub` or similar).
+   - Reading canonical `Book` and generating compliant EPUB 3.3 packages validated by `ValidatorService`.
+   - Must NOT write EPUB fields back into the Book Model.
+2. **HTML engine architecture & implementation:**
+   - Format-neutral projection from canonical `Book` to clean semantic HTML.
+3. **PDF renderer bake-off execution & selection decision:**
+   - Evaluating candidates (Typst, Chromium/Paged.js, pdf-lib) against the existing multilingual fixtures (`docs/PDF_RENDERER_BAKEOFF_PLAN.md`).
+   - Issuing a formal selection ADR. Renderer remains **UNDECIDED**.
+4. **Production EPUBCheck packaging & Java runtime freeze:**
+   - Transitioning from the PR #7 spike to a production release strategy for bundled Temurin JRE / `jlink` isolation.
+5. **DTP / Page model / Typography:**
+   - Defining pagination, layout primitives, and complex Indic/Kannada text shaping (HarfBuzz/Pango).
+
+**DO NOT implement any of the above yet.** Each requires an authorized slice and relevant architectural decision before code changes.
+
+Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama.
 
 ## Explicitly out of order
 
