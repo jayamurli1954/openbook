@@ -2,10 +2,10 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-09-07
-- **Reconciled to:** `main` after PRs #6–#9 (`ffd0b1d`)
-- **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not select a final PDF renderer. Do not replace official EPUBCheck. Do not expand the desktop shell beyond ADR-0007 hard stops without a new authorization.
+- **Reconciled to:** `main` after PRs #6–#12 (`22eb796`)
+- **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not select a final PDF renderer. Do not replace official EPUBCheck. Do not implement the editor until an authorized implementation PR follows ADR-0008. Do not expand the desktop shell beyond existing hard stops without a new authorization.
 
-Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`.
+Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0008-editor-technology-tiptap-prosemirror.md`.
 
 ```text
 FOUNDATION
@@ -15,6 +15,8 @@ FOUNDATION
 ├── SQLite (tauri-plugin-sql 2.4.1) [FROZEN in ADR-0007; connectivity proof in PR #9; production schema/migrations/domain persistence NOT STARTED]
 ├── Book Model                   [DONE on main: executable `@openbook/book-model` (ADR-0006)]
 ├── CI (foundation tests)        [DONE on main: `.github/workflows/ci.yml` runs package tests + desktop frontend build]
+├── Semantic Document Model      [DONE on main: `@openbook/semantic-document` (PR #11)]
+├── Desktop SDM boundary         [DONE on main: in-memory Desktop → SDM → Book (PR #12)]
 │
 PUBLISHING
 ├── EPUB engine                  [ACCEPTED: OpenBook TypeScript EPUB 3.3; NOT STARTED]
@@ -30,8 +32,10 @@ VALIDATION
 ├── Book Doctor                  [ACCEPTED product concept; NOT STARTED]
 │
 EDITOR
-├── Tiptap                       [preferred; license-scorecard required; NOT FROZEN; NOT STARTED]
-├── semantic document model      [must map to Book Model; NOT STARTED]
+├── Editor technology decision   [CURRENT GATE: ADR-0008 — Tiptap/ProseMirror selected; OSS versions Frozen; implementation NOT STARTED]
+├── Tiptap / ProseMirror         [FROZEN pins in ADR-0008; packages NOT installed; UI NOT STARTED]
+├── EditorAdapter (PM ↔ SDM)     [NOT STARTED — authorized only after ADR-0008 implementation freeze-lift]
+├── semantic document model      [DONE (PR #11); maps to Book Model]
 │
 DTP
 ├── page model                   [requirements exist; NOT STARTED]
@@ -53,8 +57,11 @@ Status against the original ordered list:
 3. **PDF bake-off plan + fixtures** (no production renderer) — **DONE** (PR #6); **renderer selection still PENDING / UNDECIDED**.
 4. **EPUBCheck packaging spike** behind `ValidatorService` — **DONE as spike** (PR #7 / `docs/EPUBCHECK_PACKAGING_SPIKE.md`); production packaging remains conditional/future work.
 5. **Desktop shell freeze-lift + empty shell** — **DONE** (ADR-0007 baseline; PR #9 `apps/desktop` with SQLite connectivity proof only).
+6. **Semantic Document Model contract** — **DONE** (PR #11 / `@openbook/semantic-document`).
+7. **Desktop SDM integration boundary** — **DONE** (PR #12; in-memory Desktop → SDM → Book).
+8. **Editor technology evaluation and decision** — **CURRENT GATE** (ADR-0008 / this backlog entry). Implementation of Tiptap UI remains a later authorized PR.
 
-Remaining foundation / product work (not authorized by backlog presence alone): production SQLite persistence schema; EPUB/HTML/PDF engines; PDF renderer choice and implementation; editor/Tiptap; DTP; AI/Ollama.
+Remaining foundation / product work (not authorized by backlog presence alone): editor implementation/EditorAdapter; production SQLite persistence schema; EPUB/HTML/PDF engines; PDF renderer choice and implementation; DTP; AI/Ollama.
 
 ## Explicitly out of order
 
@@ -64,3 +71,5 @@ Remaining foundation / product work (not authorized by backlog presence alone): 
 - Making Ollama required for MVP
 - Declaring `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` because documentation or early scaffolds exist
 - Treating the PR #9 SQLite smoke DB as a production persistence schema
+- Installing Tiptap/ProseMirror or building editor UI solely because ADR-0008 exists
+- Letting Tiptap/ProseMirror JSON become a parallel canonical document model

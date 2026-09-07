@@ -25,7 +25,7 @@
 | PDF generation | pdf-lib | Programmatic PDF generation/manipulation | MIT | Lightweight and TypeScript-friendly; may be insufficient for advanced pagination/typesetting | **Evaluate / supporting tool** |
 | PDF generation | Chromium via Puppeteer | HTML/CSS print-to-PDF candidate | Puppeteer Apache-2.0; Chromium distribution has additional third-party components | Mature layout engine; larger footprint and print-layout constraints | **Evaluate** |
 | DTP reference | Scribus | Functional/quality reference; possible external-process integration later | GPL family; exact components require review | Excellent professional DTP reference; avoid casual embedding | **Reference / possible process boundary** |
-| Editor | Tiptap + ProseMirror | Semantic authoring UI | ProseMirror core is MIT; exact Tiptap package/version licenses must be verified | Strong semantic editor architecture | **Preferred, license-scorecard required** |
+| Editor | Tiptap **3.31.3** + ProseMirror via `@tiptap/pm` **3.31.3** | Desktop authoring UI (React) | MIT (OSS packages only; no Tiptap Cloud/Pro for core) | Aligns with SDM → Book boundary (ADR-0008) | **Frozen pins (ADR-0008); implementation NOT STARTED** |
 | Desktop shell | Tauri **2.11.5** (`@tauri-apps/api` **2.11.1**, CLI **2.11.4**) | Desktop application shell/native bridge | Apache-2.0 OR MIT (exact release recorded in ADR-0007) | Good fit for local-first desktop architecture | **Frozen baseline (ADR-0007)** |
 | UI | React **19.2.8** + `react-dom` **19.2.8** | Desktop WebView UI | MIT | Matches ADR-0004/PROJECT-CONTEXT direction | **Frozen baseline (ADR-0007)** |
 | Language | TypeScript **5.9.3** | Primary product/domain TypeScript | Apache-2.0 | Compatible with existing workspace `^5.8.2` packages | **Frozen baseline (ADR-0007)** |
@@ -107,11 +107,9 @@ The Book Model must not depend on EPUB, PDF or renderer-specific structures. Ren
 
 - PDF renderer (**UNDECIDED**; bake-off plan exists)
 - exact Temurin/Java version, architectures, and whether `jlink` is used (bundling *architecture* is Accepted in ADR-0005; not Frozen)
-- exact Tiptap package set
 - exact typography/native dependency set
 - font distribution strategy
 - PDF/X and professional print workflow scope
-- frontend bundler exact version (deferred to ADR-0007 next-PR scaffold inventory)
 
 ## Frozen by ADR-0007 (desktop baseline only)
 
@@ -120,7 +118,12 @@ The Book Model must not depend on EPUB, PDF or renderer-specific structures. Ren
 - TypeScript **5.9.3**
 - SQLite via `tauri-plugin-sql` **2.4.1** (`sqlite`) as persistence infrastructure (not the Book Model)
 
-See `docs/adr/0007-desktop-foundation-technology-baseline-and-freeze-lift.md` for platform scope, package boundaries, and the next-PR freeze-lift hard stops.
+## Frozen by ADR-0008 (editor OSS pins only — not installed yet)
+
+- `@tiptap/react` / `@tiptap/core` / `@tiptap/pm` / `@tiptap/starter-kit` / `@tiptap/extension-link` **3.31.3** (MIT)
+- Editor must map through `@openbook/semantic-document`; Book Model remains canonical
+
+See `docs/adr/0007-desktop-foundation-technology-baseline-and-freeze-lift.md` and `docs/adr/0008-editor-technology-tiptap-prosemirror.md`.
 
 ## Gate
 
