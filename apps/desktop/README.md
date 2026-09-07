@@ -25,9 +25,11 @@ Authorized by **ADR-0007** freeze-lift only.
 - Tiptap JSON is editor transport only (`EditorAdapter` in
   `src/domain/editorAdapter.ts`). Multi-chapter authoring is an in-memory
   session (`src/domain/editorBookSession.ts`: select / create / rename /
-  delete chapters) that still projects through the SDM boundary.
-- SQLite is wired for **connectivity proof only** (`SELECT 1`). No production schema, migrations, or domain database model.
-- No EPUB/HTML/PDF engines, PDF renderer, EPUBCheck changes, AI/Ollama, Save/Open project files, or publishing workflows.
+- SQLite project persistence architecture and contracts are established (`src/persistence/` in PR #16).
+  SQLite is persistence infrastructure, not the canonical domain model; the Book Model remains canonical.
+  The minimal schema tracks migrations, project metadata, and canonical Book payloads.
+  Save/Open project UI, autosave, and project file import/export remain future work.
+- No EPUB/HTML/PDF engines, PDF renderer, EPUBCheck changes, AI/Ollama, Save/Open UI, or publishing workflows.
 
 ## Commands
 

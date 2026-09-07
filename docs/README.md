@@ -12,5 +12,6 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [PDF renderer bake-off plan](PDF_RENDERER_BAKEOFF_PLAN.md) | Evaluation methodology + fixtures; **no winner selected** |
 | [Foundation readiness report](FOUNDATION-READINESS-REPORT.md) | Current gate assessment |
 | [Implementation backlog](IMPLEMENTATION-BACKLOG.md) | Future work; not an authorization to code |
+| [Project persistence architecture](PROJECT_PERSISTENCE_ARCHITECTURE.md) | SQLite project persistence contracts and boundary (PR #16) |
 
 Canonical product files live at the repository root: vision, PRD, architecture, FOSS strategy, licensing policy, roadmap, contributing.
