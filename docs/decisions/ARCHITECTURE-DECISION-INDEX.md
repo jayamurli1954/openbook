@@ -18,6 +18,7 @@ Numbering: files are `docs/adr/NNNN-slug.md`. **ADR-0001 was never issued on `ma
 | ADR-0007 | Desktop foundation technology baseline and freeze-lift | Accepted; Tauri/React/TypeScript/SQLite versions Frozen; next-PR shell scaffold authorized | Desktop / Foundation | 2026-09-07 |
 | ADR-0008 | Editor technology evaluation and decision (Tiptap/ProseMirror) | Accepted; OSS Tiptap package versions Frozen; editor implementation not authorized by this ADR alone | Editor / Authoring | 2026-09-07 |
 | ADR-0009 | EPUB 3.3 engine architecture and publishing boundary | Accepted; implementation gated for follow-up slice | Publishing / EPUB | 2026-09-07 |
+| ADR-0010 | EPUB 3.3 asset & resource packaging architecture (Gate 3) | Proposed | Publishing / EPUB | 2026-09-07 |
 
 **Accepted is not Frozen.** Frozen means implementation must follow that decision unless a new ADR replaces it. ADR-0007 freezes exact Tauri **2.11.5**, React **19.2.8**, TypeScript **5.9.3**, and `tauri-plugin-sql` **2.4.1** (`sqlite`) for the desktop baseline. ADR-0008 freezes the open-source Tiptap/ProseMirror package pins for the authoring surface. ADR-0009 accepts the EPUB 3.3 engine architecture and Book Model mapping boundary, gating implementation for a follow-up freeze-lift. PDF renderer selection remains UNDECIDED (ADR-0004). Typst remains an evaluation candidate only.
 
