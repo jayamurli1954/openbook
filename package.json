@@ -5,14 +5,15 @@
   "workspaces": [
     "packages/book-model",
     "packages/validator",
+    "packages/semantic-document",
     "apps/desktop"
   ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "build": "npm run build -w @openbook/book-model && npm run build -w @openbook/validator && npm run build -w @openbook/desktop",
-    "test": "npm test -w @openbook/book-model && npm test -w @openbook/validator",
+    "build": "npm run build -w @openbook/book-model && npm run build -w @openbook/validator && npm run build -w @openbook/semantic-document && npm run build -w @openbook/desktop",
+    "test": "npm test -w @openbook/book-model && npm test -w @openbook/validator && npm test -w @openbook/semantic-document",
     "tauri:build": "npm run tauri:build -w @openbook/desktop"
   },
   "devDependencies": {

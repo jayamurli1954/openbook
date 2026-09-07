@@ -1,0 +1,21 @@
+{
+  "name": "@openbook/semantic-document",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Format-neutral semantic document/editor contract that maps to @openbook/book-model. Not an editor.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "CONTRACT.md", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/semantic-document.test.js"
+  },
+  "dependencies": {
+    "@openbook/book-model": "*"
+  }
+}

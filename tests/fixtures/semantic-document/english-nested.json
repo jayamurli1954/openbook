@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "title": "Nested English Fixture",
+    "subtitle": "",
+    "authors": ["Fixture Author"],
+    "contributors": [],
+    "language": "en",
+    "identifier": "fixture-en-sdm-1",
+    "publisher": "",
+    "publishedAt": "",
+    "copyright": "",
+    "description": "",
+    "subjects": [],
+    "rights": ""
+  },
+  "sections": [
+    {
+      "id": "front-1",
+      "matter": "front",
+      "role": "dedication",
+      "title": "Dedication",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "id": "front-p1",
+          "inlines": [{ "type": "text", "text": "For readers everywhere." }]
+        }
+      ]
+    },
+    {
+      "id": "main-1",
+      "matter": "main",
+      "role": "chapter",
+      "title": "Structures",
+      "blocks": [
+        {
+          "type": "heading",
+          "id": "main-h1",
+          "level": 2,
+          "inlines": [{ "type": "text", "text": "Lists and emphasis" }]
+        },
+        {
+          "type": "paragraph",
+          "id": "main-p1",
+          "inlines": [
+            { "type": "text", "text": "A " },
+            {
+              "type": "strong",
+              "children": [{ "type": "text", "text": "strong" }]
+            },
+            { "type": "text", "text": " word and an " },
+            {
+              "type": "emphasis",
+              "children": [{ "type": "text", "text": "emphasized" }]
+            },
+            { "type": "text", "text": " phrase." }
+          ]
+        },
+        {
+          "type": "list",
+          "id": "main-l1",
+          "ordered": true,
+          "items": [
+            [{ "type": "text", "text": "First" }],
+            [
+              {
+                "type": "link",
+                "href": "https://example.org",
+                "children": [{ "type": "text", "text": "Second" }]
+              }
+            ]
+          ]
+        },
+        {
+          "type": "image",
+          "id": "main-img1",
+          "assetId": "fig-1",
+          "caption": [{ "type": "text", "text": "Figure one" }]
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "fig-1",
+      "kind": "image",
+      "fileName": "figure-one.png",
+      "mediaType": "image/png",
+      "altText": "Figure one",
+      "licence": ""
+    }
+  ]
+}
