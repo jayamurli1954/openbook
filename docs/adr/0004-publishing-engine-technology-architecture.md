@@ -80,9 +80,11 @@ Tiptap and ProseMirror remain the preferred semantic editor architecture. The Ti
 
 ### 9. Desktop architecture
 
-Tauri 2.x remains the preferred desktop shell. The Tauri repository is dual-licensed under Apache-2.0 and MIT. OpenBook will use Tauri as the native application boundary and keep most product/domain logic in TypeScript.
+Tauri 2.x remains the preferred desktop shell. **Exact baseline versions are Frozen in ADR-0007** (Tauri **2.11.5**, `@tauri-apps/api` **2.11.1**, `@tauri-apps/cli` **2.11.4**, React **19.2.8**, TypeScript **5.9.3**, SQLite via `tauri-plugin-sql` **2.4.1**). The Tauri repository is dual-licensed under Apache-2.0 and MIT. OpenBook will use Tauri as the native application boundary and keep most product/domain logic in TypeScript.
 
 Rust will be used selectively for native/system functionality and performance-sensitive integrations rather than as the primary product-development language.
+
+This ADR does not by itself authorize creating the desktop application; see ADR-0007 for the freeze-lift that names the next scaffolding PR.
 
 ## PDF bake-off
 
