@@ -1,6 +1,6 @@
 # ADR-0010: EPUB 3.3 Asset & Resource Packaging Architecture — Gate 3
 
-* **Status:** Proposed
+* **Status:** Accepted
 * **Date:** 2026-09-07
 * **Decision scope:** EPUB 3.3 Engine Gate 3 — Asset & Resource Packaging
 * **Depends on:** ADR-0006, ADR-0009
@@ -623,21 +623,21 @@ must stop implementation and trigger a separate architecture review.
 
 ADR-0010 may be marked **Accepted** when the Product Owner approves the following architectural invariants:
 
-* [ ] Book Model remains unchanged.
-* [ ] AssetResolver is an external injected boundary.
-* [ ] Asset resolution is asynchronous.
-* [ ] EPUB builders are asynchronous at the asset-aware boundary.
-* [ ] Images are the only Gate 3 resource type.
-* [ ] Canonical image paths are deterministic and MIME-derived.
-* [ ] User filenames cannot control package paths.
-* [ ] Image references resolve through AssetRef → AssetResolver.
-* [ ] Images are registered in the EPUB manifest.
-* [ ] Existing altText semantics are preserved.
-* [ ] Unreferenced assets are not packaged.
-* [ ] Gate 2 archive ordering/determinism remains authoritative.
-* [ ] ValidatorService remains the validation boundary.
-* [ ] EPUBCheck 5.3.0 remains authoritative for EPUB conformance.
-* [ ] No Book Model, SDM, SQLite, Tauri, or unrelated publishing changes are authorized by Gate 3.
-* [ ] Gate 3 implementation requires a separate explicit implementation instruction.
+* [x] Book Model remains unchanged.
+* [x] AssetResolver is an external injected boundary.
+* [x] Asset resolution is asynchronous.
+* [x] EPUB builders are asynchronous at the asset-aware boundary.
+* [x] Images are the only Gate 3 resource type.
+* [x] Canonical image paths are deterministic and MIME-derived.
+* [x] User filenames cannot control package paths.
+* [x] Image references resolve through AssetRef → AssetResolver.
+* [x] Images are registered in the EPUB manifest.
+* [x] Existing altText semantics are preserved.
+* [x] Unreferenced assets are not packaged.
+* [x] Gate 2 archive ordering/determinism remains authoritative.
+* [x] ValidatorService remains the validation boundary.
+* [x] EPUBCheck 5.3.0 remains authoritative for EPUB conformance.
+* [x] No Book Model, SDM, SQLite, Tauri, or unrelated publishing changes are authorized by Gate 3.
+* [x] Gate 3 implementation requires a separate explicit implementation instruction.
 
-**Decision:** Pending Product Owner acceptance.
+**Decision:** Accepted. Implementation remains gated and requires a separate explicit implementation instruction.
