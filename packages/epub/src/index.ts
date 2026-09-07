@@ -12,6 +12,7 @@ export type {
 export { UnsupportedContentError } from "./types.js";
 export { buildEpub, buildEpubPackage } from "./epub-builder.js";
 export { buildEpubArchive } from "./archive/epub-archive.js";
+export { normalizeDateForZip } from "./archive/archive-timestamps.js";
 export { orderArchiveFiles, normalizeZipPath } from "./archive/archive-order.js";
 export { escapeXmlAttr, escapeXmlText } from "./xml-utils.js";
 export { serializeSectionDocument } from "./xhtml-serializer.js";

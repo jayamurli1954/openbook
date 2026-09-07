@@ -5,8 +5,9 @@ import * as nodeFs from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { describe, it } from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createBook, type StructuralSection } from "@openbook/book-model";
 import { EpubCheckSubprocessAdapter } from "@openbook/validator";
 import { unzipSync } from "fflate";
@@ -14,6 +15,7 @@ import {
   buildEpub,
   buildEpubArchive,
   buildEpubPackage,
+  normalizeDateForZip,
   UnsupportedContentError,
 } from "./index.js";
 
@@ -742,6 +744,104 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
       Buffer.from(b1).equals(Buffer.from(b2)),
       false,
       "Different timestamps must produce distinct binary outputs",
+    );
+  });
+
+  it("normalizes Date objects so local getters match UTC components for fflate DOS serialization", () => {
+    const isoString = "2026-07-15T14:30:45Z";
+    const normalized = normalizeDateForZip(isoString);
+    assert.equal(normalized.getFullYear(), 2026);
+    assert.equal(normalized.getMonth(), 6); // July is index 6
+    assert.equal(normalized.getDate(), 15);
+    assert.equal(normalized.getHours(), 14);
+    assert.equal(normalized.getMinutes(), 30);
+    assert.equal(normalized.getSeconds(), 45);
+
+    // Also with Date input
+    const dateObj = new Date("2026-11-20T08:15:22Z");
+    const normalizedFromObj = normalizeDateForZip(dateObj);
+    assert.equal(normalizedFromObj.getFullYear(), 2026);
+    assert.equal(normalizedFromObj.getMonth(), 10); // November is index 10
+    assert.equal(normalizedFromObj.getDate(), 20);
+    assert.equal(normalizedFromObj.getHours(), 8);
+    assert.equal(normalizedFromObj.getMinutes(), 15);
+    assert.equal(normalizedFromObj.getSeconds(), 22);
+
+    // Fallback date
+    const fallback = normalizeDateForZip(undefined);
+    assert.equal(fallback.getFullYear(), 2026);
+    assert.equal(fallback.getMonth(), 0);
+    assert.equal(fallback.getDate(), 1);
+    assert.equal(fallback.getHours(), 0);
+    assert.equal(fallback.getMinutes(), 0);
+    assert.equal(fallback.getSeconds(), 0);
+  });
+
+  it("enforces that ZIP entry MS-DOS timestamp bytes represent exact UTC values independent of host timezone", () => {
+    const book = createBook({
+      title: "MS-DOS Byte Check",
+      language: "en",
+    });
+
+    const epubBytes = buildEpub(book, { modifiedDate: "2026-01-01T00:00:00Z" });
+    // In local file header for the first entry ("mimetype"):
+    // Offset 0..3: Signature 0x04034b50 (PK\x03\x04)
+    // Offset 10..11: Last mod file time (little-endian uint16)
+    // Offset 12..13: Last mod file date (little-endian uint16)
+    // For 2026-01-01 00:00:00:
+    // Time: (0 << 11) | (0 << 5) | 0 = 0 -> [0x00, 0x00]
+    // Date: ((2026 - 1980) << 9) | (1 << 5) | 1 = (46 << 9) | 32 | 1 = 23585 = 0x5c21 -> [0x21, 0x5c] (33, 92)
+    assert.equal(epubBytes[0], 0x50);
+    assert.equal(epubBytes[1], 0x4b);
+    assert.equal(epubBytes[2], 0x03);
+    assert.equal(epubBytes[3], 0x04);
+    assert.equal(epubBytes[10], 0x00, "Time byte 0 must be 0 for 00:00:00 UTC");
+    assert.equal(epubBytes[11], 0x00, "Time byte 1 must be 0 for 00:00:00 UTC");
+    assert.equal(epubBytes[12], 0x21, "Date byte 0 must be 0x21 (33) for 2026-01-01");
+    assert.equal(epubBytes[13], 0x5c, "Date byte 1 must be 0x5c (92) for 2026-01-01");
+  });
+
+  it("verifies byte-for-byte binary determinism across different simulated host timezones via subprocess", () => {
+    const timezones = [
+      "UTC",
+      "Asia/Singapore",
+      "America/New_York",
+      "Europe/London",
+      "Asia/Kolkata",
+      "Pacific/Auckland",
+    ];
+
+    const book = createBook({
+      title: "Cross TZ Determinism",
+      language: "en",
+    });
+    const bookJson = JSON.stringify(book);
+    const indexJsUrl = pathToFileURL(path.join(__dirname, "index.js")).href;
+    const childScript = `
+      import { buildEpub } from "${indexJsUrl}";
+      const book = JSON.parse(process.argv[1]);
+      const bytes = buildEpub(book, { modifiedDate: "2026-01-01T00:00:00Z" });
+      process.stdout.write(Buffer.from(bytes).toString("hex"));
+    `;
+
+    const outputs = new Set<string>();
+    for (const tz of timezones) {
+      const hex = execFileSync(
+        process.execPath,
+        ["--input-type=module", "-e", childScript, bookJson],
+        {
+          cwd: rootDir,
+          env: { ...process.env, TZ: tz },
+          encoding: "utf-8",
+        },
+      ).trim();
+      outputs.add(hex);
+    }
+
+    assert.equal(
+      outputs.size,
+      1,
+      `Expected identical binary output across all timezones, but got ${outputs.size} distinct outputs`,
     );
   });
 

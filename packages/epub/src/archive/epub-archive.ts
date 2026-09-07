@@ -1,47 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { strToU8, zipSync } from "fflate";
-import type { EpubPackage } from "../types.js";
+import type { EpubArchiveOptions, EpubPackage } from "../types.js";
 import { orderArchiveFiles } from "./archive-order.js";
-
-const FALLBACK_DETERMINISTIC_DATE = new Date("2026-01-01T00:00:00Z");
-
-export interface EpubArchiveOptions {
-  /**
-   * Deterministic entry timestamp for the ZIP archive.
-   * If not provided, derived from pkg.metadata.modified.
-   * Never calls the system clock / new Date().
-   */
-  archiveDate?: string | Date;
-}
-
-/**
- * Resolves a deterministic Date object from options or package metadata.
- * Never calls new Date() with system time.
- */
-function resolveArchiveDate(
-  pkg: EpubPackage,
-  options?: EpubArchiveOptions,
-): Date {
-  if (options?.archiveDate) {
-    if (options.archiveDate instanceof Date) {
-      return options.archiveDate;
-    }
-    const parsed = new Date(options.archiveDate);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed;
-    }
-  }
-
-  if (pkg.metadata?.modified) {
-    const parsed = new Date(pkg.metadata.modified);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed;
-    }
-  }
-
-  return FALLBACK_DETERMINISTIC_DATE;
-}
+import { normalizeDateForZip } from "./archive-timestamps.js";
 
 /**
  * Packs an in-memory EpubPackage into a compliant, deterministic EPUB 3.3 OCF ZIP archive (.epub).
@@ -52,14 +14,15 @@ function resolveArchiveDate(
  * 3. "mimetype" is stored/uncompressed (level 0).
  * 4. Other resources are compressed deterministically with DEFLATE (level 6).
  * 5. Deterministic entry ordering: mimetype, container.xml, package.opf, nav.xhtml, css, xhtml...
- * 6. Deterministic timestamps: all entries share the exact same canonical timestamp; no system clock.
- * 7. Byte-for-byte identical output for identical package and options.
+ * 6. Deterministic timestamps: normalized to UTC components so ZIP MS-DOS bytes are identical across host timezones.
+ * 7. Byte-for-byte identical output for identical package and options across machines, platforms, and run times.
  */
 export function buildEpubArchive(
   pkg: EpubPackage,
   options?: EpubArchiveOptions,
 ): Uint8Array {
-  const entryDate = resolveArchiveDate(pkg, options);
+  const rawDate = options?.archiveDate ?? pkg.metadata?.modified;
+  const entryDate = normalizeDateForZip(rawDate);
   const orderedFiles = orderArchiveFiles(pkg.files);
 
   const archiveData: Record<
