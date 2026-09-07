@@ -30,7 +30,10 @@ export function serializeInlines(inlines: InlineSpan[]): string {
 /**
  * Serializes a ContentBlock to semantic XHTML block elements.
  */
-export function serializeBlock(block: ContentBlock): string {
+export function serializeBlock(
+  block: ContentBlock,
+  resolvedImages?: ReadonlyMap<string, ResolvedImageRef>,
+): string {
   const idAttr = block.id ? ` id="${escapeXmlAttr(block.id)}"` : "";
 
   switch (block.type) {
@@ -54,11 +57,35 @@ export function serializeBlock(block: ContentBlock): string {
       return `      <${tag}${idAttr}>\n${items}\n      </${tag}>`;
     }
 
-    case "image":
-      throw new UnsupportedContentError("image", block.id);
+    case "image": {
+      const resolved = resolvedImages?.get(block.assetId);
+      if (!resolved) {
+        throw new UnsupportedContentError(
+          "image",
+          block.id,
+          `Image block "${block.id}" references unbundled or unresolved asset "${block.assetId}".`,
+        );
+      }
 
-    default:
-      return "";
+      const altAttr = ` alt="${escapeXmlAttr(resolved.altText || "")}"`;
+      const srcAttr = ` src="${escapeXmlAttr(resolved.xhtmlHref)}"`;
+
+      if (block.caption && block.caption.length > 0) {
+        const captionHtml = serializeInlines(block.caption);
+        return `      <figure${idAttr}>\n        <img${srcAttr}${altAttr} />\n        <figcaption>${captionHtml}</figcaption>\n      </figure>`;
+      }
+
+      return `      <figure${idAttr}>\n        <img${srcAttr}${altAttr} />\n      </figure>`;
+    }
+
+    default: {
+      const b = block as unknown as { type?: string; id?: string };
+      throw new UnsupportedContentError(
+        b.type ?? "unknown",
+        b.id,
+        `Unsupported content block of type "${b.type}".`,
+      );
+    }
   }
 }
 
@@ -108,9 +135,15 @@ function getSectionSemantics(section: StructuralSection): { epubType: string; ro
   }
 }
 
+export interface ResolvedImageRef {
+  xhtmlHref: string;
+  altText: string;
+}
+
 export interface SectionDocumentOptions {
   language: string;
   bookTitle: string;
+  resolvedImages?: ReadonlyMap<string, ResolvedImageRef>;
 }
 
 /**
@@ -134,7 +167,7 @@ export function serializeSectionDocument(
     : "";
 
   const blocksContent = section.blocks
-    .map((block) => serializeBlock(block))
+    .map((block) => serializeBlock(block, options.resolvedImages))
     .filter((line) => line.length > 0)
     .join("\n");
 

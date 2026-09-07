@@ -8,15 +8,19 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { describe, it } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { createBook, type StructuralSection } from "@openbook/book-model";
+import { createBook, type AssetRef, type StructuralSection } from "@openbook/book-model";
 import { EpubCheckSubprocessAdapter } from "@openbook/validator";
 import { unzipSync } from "fflate";
 import {
+  AssetResolutionError,
+  AssetValidationError,
   buildEpub,
   buildEpubArchive,
   buildEpubPackage,
   normalizeDateForZip,
   UnsupportedContentError,
+  type AssetResolver,
+  type PublishingDiagnostic,
 } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -32,14 +36,14 @@ const hasSpikeRuntime =
   nodeFs.existsSync(javaExe) && nodeFs.existsSync(epubcheckJar);
 
 describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
-  it("generates minimum conforming EPUB 3.3 package structure", () => {
+  it("generates minimum conforming EPUB 3.3 package structure", async () => {
     const book = createBook({
       title: "Conforming Minimal Book",
       authors: ["Author One"],
       language: "en",
     });
 
-    const pkg = buildEpubPackage(book);
+    const pkg = await buildEpubPackage(book);
 
     // Verify in-memory files structure
     assert.ok(Array.isArray(pkg.files));
@@ -108,7 +112,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     assert.ok(pkg.spine.includes("sec-ch-001"));
   });
 
-  it("maps Book Model metadata to Dublin Core in package.opf", () => {
+  it("maps Book Model metadata to Dublin Core in package.opf", async () => {
     const book = createBook({
       title: "Metadata Test Volume",
       authors: ["Jane Doe", "John Smith"],
@@ -120,7 +124,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     book.metadata.rights = "CC BY 4.0";
     book.metadata.publishedAt = "2026-05-15T12:00:00Z";
 
-    const pkg = buildEpubPackage(book);
+    const pkg = await buildEpubPackage(book);
     const opfFile = pkg.files.find((f) => f.path === "EPUB/package.opf");
     assert.ok(opfFile);
     const opf = String(opfFile.content);
@@ -145,7 +149,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     );
   });
 
-  it("maps content blocks and inline formatting to semantic XHTML5", () => {
+  it("maps content blocks and inline formatting to semantic XHTML5", async () => {
     const book = createBook({
       title: "Rich Formatting Test",
       language: "en",
@@ -215,7 +219,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
 
     book.chapters = [chapter];
 
-    const pkg = buildEpubPackage(book);
+    const pkg = await buildEpubPackage(book);
     const chapterFile = pkg.files.find(
       (f) => f.path === "EPUB/text/ch_001.xhtml",
     );
@@ -249,7 +253,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     );
   });
 
-  it("preserves English, Kannada, and mixed Unicode code points without entity corruption", () => {
+  it("preserves English, Kannada, and mixed Unicode code points without entity corruption", async () => {
     const kannadaTitle = "ಕನ್ನಡ ಕಾವ್ಯ ಸಂಗ್ರಹ";
     const kannadaHeading = "ಮೊದಲನೆಯ ಅಧ್ಯಾಯ: ಆರಂಭ";
     const kannadaParagraph =
@@ -290,7 +294,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
 
     book.chapters = [chapter];
 
-    const pkg = buildEpubPackage(book);
+    const pkg = await buildEpubPackage(book);
 
     // 1. Check OPF preserves Kannada title and language
     const opf = String(
@@ -344,7 +348,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     );
   });
 
-  it("safely escapes XML and HTML special characters in content and attributes", () => {
+  it("safely escapes XML and HTML special characters in content and attributes", async () => {
     const book = createBook({
       title: "Tom & Jerry <Adventures> & \"Legends\"",
       authors: ["O'Connor & Sons"],
@@ -378,7 +382,8 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
 
     book.chapters = [chapter];
 
-    const pkg = buildEpubPackage(book);
+    const pkg = await buildEpubPackage(book);
+    assert.ok(pkg);
 
     // OPF escaping
     const opf = String(
@@ -411,7 +416,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     );
   });
 
-  it("strictly preserves Book Model immutability and causes zero reverse bleed", () => {
+  it("strictly preserves Book Model immutability and causes zero reverse bleed", async () => {
     const book = createBook({
       title: "Immutability Test",
       language: "en",
@@ -420,7 +425,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     // Deep freeze snapshot before building EPUB
     const snapshotBefore = JSON.stringify(book);
 
-    const pkg = buildEpubPackage(book);
+    const pkg = await buildEpubPackage(book);
     assert.ok(pkg);
 
     const snapshotAfter = JSON.stringify(book);
@@ -440,7 +445,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     assert.equal(rawBook["ncx"], undefined);
   });
 
-  it("guarantees deterministic output without relying on runtime system clock", () => {
+  it("guarantees deterministic output without relying on runtime system clock", async () => {
     const book = createBook({
       title: "Determinism Verification",
       authors: ["Fixed Author"],
@@ -450,10 +455,10 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     book.metadata.publishedAt = "2026-06-01T00:00:00Z";
 
     // Run 1
-    const pkg1 = buildEpubPackage(book);
+    const pkg1 = await buildEpubPackage(book);
 
     // Run 2 (without passing explicit modifiedDate, verifying no clock dependency)
-    const pkg2 = buildEpubPackage(book);
+    const pkg2 = await buildEpubPackage(book);
 
     assert.equal(pkg1.files.length, pkg2.files.length);
     for (let i = 0; i < pkg1.files.length; i++) {
@@ -469,7 +474,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     assert.deepEqual(pkg1.metadata, pkg2.metadata);
   });
 
-  it("handles navigation and landmarks without generating NCX by default", () => {
+  it("handles navigation and landmarks without generating NCX by default", async () => {
     const book = createBook({
       title: "Navigation & Landmarks Book",
       language: "en",
@@ -510,7 +515,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
       },
     ];
 
-    const pkg = buildEpubPackage(book);
+    const pkg = await buildEpubPackage(book);
 
     // 1. Navigation document check
     const navFile = pkg.files.find((f) => f.path === "EPUB/nav.xhtml");
@@ -552,7 +557,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
     );
   });
 
-  it("explicitly and deterministically rejects Book containing unsupported image blocks", () => {
+  it("explicitly and deterministically rejects Book containing unsupported image blocks", async () => {
     const book = createBook({
       title: "Book With Image",
       language: "en",
@@ -581,42 +586,89 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
       },
     ];
 
-    assert.throws(
-      () => buildEpubPackage(book),
+    await assert.rejects(
+      async () => await buildEpubPackage(book),
       (err: unknown) => {
         assert.ok(
+          err instanceof AssetValidationError ||
+          err instanceof AssetResolutionError ||
           err instanceof UnsupportedContentError,
-          "Error must be instance of UnsupportedContentError",
+          "Must reject unbundled/unresolved image blocks",
         );
-        assert.equal(err.blockType, "image");
-        assert.equal(err.blockId, "img-1");
-        assert.match(err.message, /image.*not supported in EPUB Gate 1/i);
         return true;
       },
     );
   });
+
+  it("successfully packages image blocks when matching Book.assets and AssetResolver are provided via buildEpubPackage", async () => {
+    const book = createBook({
+      title: "Book With Image Package",
+      language: "en",
+      withOpeningChapter: false,
+    });
+
+    book.assets = [
+      {
+        id: "asset-cover-art",
+        kind: "image",
+        fileName: "cover.png",
+        mediaType: "image/png",
+        altText: "Cover illustration",
+        licence: "CC0",
+      },
+    ];
+
+    book.chapters = [
+      {
+        id: "ch-img",
+        kind: "main",
+        role: "chapter",
+        title: "Chapter With Image",
+        blocks: [
+          {
+            type: "image",
+            id: "img-1",
+            assetId: "asset-cover-art",
+            caption: [{ type: "text", text: "Cover illustration" }],
+          },
+        ],
+      },
+    ];
+
+    const resolver: AssetResolver = {
+      resolve: async () =>
+        Buffer.from(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+          "base64",
+        ),
+    };
+
+    const pkg = await buildEpubPackage(book, { assetResolver: resolver });
+    assert.ok(pkg.files.some((f) => f.path === "EPUB/images/asset-cover-art.png"));
+    assert.ok(pkg.manifest.some((m) => m.href === "images/asset-cover-art.png"));
+  });
 });
 
 describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packaging)", () => {
-  it("produces valid, non-empty EPUB Uint8Array binary via buildEpub", () => {
+  it("produces valid, non-empty EPUB Uint8Array binary via buildEpub", async () => {
     const book = createBook({
       title: "Gate 2 Binary Verification",
       authors: ["Author A"],
       language: "en",
     });
 
-    const epubBytes = buildEpub(book);
+    const epubBytes = await buildEpub(book);
     assert.ok(epubBytes instanceof Uint8Array);
     assert.ok(epubBytes.length > 500, "EPUB binary must have substantial content");
   });
 
-  it("enforces strict OCF mimetype requirements on the raw ZIP binary", () => {
+  it("enforces strict OCF mimetype requirements on the raw ZIP binary", async () => {
     const book = createBook({
       title: "Mimetype OCF Verification",
       language: "en",
     });
 
-    const epubBytes = buildEpub(book);
+    const epubBytes = await buildEpub(book);
 
     // 1. Magic number: PK\x03\x04 (0x50, 0x4B, 0x03, 0x04)
     assert.equal(epubBytes[0], 0x50);
@@ -645,14 +697,14 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     assert.equal(content, "application/epub+zip");
   });
 
-  it("verifies ZIP readability and extracted OCF package structure", () => {
+  it("verifies ZIP readability and extracted OCF package structure", async () => {
     const book = createBook({
       title: "Extraction Test Book",
       authors: ["Extractor"],
       language: "en",
     });
 
-    const epubBytes = buildEpub(book);
+    const epubBytes = await buildEpub(book);
     const unzipped = unzipSync(epubBytes);
 
     // Verify all core files are readable in the archive
@@ -685,9 +737,9 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     );
   });
 
-  it("verifies extracted container.xml correctly references EPUB/package.opf", () => {
+  it("verifies extracted container.xml correctly references EPUB/package.opf", async () => {
     const book = createBook({ title: "Container Reference Test", language: "en" });
-    const epubBytes = buildEpub(book);
+    const epubBytes = await buildEpub(book);
     const unzipped = unzipSync(epubBytes);
 
     const containerXml = new TextDecoder().decode(
@@ -697,7 +749,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     assert.match(containerXml, /media-type="application\/oebps-package\+xml"/);
   });
 
-  it("guarantees byte-for-byte deterministic output across repeated builds", () => {
+  it("guarantees byte-for-byte deterministic output across repeated builds", async () => {
     const book = createBook({
       title: "Byte Determinism Book",
       authors: ["Deterministic Author"],
@@ -706,8 +758,8 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     });
     book.metadata.publishedAt = "2026-06-01T00:00:00Z";
 
-    const b1 = buildEpub(book);
-    const b2 = buildEpub(book);
+    const b1 = await buildEpub(book);
+    const b2 = await buildEpub(book);
 
     assert.equal(b1.length, b2.length);
     assert.equal(
@@ -717,7 +769,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     );
   });
 
-  it("guarantees deterministic output with explicit modifiedDate without system clock", () => {
+  it("guarantees deterministic output with explicit modifiedDate without system clock", async () => {
     const book = createBook({
       title: "Explicit Date Determinism",
       language: "en",
@@ -725,20 +777,20 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
 
     const fixedDate = new Date("2026-07-15T14:30:00Z");
 
-    const b1 = buildEpub(book, { modifiedDate: fixedDate });
-    const b2 = buildEpub(book, { modifiedDate: fixedDate });
+    const b1 = await buildEpub(book, { modifiedDate: fixedDate });
+    const b2 = await buildEpub(book, { modifiedDate: fixedDate });
 
     assert.equal(Buffer.from(b1).equals(Buffer.from(b2)), true);
   });
 
-  it("produces distinct binary outputs for different timestamps", () => {
+  it("produces distinct binary outputs for different timestamps", async () => {
     const book = createBook({
       title: "Distinct Timestamps Test",
       language: "en",
     });
 
-    const b1 = buildEpub(book, { modifiedDate: "2026-01-01T00:00:00Z" });
-    const b2 = buildEpub(book, { modifiedDate: "2026-02-01T00:00:00Z" });
+    const b1 = await buildEpub(book, { modifiedDate: "2026-01-01T00:00:00Z" });
+    const b2 = await buildEpub(book, { modifiedDate: "2026-02-01T00:00:00Z" });
 
     assert.equal(
       Buffer.from(b1).equals(Buffer.from(b2)),
@@ -777,13 +829,13 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     assert.equal(fallback.getSeconds(), 0);
   });
 
-  it("enforces that ZIP entry MS-DOS timestamp bytes represent exact UTC values independent of host timezone", () => {
+  it("enforces that ZIP entry MS-DOS timestamp bytes represent exact UTC values independent of host timezone", async () => {
     const book = createBook({
       title: "MS-DOS Byte Check",
       language: "en",
     });
 
-    const epubBytes = buildEpub(book, { modifiedDate: "2026-01-01T00:00:00Z" });
+    const epubBytes = await buildEpub(book, { modifiedDate: "2026-01-01T00:00:00Z" });
     // In local file header for the first entry ("mimetype"):
     // Offset 0..3: Signature 0x04034b50 (PK\x03\x04)
     // Offset 10..11: Last mod file time (little-endian uint16)
@@ -820,7 +872,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     const childScript = `
       import { buildEpub } from "${indexJsUrl}";
       const book = JSON.parse(process.argv[1]);
-      const bytes = buildEpub(book, { modifiedDate: "2026-01-01T00:00:00Z" });
+      const bytes = await buildEpub(book, { modifiedDate: "2026-01-01T00:00:00Z" });
       process.stdout.write(Buffer.from(bytes).toString("hex"));
     `;
 
@@ -845,7 +897,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     );
   });
 
-  it("preserves Kannada and mixed Unicode text intact through the complete ZIP round-trip", () => {
+  it("preserves Kannada and mixed Unicode text intact through the complete ZIP round-trip", async () => {
     const kannadaTitle = "ಕನ್ನಡ ಕಾವ್ಯ ಪ್ರಪಂಚ";
     const kannadaBody = "ಕನ್ನಡ ಸಾಹಿತ್ಯವು ಸಾವಿರಾರು ವರ್ಷಗಳ ಇತಿಹಾಸವನ್ನು ಹೊಂದಿದೆ.";
     const mixedBody = "OpenBook ತಂತ್ರಜ್ಞಾನ ಡಿಜಿಟಲ್ ಮುದ್ರಣಕ್ಕೆ ಸಹಾಯಕ.";
@@ -878,7 +930,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
       },
     ];
 
-    const epubBytes = buildEpub(book);
+    const epubBytes = await buildEpub(book);
     const unzipped = unzipSync(epubBytes);
 
     const xhtmlContent = new TextDecoder("utf-8").decode(
@@ -910,7 +962,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     );
   });
 
-  it("preserves XML and HTML escaping through ZIP extraction without corruption", () => {
+  it("preserves XML and HTML escaping through ZIP extraction without corruption", async () => {
     const book = createBook({
       title: "Tom & Jerry <Adventures> & \"Legends\"",
       authors: ["O'Connor & Sons"],
@@ -934,7 +986,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
       },
     ];
 
-    const epubBytes = buildEpub(book);
+    const epubBytes = await buildEpub(book);
     const unzipped = unzipSync(epubBytes);
 
     const xhtmlContent = new TextDecoder("utf-8").decode(
@@ -944,9 +996,9 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     assert.match(xhtmlContent, /5 &lt; 10 &amp; 20 &gt; 15; &apos;quotes&apos;\./);
   });
 
-  it("verifies no NCX file or references exist in the ZIP archive", () => {
+  it("verifies no NCX file or references exist in the ZIP archive", async () => {
     const book = createBook({ title: "No NCX Verification", language: "en" });
-    const epubBytes = buildEpub(book);
+    const epubBytes = await buildEpub(book);
     const unzipped = unzipSync(epubBytes);
 
     const paths = Object.keys(unzipped);
@@ -963,9 +1015,42 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     );
   });
 
-  it("retains deterministic rejection of Books containing image blocks via buildEpub", () => {
+  it("retains deterministic rejection of Books containing unsupported content blocks via buildEpub", async () => {
     const book = createBook({
-      title: "Book With Image",
+      title: "Book With Unsupported Block",
+      language: "en",
+      withOpeningChapter: false,
+    });
+
+    book.chapters = [
+      {
+        id: "ch-audio",
+        kind: "main",
+        role: "chapter",
+        title: "Chapter With Audio",
+        blocks: [
+          {
+            type: "audio" as any,
+            id: "audio-reject",
+          } as any,
+        ],
+      },
+    ];
+
+    await assert.rejects(
+      async () => buildEpub(book),
+      (err: unknown) => {
+        assert.ok(err instanceof UnsupportedContentError);
+        assert.equal(err.blockType, "audio");
+        assert.equal(err.blockId, "audio-reject");
+        return true;
+      },
+    );
+  });
+
+  it("verifies that Books containing image blocks fail deterministically when asset requirements are unresolved or missing via buildEpub", async () => {
+    const book = createBook({
+      title: "Book With Unresolved Image",
       language: "en",
       withOpeningChapter: false,
     });
@@ -987,15 +1072,95 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
       },
     ];
 
-    assert.throws(
-      () => buildEpub(book),
+    // Missing AssetResolver
+    await assert.rejects(
+      async () => buildEpub(book),
       (err: unknown) => {
-        assert.ok(err instanceof UnsupportedContentError);
-        assert.equal(err.blockType, "image");
-        assert.equal(err.blockId, "img-reject");
+        assert.ok(err instanceof AssetResolutionError);
+        assert.equal(err.code, "MISSING_RESOLVER");
         return true;
       },
     );
+
+    // Missing asset in Book.assets even with resolver
+    const dummyResolver: AssetResolver = {
+      resolve: async () => new Uint8Array([1, 2, 3]),
+    };
+    await assert.rejects(
+      async () => buildEpub(book, { assetResolver: dummyResolver }),
+      (err: unknown) => {
+        assert.ok(err instanceof AssetValidationError);
+        assert.equal(err.code, "MISSING_ASSET_REFERENCE");
+        assert.equal(err.assetId, "cover-art");
+        return true;
+      },
+    );
+  });
+
+  it("verifies that Books containing image blocks succeed via buildEpub when matching Book.assets and AssetResolver are provided", async () => {
+    const pngBytes = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "base64",
+    );
+
+    const book = createBook({
+      title: "Book With Valid Image via buildEpub",
+      language: "en",
+      withOpeningChapter: false,
+    });
+
+    book.assets = [
+      {
+        id: "cover-art",
+        kind: "image",
+        fileName: "cover.png",
+        mediaType: "image/png",
+        altText: "Cover Art",
+        licence: "CC0",
+      },
+    ];
+
+    book.chapters = [
+      {
+        id: "ch-img",
+        kind: "main",
+        role: "chapter",
+        title: "Chapter With Image",
+        blocks: [
+          {
+            type: "image",
+            id: "img-ok",
+            assetId: "cover-art",
+            caption: [{ type: "text", text: "Cover caption" }],
+          },
+        ],
+      },
+    ];
+
+    const resolver: AssetResolver = {
+      resolve: async (asset) => {
+        if (asset.id === "cover-art") return pngBytes;
+        throw new Error("Unknown asset");
+      },
+    };
+
+    const epubBytes = await buildEpub(book, { assetResolver: resolver });
+    assert.ok(epubBytes instanceof Uint8Array);
+    assert.ok(epubBytes.length > 500);
+
+    const unzipped = unzipSync(epubBytes);
+    assert.ok(unzipped["EPUB/images/cover-art.png"]);
+    assert.deepEqual(
+      new Uint8Array(unzipped["EPUB/images/cover-art.png"]),
+      new Uint8Array(pngBytes),
+    );
+
+    const xhtml = new TextDecoder("utf-8").decode(
+      unzipped["EPUB/text/ch_001.xhtml"],
+    );
+    assert.ok(xhtml.includes('<figure id="img-ok">'));
+    assert.ok(xhtml.includes('<img src="../images/cover-art.png" alt="Cover Art" />'));
+    assert.ok(xhtml.includes("<figcaption>Cover caption</figcaption>"));
   });
 
   it("buildEpubArchive consumes EpubPackage only and does not require Book", () => {
@@ -1144,7 +1309,7 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
         },
       ];
 
-      const epubBytes = buildEpub(book);
+      const epubBytes = await buildEpub(book);
 
       const tempDir = await fs.mkdtemp(
         path.join(os.tmpdir(), "openbook-gate2-test-"),
@@ -1184,4 +1349,1045 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
       }
     },
   );
+
+  describe("EPUB 3.3 Engine Gate 3 (Asset & Resource Packaging - Images)", () => {
+    const PNG_BYTES = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "base64",
+    );
+    const GIF_BYTES = Buffer.from(
+      "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+      "base64",
+    );
+    const SVG_BYTES = new TextEncoder().encode(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="red"/></svg>',
+    );
+    const WEBP_BYTES = Buffer.from(
+      "UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAQAAAAEAAQUxQz0AAAAAAAAAAABWUDggGAAAADABAJ0BKgEAAQAAAP4AAA3AAP7/twAAAA==",
+      "base64",
+    );
+    const JPEG_BYTES = Buffer.from(
+      "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=",
+      "base64",
+    );
+
+    const createTestAsset = (
+      id: string,
+      mediaType: string,
+      overrides: Partial<AssetRef> = {},
+    ): AssetRef => ({
+      id,
+      kind: "image",
+      mediaType,
+      fileName: `${id}.dat`,
+      altText: overrides.altText ?? "",
+      licence: "CC0",
+      ...overrides,
+    });
+
+    const createMemoryResolver = (
+      assetMap: Record<string, Uint8Array>,
+    ): AssetResolver => ({
+      resolve: async (asset) => {
+        const data = assetMap[asset.id];
+        if (!data) {
+          throw new Error(`Asset not found: ${asset.id}`);
+        }
+        return data;
+      },
+    });
+
+    it("packages individual image formats (JPEG, PNG, SVG, WebP, GIF) with canonical paths and manifest entries", async () => {
+      const formats: Array<{
+        ext: string;
+        mime: string;
+        bytes: Uint8Array;
+      }> = [
+        { ext: "jpg", mime: "image/jpeg", bytes: JPEG_BYTES },
+        { ext: "png", mime: "image/png", bytes: PNG_BYTES },
+        { ext: "svg", mime: "image/svg+xml", bytes: SVG_BYTES },
+        { ext: "webp", mime: "image/webp", bytes: WEBP_BYTES },
+        { ext: "gif", mime: "image/gif", bytes: GIF_BYTES },
+      ];
+
+      for (const fmt of formats) {
+        const assetId = `test-img-${fmt.ext}`;
+        const book = createBook({
+          title: `Book with ${fmt.ext.toUpperCase()}`,
+          language: "en",
+          withOpeningChapter: false,
+        });
+
+        book.assets = [
+          createTestAsset(assetId, fmt.mime, {
+            altText: `Test ${fmt.ext} image`,
+          }),
+        ];
+
+        book.chapters = [
+          {
+            id: "ch1",
+            kind: "main",
+            role: "chapter",
+            title: "Chapter 1",
+            blocks: [
+              {
+                type: "image",
+                id: `blk-${fmt.ext}`,
+                assetId,
+                caption: [{ type: "text", text: `Caption for ${fmt.ext}` }],
+              },
+            ],
+          },
+        ];
+
+        const resolver = createMemoryResolver({ [assetId]: fmt.bytes });
+        const pkg = await buildEpubPackage(book, { assetResolver: resolver });
+
+        // Verify package files
+        const expectedPath = `EPUB/images/${assetId}.${fmt.ext}`;
+        const imgFile = pkg.files.find((f) => f.path === expectedPath);
+        assert.ok(imgFile, `Expected file ${expectedPath} in package files`);
+        assert.equal(imgFile.mediaType, fmt.mime);
+        assert.deepEqual(imgFile.content, fmt.bytes);
+
+        // Verify manifest entry
+        const manifestItem = pkg.manifest.find(
+          (m) => m.href === `images/${assetId}.${fmt.ext}`,
+        );
+        assert.ok(manifestItem, `Expected manifest item for ${expectedPath}`);
+        assert.equal(manifestItem.mediaType, fmt.mime);
+        assert.equal(manifestItem.id, `img-${assetId}`);
+
+        // Verify XHTML content
+        const chFile = pkg.files.find((f) => f.path === "EPUB/text/ch_001.xhtml");
+        assert.ok(chFile);
+        const xhtml =
+          typeof chFile.content === "string"
+            ? chFile.content
+            : new TextDecoder().decode(chFile.content);
+        assert.ok(
+          xhtml.includes(`<figure id="blk-${fmt.ext}">`),
+          "Must render <figure>",
+        );
+        assert.ok(
+          xhtml.includes(
+            `<img src="../images/${assetId}.${fmt.ext}" alt="Test ${fmt.ext} image" />`,
+          ),
+          "Must render <img> with relative path and authoritative alt",
+        );
+        assert.ok(
+          xhtml.includes(`<figcaption>Caption for ${fmt.ext}</figcaption>`),
+          "Must render <figcaption>",
+        );
+
+        // Verify ZIP archive builds
+        const epubBytes = await buildEpub(book, { assetResolver: resolver });
+        const unzipped = unzipSync(epubBytes);
+        assert.ok(unzipped[expectedPath], `ZIP must contain ${expectedPath}`);
+        assert.deepEqual(
+          new Uint8Array(unzipped[expectedPath]),
+          new Uint8Array(fmt.bytes),
+        );
+      }
+    });
+
+    it("packages multiple images across sections and omits unreferenced assets", async () => {
+      const book = createBook({
+        title: "Multi-Image Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("fig-1", "image/png", { altText: "First figure" }),
+        createTestAsset("fig-2", "image/jpeg", { altText: "Second figure" }),
+        createTestAsset("unreferenced-img", "image/png", {
+          altText: "Unreferenced figure",
+        }),
+      ];
+
+      book.frontMatter = [
+        {
+          id: "intro",
+          kind: "front",
+          role: "introduction",
+          title: "Introduction",
+          blocks: [
+            {
+              type: "image",
+              id: "img-intro",
+              assetId: "fig-1",
+              caption: [],
+            },
+          ],
+        },
+      ];
+
+      book.chapters = [
+        {
+          id: "ch-main",
+          kind: "main",
+          role: "chapter",
+          title: "Main Chapter",
+          blocks: [
+            {
+              type: "image",
+              id: "img-main",
+              assetId: "fig-2",
+              caption: [{ type: "text", text: "Main caption" }],
+            },
+          ],
+        },
+      ];
+
+      const resolver = createMemoryResolver({
+        "fig-1": PNG_BYTES,
+        "fig-2": JPEG_BYTES,
+        "unreferenced-img": PNG_BYTES,
+      });
+
+      const pkg = await buildEpubPackage(book, { assetResolver: resolver });
+
+      // Referenced assets must exist in package files and OPF manifest
+      assert.ok(pkg.files.some((f) => f.path === "EPUB/images/fig-1.png"));
+      assert.ok(pkg.files.some((f) => f.path === "EPUB/images/fig-2.jpg"));
+      assert.ok(pkg.manifest.some((m) => m.href === "images/fig-1.png"));
+      assert.ok(pkg.manifest.some((m) => m.href === "images/fig-2.jpg"));
+
+      // Unreferenced asset must NOT exist in package files or OPF manifest
+      assert.ok(
+        !pkg.files.some((f) => f.path.includes("unreferenced-img")),
+        "Unreferenced asset must not be included in package files",
+      );
+      assert.ok(
+        !pkg.manifest.some((m) => m.href.includes("unreferenced-img")),
+        "Unreferenced asset must not be included in manifest",
+      );
+
+      // Spine must only contain text sections
+      for (const spineId of pkg.spine) {
+        assert.ok(
+          spineId.startsWith("sec-"),
+          "Spine must only reference section items",
+        );
+      }
+    });
+
+    it("emits a deterministic warning diagnostic when altText is missing or empty", async () => {
+      const book = createBook({
+        title: "Missing Alt Text Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("no-alt-img", "image/png", { altText: "" }),
+      ];
+
+      book.chapters = [
+        {
+          id: "ch1",
+          kind: "main",
+          role: "chapter",
+          title: "Chapter 1",
+          blocks: [
+            {
+              type: "image",
+              id: "img-blk-1",
+              assetId: "no-alt-img",
+              caption: [],
+            },
+          ],
+        },
+      ];
+
+      const diagnostics: PublishingDiagnostic[] = [];
+      const resolver = createMemoryResolver({ "no-alt-img": PNG_BYTES });
+
+      const pkg = await buildEpubPackage(book, {
+        assetResolver: resolver,
+        onDiagnostic: (d) => diagnostics.push(d),
+      });
+
+      assert.ok(pkg);
+      assert.equal(diagnostics.length, 1);
+      const diag = diagnostics[0];
+      assert.ok(diag);
+      assert.equal(diag.code, "MISSING_ALT_TEXT");
+      assert.equal(diag.severity, "warning");
+      assert.equal(diag.assetId, "no-alt-img");
+
+      // HTML img alt must be empty string
+      const chFile = pkg.files.find((f) => f.path === "EPUB/text/ch_001.xhtml");
+      const xhtml =
+        typeof chFile?.content === "string"
+          ? chFile.content
+          : new TextDecoder().decode(chFile?.content);
+      assert.match(xhtml, /<img src="\.\.\/images\/no-alt-img\.png" alt="" \/>/);
+    });
+
+    it("generates semantic figure markup with Unicode/Kannada alt text and caption", async () => {
+      const kannadaAlt = "ಚಿತ್ರ ವಿವರಣೆ - ಸುಂದರ ಪರಿಸರ";
+      const kannadaCaption = "ಚಿತ್ರ ೧: ಕರ್ನಾಟಕದ ನಿಸರ್ಗ ಸೌಂದರ್ಯ";
+
+      const book = createBook({
+        title: "ಕನ್ನಡ ಚಿತ್ರ ಪುಸ್ತಕ",
+        language: "kn",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("kn-img", "image/png", { altText: kannadaAlt }),
+      ];
+
+      book.chapters = [
+        {
+          id: "ch-kn",
+          kind: "main",
+          role: "chapter",
+          title: "ಅಧ್ಯಾಯ",
+          blocks: [
+            {
+              type: "image",
+              id: "img-kn-1",
+              assetId: "kn-img",
+              caption: [{ type: "text", text: kannadaCaption }],
+            },
+          ],
+        },
+      ];
+
+      const resolver = createMemoryResolver({ "kn-img": PNG_BYTES });
+      const epubBytes = await buildEpub(book, { assetResolver: resolver });
+      const unzipped = unzipSync(epubBytes);
+
+      const xhtml = new TextDecoder("utf-8").decode(
+        unzipped["EPUB/text/ch_001.xhtml"],
+      );
+      assert.ok(xhtml.includes(kannadaAlt), "XHTML must preserve Kannada altText");
+      assert.ok(
+        xhtml.includes(kannadaCaption),
+        "XHTML must preserve Kannada figcaption",
+      );
+      assert.ok(
+        xhtml.includes('<figure id="img-kn-1">'),
+        "Must render <figure>",
+      );
+      assert.ok(
+        xhtml.includes(
+          `<img src="../images/kn-img.png" alt="${kannadaAlt}" />`,
+        ),
+        "Must render <img> with correct src and alt",
+      );
+      assert.ok(
+        xhtml.includes(`<figcaption>${kannadaCaption}</figcaption>`),
+        "Must render <figcaption>",
+      );
+    });
+
+    it("enforces deterministic error on missing asset reference", async () => {
+      const book = createBook({
+        title: "Missing Asset Ref Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = []; // No assets registered
+      book.chapters = [
+        {
+          id: "ch1",
+          kind: "main",
+          role: "chapter",
+          title: "Chapter",
+          blocks: [
+            {
+              type: "image",
+              id: "img-blk",
+              assetId: "ghost-asset",
+              caption: [],
+            },
+          ],
+        },
+      ];
+
+      await assert.rejects(
+        async () =>
+          buildEpubPackage(book, {
+            assetResolver: createMemoryResolver({}),
+          }),
+        (err: unknown) => {
+          assert.ok(err instanceof AssetValidationError);
+          assert.equal(err.code, "MISSING_ASSET_REFERENCE");
+          assert.equal(err.assetId, "ghost-asset");
+          return true;
+        },
+      );
+    });
+
+    it("enforces deterministic error on missing asset resolver when images exist", async () => {
+      const book = createBook({
+        title: "Missing Resolver Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("hero-img", "image/png", { altText: "Hero" }),
+      ];
+
+      book.chapters = [
+        {
+          id: "ch1",
+          kind: "main",
+          role: "chapter",
+          title: "Chapter",
+          blocks: [
+            {
+              type: "image",
+              id: "img-hero",
+              assetId: "hero-img",
+              caption: [],
+            },
+          ],
+        },
+      ];
+
+      await assert.rejects(
+        async () => buildEpubPackage(book), // No assetResolver provided
+        (err: unknown) => {
+          assert.ok(err instanceof AssetResolutionError);
+          assert.equal(err.code, "MISSING_RESOLVER");
+          return true;
+        },
+      );
+    });
+
+    it("enforces deterministic error on duplicate asset IDs", async () => {
+      const book = createBook({
+        title: "Duplicate Asset ID Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("dup-id", "image/png", { altText: "First" }),
+        createTestAsset("dup-id", "image/jpeg", { altText: "Duplicate" }),
+      ];
+
+      book.chapters = [
+        {
+          id: "ch1",
+          kind: "main",
+          role: "chapter",
+          title: "Chapter",
+          blocks: [
+            {
+              type: "image",
+              id: "img-1",
+              assetId: "dup-id",
+              caption: [],
+            },
+          ],
+        },
+      ];
+
+      const resolver = createMemoryResolver({ "dup-id": PNG_BYTES });
+
+      await assert.rejects(
+        async () => buildEpubPackage(book, { assetResolver: resolver }),
+        (err: unknown) => {
+          assert.ok(err instanceof AssetValidationError);
+          assert.equal(err.code, "DUPLICATE_ASSET_ID");
+          assert.equal(err.assetId, "dup-id");
+          return true;
+        },
+      );
+    });
+
+    it("enforces deterministic error on unsupported media types and non-image kinds", async () => {
+      const book = createBook({
+        title: "Unsupported Media Type Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("pdf-asset", "application/pdf" as any, {
+          altText: "PDF",
+        }),
+      ];
+
+      book.chapters = [
+        {
+          id: "ch1",
+          kind: "main",
+          role: "chapter",
+          title: "Chapter",
+          blocks: [
+            {
+              type: "image",
+              id: "img-pdf",
+              assetId: "pdf-asset",
+              caption: [],
+            },
+          ],
+        },
+      ];
+
+      const resolver = createMemoryResolver({ "pdf-asset": PNG_BYTES });
+
+      await assert.rejects(
+        async () => buildEpubPackage(book, { assetResolver: resolver }),
+        (err: unknown) => {
+          assert.ok(err instanceof AssetValidationError);
+          assert.equal(err.code, "UNSUPPORTED_MEDIA_TYPE");
+          assert.equal(err.assetId, "pdf-asset");
+          return true;
+        },
+      );
+
+      // Non-image kind
+      book.assets = [
+        {
+          id: "audio-asset",
+          kind: "audio" as any,
+          fileName: "audio.mp3",
+          mediaType: "image/png",
+          altText: "Audio",
+          licence: "CC0",
+        },
+      ];
+      const ch0 = book.chapters[0];
+      assert.ok(ch0);
+      ch0.blocks[0] = {
+        type: "image",
+        id: "img-aud",
+        assetId: "audio-asset",
+        caption: [],
+      };
+
+      await assert.rejects(
+        async () => buildEpubPackage(book, { assetResolver: resolver }),
+        (err: unknown) => {
+          assert.ok(err instanceof AssetValidationError);
+          assert.equal(err.code, "NON_IMAGE_ASSET_KIND");
+          assert.equal(err.assetId, "audio-asset");
+          return true;
+        },
+      );
+    });
+
+    it("enforces deterministic error on unsafe asset IDs (path traversal, control chars, drive letters)", async () => {
+      const unsafeIds = [
+        "../traversal",
+        "..\\traversal",
+        "/absolute/path",
+        "C:\\windows\\system32",
+        "foo\x00bar",
+        "   ",
+      ];
+
+      for (const unsafeId of unsafeIds) {
+        const book = createBook({
+          title: "Unsafe ID Book",
+          language: "en",
+          withOpeningChapter: false,
+        });
+
+        book.assets = [
+          createTestAsset(unsafeId, "image/png", { altText: "Unsafe" }),
+        ];
+
+        book.chapters = [
+          {
+            id: "ch1",
+            kind: "main",
+            role: "chapter",
+            title: "Chapter",
+            blocks: [
+              {
+                type: "image",
+                id: "img-blk",
+                assetId: unsafeId,
+                caption: [],
+              },
+            ],
+          },
+        ];
+
+        const resolver = createMemoryResolver({ [unsafeId]: PNG_BYTES });
+
+        await assert.rejects(
+          async () => buildEpubPackage(book, { assetResolver: resolver }),
+          (err: unknown) => {
+            assert.ok(err instanceof AssetValidationError);
+            assert.equal(err.code, "UNSAFE_ASSET_ID");
+            return true;
+          },
+          `Expected rejection for unsafe asset ID '${unsafeId}'`,
+        );
+      }
+    });
+
+    it("enforces deterministic error on resolver failure and empty asset bytes", async () => {
+      const book = createBook({
+        title: "Resolver Failure Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("fail-img", "image/png", { altText: "Failing" }),
+      ];
+
+      book.chapters = [
+        {
+          id: "ch1",
+          kind: "main",
+          role: "chapter",
+          title: "Chapter",
+          blocks: [
+            {
+              type: "image",
+              id: "img-fail",
+              assetId: "fail-img",
+              caption: [],
+            },
+          ],
+        },
+      ];
+
+      const failingResolver: AssetResolver = {
+        resolve: async () => {
+          throw new Error("Disk I/O failure");
+        },
+      };
+
+      await assert.rejects(
+        async () => buildEpubPackage(book, { assetResolver: failingResolver }),
+        (err: unknown) => {
+          assert.ok(err instanceof AssetResolutionError);
+          assert.equal(err.code, "RESOLUTION_FAILED");
+          assert.equal(err.assetId, "fail-img");
+          assert.ok(err.message.includes("Disk I/O failure"));
+          return true;
+        },
+      );
+
+      // Empty byte payload
+      const emptyResolver: AssetResolver = {
+        resolve: async () => new Uint8Array(0),
+      };
+
+      await assert.rejects(
+        async () => buildEpubPackage(book, { assetResolver: emptyResolver }),
+        (err: unknown) => {
+          assert.ok(err instanceof AssetResolutionError);
+          assert.equal(err.code, "EMPTY_ASSET_DATA");
+          assert.equal(err.assetId, "fail-img");
+          return true;
+        },
+      );
+    });
+
+    it("enforces deterministic error on output-path collision", async () => {
+      const book = createBook({
+        title: "Path Collision Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("photo", "image/png", { altText: "Photo 1" }),
+        createTestAsset("PHOTO", "image/png", { altText: "Photo 2" }),
+      ];
+
+      book.chapters = [
+        {
+          id: "ch1",
+          kind: "main",
+          role: "chapter",
+          title: "Chapter",
+          blocks: [
+            {
+              type: "image",
+              id: "img-1",
+              assetId: "photo",
+              caption: [],
+            },
+            {
+              type: "image",
+              id: "img-2",
+              assetId: "PHOTO",
+              caption: [],
+            },
+          ],
+        },
+      ];
+
+      const resolver = createMemoryResolver({
+        photo: PNG_BYTES,
+        PHOTO: PNG_BYTES,
+      });
+
+      await assert.rejects(
+        async () => buildEpubPackage(book, { assetResolver: resolver }),
+        (err: unknown) => {
+          assert.ok(err instanceof AssetValidationError);
+          assert.equal(err.code, "PATH_COLLISION");
+          return true;
+        },
+      );
+    });
+
+    it("preserves byte-for-byte binary determinism across multiple builds with image assets", async () => {
+      const book = createBook({
+        title: "Deterministic Image Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("hero", "image/png", { altText: "Hero Image" }),
+        createTestAsset("vector-art", "image/svg+xml", {
+          altText: "SVG Vector",
+        }),
+      ];
+
+      book.chapters = [
+        {
+          id: "ch1",
+          kind: "main",
+          role: "chapter",
+          title: "Chapter 1",
+          blocks: [
+            {
+              type: "image",
+              id: "img-hero",
+              assetId: "hero",
+              caption: [{ type: "text", text: "Hero caption" }],
+            },
+            {
+              type: "image",
+              id: "img-svg",
+              assetId: "vector-art",
+              caption: [],
+            },
+          ],
+        },
+      ];
+
+      const resolver = createMemoryResolver({
+        hero: PNG_BYTES,
+        "vector-art": SVG_BYTES,
+      });
+
+      const options = {
+        assetResolver: resolver,
+        modifiedDate: "2026-01-01T00:00:00Z",
+      };
+
+      const build1 = await buildEpub(book, options);
+      const build2 = await buildEpub(book, options);
+      const build3 = await buildEpub(book, options);
+
+      assert.deepEqual(
+        build1,
+        build2,
+        "Build 1 and Build 2 must be byte-for-byte identical",
+      );
+      assert.deepEqual(
+        build2,
+        build3,
+        "Build 2 and Build 3 must be byte-for-byte identical",
+      );
+    });
+
+    it("places image assets after text XHTML and before styles/other in deterministic archive order", async () => {
+      const book = createBook({
+        title: "Archive Order Book",
+        language: "en",
+        withOpeningChapter: false,
+      });
+
+      book.assets = [
+        createTestAsset("img-b", "image/png", { altText: "B" }),
+        createTestAsset("img-a", "image/jpeg", { altText: "A" }),
+      ];
+
+      book.chapters = [
+        {
+          id: "ch1",
+          kind: "main",
+          role: "chapter",
+          title: "Chapter 1",
+          blocks: [
+            { type: "image", id: "blk-b", assetId: "img-b", caption: [] },
+            { type: "image", id: "blk-a", assetId: "img-a", caption: [] },
+          ],
+        },
+      ];
+
+      const resolver = createMemoryResolver({
+        "img-b": PNG_BYTES,
+        "img-a": JPEG_BYTES,
+      });
+
+      const pkg = await buildEpubPackage(book, { assetResolver: resolver });
+
+      // In files array, images must be sorted lexicographically: img-a.jpg before img-b.png
+      const imageFiles = pkg.files.filter((f) =>
+        f.path.startsWith("EPUB/images/"),
+      );
+      assert.equal(imageFiles.length, 2);
+      const img0 = imageFiles[0];
+      const img1 = imageFiles[1];
+      assert.ok(img0);
+      assert.ok(img1);
+      assert.equal(img0.path, "EPUB/images/img-a.jpg");
+      assert.equal(img1.path, "EPUB/images/img-b.png");
+
+      // Verify ZIP entry ordering via Central Directory header inspection
+      const epubBytes = await buildEpub(book, {
+        assetResolver: resolver,
+        modifiedDate: "2026-01-01T00:00:00Z",
+      });
+
+      // Extract ZIP entry paths in actual archive order
+      const entryPaths: string[] = [];
+      let offset = 0;
+      while (offset < epubBytes.length - 4) {
+        // Look for local file header signature PK\x03\x04 (0x04034b50)
+        if (
+          epubBytes[offset] === 0x50 &&
+          epubBytes[offset + 1] === 0x4b &&
+          epubBytes[offset + 2] === 0x03 &&
+          epubBytes[offset + 3] === 0x04
+        ) {
+          const b26 = epubBytes[offset + 26];
+          const b27 = epubBytes[offset + 27];
+          const b28 = epubBytes[offset + 28];
+          const b29 = epubBytes[offset + 29];
+          const b18 = epubBytes[offset + 18];
+          const b19 = epubBytes[offset + 19];
+          const b20 = epubBytes[offset + 20];
+          const b21 = epubBytes[offset + 21];
+          if (
+            b26 === undefined ||
+            b27 === undefined ||
+            b28 === undefined ||
+            b29 === undefined ||
+            b18 === undefined ||
+            b19 === undefined ||
+            b20 === undefined ||
+            b21 === undefined
+          ) {
+            break;
+          }
+          const fnLen = b26 | (b27 << 8);
+          const extraLen = b28 | (b29 << 8);
+          const compSize = b18 | (b19 << 8) | (b20 << 16) | (b21 << 24);
+          const fnBytes = epubBytes.subarray(offset + 30, offset + 30 + fnLen);
+          const entryName = new TextDecoder().decode(fnBytes);
+          entryPaths.push(entryName);
+          offset += 30 + fnLen + extraLen + compSize;
+        } else {
+          offset++;
+        }
+      }
+
+      // Verify mimetype is first
+      assert.equal(entryPaths[0], "mimetype");
+      // Verify META-INF/container.xml is second
+      assert.equal(entryPaths[1], "META-INF/container.xml");
+      // Verify EPUB/package.opf is third
+      assert.equal(entryPaths[2], "EPUB/package.opf");
+      // Verify EPUB/nav.xhtml is fourth
+      assert.equal(entryPaths[3], "EPUB/nav.xhtml");
+
+      // Find index of last EPUB/text/ file
+      const lastTextIdx = entryPaths.reduce(
+        (acc, p, idx) => (p.startsWith("EPUB/text/") ? idx : acc),
+        -1,
+      );
+      assert.ok(lastTextIdx > 0, "Must have text files");
+
+      // Find index of first and last EPUB/images/ file
+      const firstImgIdx = entryPaths.findIndex((p) =>
+        p.startsWith("EPUB/images/"),
+      );
+      const lastImgIdx = entryPaths.reduce(
+        (acc, p, idx) => (p.startsWith("EPUB/images/") ? idx : acc),
+        -1,
+      );
+
+      assert.ok(firstImgIdx > lastTextIdx, "Images must appear after text XHTML");
+      assert.equal(entryPaths[firstImgIdx], "EPUB/images/img-a.jpg");
+      assert.equal(entryPaths[lastImgIdx], "EPUB/images/img-b.png");
+    });
+
+    it(
+      "validates generated multi-image EPUB (JPEG, PNG, SVG, WebP, GIF) with official EPUBCheck 5.3.0 and achieves zero errors and zero warnings",
+      { skip: !hasSpikeRuntime },
+      async () => {
+        const book = createBook({
+          title: "Gate 3 Multi-Image Conformance Publication",
+          authors: ["OpenBook Conformance Team"],
+          language: "en",
+          withOpeningChapter: false,
+        });
+
+        book.metadata.identifier =
+          "urn:uuid:8b3543f2-5d23-4328-b132-009988776655";
+        book.metadata.publishedAt = "2026-01-01T00:00:00Z";
+        book.metadata.publisher = "OpenBook Press";
+        book.metadata.description =
+          "EPUB 3.3 Engine Gate 3 Conformance fixture verifying image asset packaging.";
+
+        // Register all 5 supported image formats
+        book.assets = [
+          createTestAsset("asset-png", "image/png", {
+            altText: "PNG sample diagram",
+          }),
+          createTestAsset("asset-jpeg", "image/jpeg", {
+            altText: "JPEG photographic sample",
+          }),
+          createTestAsset("asset-svg", "image/svg+xml", {
+            altText: "SVG vector illustration",
+          }),
+          createTestAsset("asset-webp", "image/webp", {
+            altText: "WebP high compression graphic",
+          }),
+          createTestAsset("asset-gif", "image/gif", {
+            altText: "GIF graphic asset",
+          }),
+        ];
+
+        // Chapter 1: Story with all 5 images and semantic figures
+        book.chapters = [
+          {
+            id: "ch-gallery",
+            kind: "main",
+            role: "chapter",
+            title: "Media Conformance Gallery",
+            blocks: [
+              {
+                type: "heading",
+                id: "h1-gal",
+                level: 2,
+                inlines: [{ type: "text", text: "Image Formats Conformance" }],
+              },
+              {
+                type: "paragraph",
+                id: "p1-gal",
+                inlines: [
+                  {
+                    type: "text",
+                    text: "The following figures demonstrate EPUB 3.3 Core Media Types packaging.",
+                  },
+                ],
+              },
+              {
+                type: "image",
+                id: "fig-png",
+                assetId: "asset-png",
+                caption: [
+                  { type: "text", text: "Figure 1: Portable Network Graphics" },
+                ],
+              },
+              {
+                type: "image",
+                id: "fig-jpeg",
+                assetId: "asset-jpeg",
+                caption: [
+                  {
+                    type: "text",
+                    text: "Figure 2: Joint Photographic Experts Group",
+                  },
+                ],
+              },
+              {
+                type: "image",
+                id: "fig-svg",
+                assetId: "asset-svg",
+                caption: [
+                  { type: "text", text: "Figure 3: Scalable Vector Graphics" },
+                ],
+              },
+              {
+                type: "image",
+                id: "fig-webp",
+                assetId: "asset-webp",
+                caption: [
+                  { type: "text", text: "Figure 4: WebP Next-Gen Image" },
+                ],
+              },
+              {
+                type: "image",
+                id: "fig-gif",
+                assetId: "asset-gif",
+                caption: [
+                  {
+                    type: "text",
+                    text: "Figure 5: Graphics Interchange Format",
+                  },
+                ],
+              },
+            ],
+          },
+        ];
+
+        const resolver = createMemoryResolver({
+          "asset-png": PNG_BYTES,
+          "asset-jpeg": JPEG_BYTES,
+          "asset-svg": SVG_BYTES,
+          "asset-webp": WEBP_BYTES,
+          "asset-gif": GIF_BYTES,
+        });
+
+        const epubBytes = await buildEpub(book, {
+          assetResolver: resolver,
+          modifiedDate: "2026-01-01T00:00:00Z",
+        });
+
+        const tempDir = await fs.mkdtemp(
+          path.join(os.tmpdir(), "openbook-gate3-test-"),
+        );
+        const tempEpubPath = path.join(tempDir, "gate3-conformance-test.epub");
+
+        try {
+          await fs.writeFile(tempEpubPath, epubBytes);
+
+          const adapter = new EpubCheckSubprocessAdapter({
+            javaExecutablePath: javaExe,
+            epubcheckJarPath: epubcheckJar,
+          });
+
+          const report = await adapter.validateEpub(tempEpubPath);
+
+          assert.equal(report.validatorName, "EPUBCheck");
+          assert.equal(report.validatorVersion, "5.3.0");
+          assert.equal(
+            report.isValid,
+            true,
+            `EPUBCheck reported errors: ${JSON.stringify(report.messages, null, 2)}`,
+          );
+          assert.equal(
+            report.summary.totalErrors,
+            0,
+            `Expected 0 errors, got ${report.summary.totalErrors}: ${JSON.stringify(report.messages)}`,
+          );
+          assert.equal(
+            report.summary.totalWarnings,
+            0,
+            `Expected 0 warnings, got ${report.summary.totalWarnings}: ${JSON.stringify(report.messages)}`,
+          );
+          assert.equal(report.summary.totalFatal, 0);
+        } finally {
+          await fs.rm(tempDir, { recursive: true, force: true });
+        }
+      },
+    );
+  });
 });

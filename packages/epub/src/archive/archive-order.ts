@@ -17,7 +17,8 @@ export function normalizeZipPath(filePath: string): string {
  * 4. "EPUB/nav.xhtml"
  * 5. "EPUB/styles/openbook.css"
  * 6. "EPUB/text/*.xhtml" sorted lexicographically by path.
- * 7. Any remaining files sorted lexicographically by path.
+ * 7. "EPUB/images/*" sorted lexicographically by path.
+ * 8. Any remaining files sorted lexicographically by path.
  */
 export function orderArchiveFiles(files: EpubPackageFile[]): EpubPackageFile[] {
   const normalized = files.map((file) => ({
@@ -44,6 +45,10 @@ export function orderArchiveFiles(files: EpubPackageFile[]): EpubPackageFile[] {
     .filter((f) => f.path.startsWith("EPUB/text/"))
     .sort((a, b) => a.path.localeCompare(b.path));
 
+  const imageFiles = normalized
+    .filter((f) => f.path.startsWith("EPUB/images/"))
+    .sort((a, b) => a.path.localeCompare(b.path));
+
   const knownPaths = new Set<string>([
     "mimetype",
     "META-INF/container.xml",
@@ -51,6 +56,7 @@ export function orderArchiveFiles(files: EpubPackageFile[]): EpubPackageFile[] {
     "EPUB/nav.xhtml",
     "EPUB/styles/openbook.css",
     ...textFiles.map((f) => f.path),
+    ...imageFiles.map((f) => f.path),
   ]);
 
   const remainingFiles = normalized
@@ -63,6 +69,7 @@ export function orderArchiveFiles(files: EpubPackageFile[]): EpubPackageFile[] {
   if (nav) ordered.push(nav);
   if (css) ordered.push(css);
   ordered.push(...textFiles);
+  ordered.push(...imageFiles);
   ordered.push(...remainingFiles);
 
   return ordered;
