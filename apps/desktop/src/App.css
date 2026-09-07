@@ -85,6 +85,33 @@ dd {
   font-size: 0.9rem;
 }
 
+.project-bar {
+  margin: 0.75rem 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #ccc;
+  background: #fff;
+}
+
+.project-binding {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.project-actions button {
+  font: inherit;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid #bbb;
+  background: #f8f8f6;
+  cursor: pointer;
+}
+
 .editor-section {
   margin-top: 0.5rem;
 }

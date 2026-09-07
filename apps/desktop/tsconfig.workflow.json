@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "declaration": true,
+    "sourceMap": true,
+    "rootDir": "src",
+    "outDir": "dist-workflow",
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "verbatimModuleSyntax": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/workflow/**/*.ts",
+    "src/domain/**/*.ts",
+    "src/persistence/**/*.ts"
+  ]
+}

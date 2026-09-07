@@ -1,9 +1,8 @@
 /**
  * SPDX-License-Identifier: Apache-2.0
  *
- * Tiptap authoring surface with in-memory multi-chapter book operations.
- * Editor transport stays in Tiptap JSON; canonical content goes through
- * EditorAdapter → SemanticDocument session → desktop domain boundary → Book.
+ * Tiptap authoring surface with in-memory multi-chapter operations and
+ * Save/Open through ProjectPersistence (canonical Book only; never Tiptap JSON).
  */
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -27,6 +26,14 @@ import {
   selectedChapterToTipTap,
   type EditorBookSession,
 } from "./domain/editorBookSession";
+import { SqliteProjectPersistence } from "./persistence/sqlitePersistence";
+import type { ProjectPersistence, ProjectSummary } from "./persistence/types";
+import {
+  listEditorProjects,
+  openEditorProject,
+  saveEditorSession,
+  type ActiveProjectBinding,
+} from "./workflow/projectWorkflow";
 import englishFixture from "./fixtures/english-tiptap.json";
 
 type ProjectionStatus = "idle" | "ok" | "error";
@@ -75,7 +82,13 @@ export default function EditorSurface() {
   const [detail, setDetail] = useState("Edit to project through SDM → Book");
   const [roundTrip, setRoundTrip] = useState("Not checked");
   const [sessionNote, setSessionNote] = useState("In-memory multi-chapter session");
+  const [binding, setBinding] = useState<ActiveProjectBinding | null>(null);
+  const bindingRef = useRef(binding);
+  bindingRef.current = binding;
+  const [persistStatus, setPersistStatus] = useState("Persistence: not initialized");
+  const [projectList, setProjectList] = useState<ProjectSummary[]>([]);
   const switchingRef = useRef(false);
+  const persistenceRef = useRef<ProjectPersistence | null>(null);
 
   const chapters = listSessionChapters(session);
   const selected = chapters.find((c) => c.id === session.selectedChapterId);
@@ -98,6 +111,25 @@ export default function EditorSurface() {
       },
     },
   });
+
+  useEffect(() => {
+    const persistence = new SqliteProjectPersistence();
+    persistenceRef.current = persistence;
+    void persistence.initialize().then((result) => {
+      if (!result.ok) {
+        setPersistStatus(`Persistence: ${result.error.message}`);
+        return;
+      }
+      setPersistStatus("Persistence: ready (SQLite ProjectPersistence)");
+      void listEditorProjects(persistence).then((listed) => {
+        if (listed.ok) setProjectList(listed.value);
+      });
+    });
+    return () => {
+      void persistence.close();
+      persistenceRef.current = null;
+    };
+  }, []);
 
   const projectFromSession = (next: EditorBookSession, warningsCount: number) => {
     const result = projectSessionToBook(next);
@@ -186,6 +218,11 @@ export default function EditorSurface() {
     projectFromSession(next, 0);
   };
 
+  const refreshProjectList = async (persistence: ProjectPersistence) => {
+    const listed = await listEditorProjects(persistence);
+    if (listed.ok) setProjectList(listed.value);
+  };
+
   const onSelectChapter = (chapterId: string) => {
     const flushed = flushEditorIntoSession();
     if (!flushed) return;
@@ -196,7 +233,9 @@ export default function EditorSurface() {
     }
     sessionRef.current = selectedNext.session;
     setSession(selectedNext.session);
-    setSessionNote(`Selected “${listSessionChapters(selectedNext.session).find((c) => c.id === chapterId)?.title ?? chapterId}”`);
+    setSessionNote(
+      `Selected “${listSessionChapters(selectedNext.session).find((c) => c.id === chapterId)?.title ?? chapterId}”`,
+    );
     loadChapterIntoEditor(selectedNext.session);
   };
 
@@ -250,13 +289,138 @@ export default function EditorSurface() {
     loadChapterIntoEditor(deleted.session);
   };
 
+  const onNewBook = () => {
+    const next = initialSession();
+    sessionRef.current = next;
+    setSession(next);
+    setBinding(null);
+    bindingRef.current = null;
+    setSessionNote("Started a new unsaved book session");
+    setPersistStatus("Persistence: ready (unsaved new book)");
+    loadChapterIntoEditor(next);
+  };
+
+  const onSaveProject = async () => {
+    const persistence = persistenceRef.current;
+    if (!persistence) {
+      setPersistStatus("Persistence: not available");
+      return;
+    }
+    const flushed = flushEditorIntoSession();
+    if (!flushed) return;
+
+    let projectName: string | undefined;
+    if (!bindingRef.current) {
+      const suggested = flushed.document.metadata.title || "Untitled Project";
+      const entered = window.prompt("Save project as", suggested);
+      if (entered === null) return;
+      projectName = entered;
+    }
+
+    const result = await saveEditorSession({
+      persistence,
+      session: flushed,
+      binding: bindingRef.current,
+      projectName,
+    });
+    if (!result.ok) {
+      setPersistStatus(result.message.text);
+      return;
+    }
+    setBinding(result.value.binding);
+    bindingRef.current = result.value.binding;
+    setPersistStatus(result.message.text);
+    await refreshProjectList(persistence);
+  };
+
+  const onOpenProject = async () => {
+    const persistence = persistenceRef.current;
+    if (!persistence) {
+      setPersistStatus("Persistence: not available");
+      return;
+    }
+    await refreshProjectList(persistence);
+    const listed = await listEditorProjects(persistence);
+    if (!listed.ok) {
+      setPersistStatus(listed.message.text);
+      return;
+    }
+    if (listed.value.length === 0) {
+      setPersistStatus("No project selected. No saved projects available.");
+      return;
+    }
+
+    const choices = listed.value
+      .map((p, i) => `${i + 1}. ${p.name} (${p.id})`)
+      .join("\n");
+    const entered = window.prompt(
+      `Open project — enter number or project id:\n${choices}`,
+      "1",
+    );
+    if (entered === null) return;
+    const trimmed = entered.trim();
+    const asIndex = Number.parseInt(trimmed, 10);
+    const projectId =
+      Number.isFinite(asIndex) && asIndex >= 1 && asIndex <= listed.value.length
+        ? listed.value[asIndex - 1]!.id
+        : trimmed;
+
+    if (!projectId) {
+      setPersistStatus("No project selected to open.");
+      return;
+    }
+
+    const opened = await openEditorProject({
+      persistence,
+      projectId,
+      preferredChapterId: sessionRef.current.selectedChapterId,
+    });
+    if (!opened.ok) {
+      setPersistStatus(opened.message.text);
+      return;
+    }
+
+    sessionRef.current = opened.value.session;
+    setSession(opened.value.session);
+    setBinding(opened.value.binding);
+    bindingRef.current = opened.value.binding;
+    setPersistStatus(opened.message.text);
+    setSessionNote(`Opened “${opened.value.binding.projectName}”`);
+    loadChapterIntoEditor(opened.value.session);
+  };
+
   return (
     <section className="editor-section">
       <h2>Editor (Tiptap)</h2>
       <p className="note">
-        In-memory book/chapter session. Path: Tiptap → EditorAdapter → SDM → Book
-        (canonical). No persistence.
+        Path: Tiptap → EditorAdapter → SDM → Book (canonical) → ProjectPersistence →
+        SQLite. Tiptap JSON is never saved.
       </p>
+
+      <div className="project-bar" aria-label="Project">
+        <span className="project-binding" data-testid="project-binding">
+          {binding
+            ? `Project: ${binding.projectName}`
+            : "Project: (unsaved — not selected)"}
+        </span>
+        <div className="project-actions">
+          <button type="button" onClick={onNewBook}>
+            New book
+          </button>
+          <button type="button" onClick={() => void onSaveProject()}>
+            Save
+          </button>
+          <button type="button" onClick={() => void onOpenProject()}>
+            Open
+          </button>
+        </div>
+        <p className="detail" data-testid="persist-status">
+          {persistStatus}
+        </p>
+        {projectList.length > 0 ? (
+          <p className="note">Saved projects in DB: {projectList.length}</p>
+        ) : null}
+      </div>
 
       <div className="editor-layout">
         <aside className="chapter-panel" aria-label="Chapters">
