@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "title": "ಕನ್ನಡ ಉದಾಹರಣೆ",
+    "subtitle": "",
+    "authors": ["ಲೇಖಕ"],
+    "contributors": [],
+    "language": "kn",
+    "identifier": "fixture-kn-sdm-1",
+    "publisher": "",
+    "publishedAt": "",
+    "copyright": "",
+    "description": "",
+    "subjects": [],
+    "rights": ""
+  },
+  "sections": [
+    {
+      "id": "kn-main-1",
+      "matter": "main",
+      "role": "chapter",
+      "title": "ಮೊದಲ ಅಧ್ಯಾಯ",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "id": "kn-p1",
+          "inlines": [
+            { "type": "text", "text": "ಇದು ಕನ್ನಡ ಪ್ಯಾರಾಗ್ರಾಫ್. " },
+            {
+              "type": "emphasis",
+              "children": [{ "type": "text", "text": "ಗುರುತು" }]
+            },
+            { "type": "text", "text": "." }
+          ]
+        },
+        {
+          "type": "list",
+          "id": "kn-l1",
+          "ordered": false,
+          "items": [
+            [{ "type": "text", "text": "ಒಂದು" }],
+            [{ "type": "text", "text": "ಎರಡು" }]
+          ]
+        }
+      ]
+    }
+  ],
+  "assets": []
+}
