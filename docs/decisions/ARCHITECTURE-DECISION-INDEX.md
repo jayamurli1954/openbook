@@ -16,8 +16,9 @@ Numbering: files are `docs/adr/NNNN-slug.md`. **ADR-0001 was never issued on `ma
 | ADR-0005 | EPUBCheck bundling, Java runtime isolation and compliance | Accepted; runtime version/`jlink` not Frozen | EPUB / Runtime / Compliance | 2026-09-03 |
 | ADR-0006 | Book Model executable specification and tests (no UI) | Accepted | Book Model / Foundation | 2026-09-03 |
 | ADR-0007 | Desktop foundation technology baseline and freeze-lift | Accepted; Tauri/React/TypeScript/SQLite versions Frozen; next-PR shell scaffold authorized | Desktop / Foundation | 2026-09-07 |
+| ADR-0008 | Editor technology evaluation and decision (Tiptap/ProseMirror) | Accepted; OSS Tiptap package versions Frozen; editor implementation not authorized by this ADR alone | Editor / Authoring | 2026-09-07 |
 
-**Accepted is not Frozen.** Frozen means implementation must follow that decision unless a new ADR replaces it. Preferred stacks that lack exact pins (Tiptap, Typst-as-candidate) remain Accepted directions or evaluation candidates. ADR-0007 freezes exact Tauri **2.11.5**, React **19.2.8**, TypeScript **5.9.3**, and `tauri-plugin-sql` **2.4.1** (`sqlite`) for the desktop baseline; PDF renderer selection remains UNDECIDED (ADR-0004).
+**Accepted is not Frozen.** Frozen means implementation must follow that decision unless a new ADR replaces it. ADR-0007 freezes exact Tauri **2.11.5**, React **19.2.8**, TypeScript **5.9.3**, and `tauri-plugin-sql` **2.4.1** (`sqlite`) for the desktop baseline. ADR-0008 freezes the open-source Tiptap/ProseMirror package pins for the authoring surface but does **not** install them or implement the editor. PDF renderer selection remains UNDECIDED (ADR-0004). Typst remains an evaluation candidate only.
 
 ## Governance
 
@@ -33,9 +34,9 @@ See also `docs/FOUNDATION-READINESS-REPORT.md` and `docs/IMPLEMENTATION-BACKLOG.
 - Exact Temurin (or other OpenJDK) version, architectures, and whether `jlink` is used (strategy is Accepted in ADR-0005)
 - Bundled-font policy
 - Contributor agreement mechanism (CLA/DCO)
-- Exact Tiptap/ProseMirror (editor) package versions — desktop shell versions are Frozen in ADR-0007; editor stack is not
-- Frontend bundler (e.g. Vite) exact version — to be recorded when the ADR-0007 next-PR shell scaffold lands
 - Whether `FOUNDATION-GOVERNANCE-READY` / `ROADMAP.md` `FOUNDATION-READY` can be declared (audit: **not passed**)
+- ~~Exact Tiptap/ProseMirror (editor) package versions~~ — resolved by ADR-0008 (OSS pins Frozen; implementation still gated)
+- ~~Frontend bundler (e.g. Vite) exact version~~ — Vite **8.2.2** recorded with the desktop shell (`apps/desktop`)
 - ~~Final Tauri / React / TypeScript / SQLite desktop baseline versions~~ — resolved by ADR-0007
 - ~~How to merge or renumber the unmerged Book Model work on PR #1~~ — resolved by ADR-0006: reused, reconciled, and landed as `@openbook/book-model` (PR #1's `docs/adr/0001` not used; 0001 stays reserved)
 
