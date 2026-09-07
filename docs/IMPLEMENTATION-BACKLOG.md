@@ -2,8 +2,8 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-09-07
-- **Reconciled to:** `main` after PRs #6–#12 (`22eb796`)
-- **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not select a final PDF renderer. Do not replace official EPUBCheck. Do not implement the editor until an authorized implementation PR follows ADR-0008. Do not expand the desktop shell beyond existing hard stops without a new authorization.
+- **Reconciled to:** `main` after PR #14 (`491a02f`)
+- **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not select a final PDF renderer. Do not replace official EPUBCheck. Do not expand beyond authorized editor slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0008-editor-technology-tiptap-prosemirror.md`.
 
@@ -32,9 +32,11 @@ VALIDATION
 ├── Book Doctor                  [ACCEPTED product concept; NOT STARTED]
 │
 EDITOR
-├── Editor technology decision   [CURRENT GATE: ADR-0008 — Tiptap/ProseMirror selected; OSS versions Frozen; implementation NOT STARTED]
-├── Tiptap / ProseMirror         [FROZEN pins in ADR-0008; packages NOT installed; UI NOT STARTED]
-├── EditorAdapter (PM ↔ SDM)     [NOT STARTED — authorized only after ADR-0008 implementation freeze-lift]
+├── Editor technology decision   [DONE: ADR-0008 — Tiptap/ProseMirror selected; OSS versions Frozen]
+├── Tiptap / ProseMirror         [DONE on main: ADR-0008 pins installed in PR #14]
+├── EditorAdapter (PM ↔ SDM)     [DONE on main: PR #14 bidirectional TipTap JSON ↔ SDM]
+├── First editor surface         [DONE on main: PR #14 minimal Tiptap UI + EN/KN round-trips]
+├── Book/chapter operations      [IN PROGRESS / this PR: in-memory multi-chapter session]
 ├── semantic document model      [DONE (PR #11); maps to Book Model]
 │
 DTP
@@ -59,9 +61,11 @@ Status against the original ordered list:
 5. **Desktop shell freeze-lift + empty shell** — **DONE** (ADR-0007 baseline; PR #9 `apps/desktop` with SQLite connectivity proof only).
 6. **Semantic Document Model contract** — **DONE** (PR #11 / `@openbook/semantic-document`).
 7. **Desktop SDM integration boundary** — **DONE** (PR #12; in-memory Desktop → SDM → Book).
-8. **Editor technology evaluation and decision** — **CURRENT GATE** (ADR-0008 / this backlog entry). Implementation of Tiptap UI remains a later authorized PR.
+8. **Editor technology evaluation and decision** — **DONE** (ADR-0008).
+9. **First Tiptap editor implementation** — **DONE** (PR #14; EditorAdapter + minimal UI).
+10. **Editor book/chapter operations** — **authorized slice** (in-memory select/create/rename/delete; no persistence).
 
-Remaining foundation / product work (not authorized by backlog presence alone): editor implementation/EditorAdapter; production SQLite persistence schema; EPUB/HTML/PDF engines; PDF renderer choice and implementation; DTP; AI/Ollama.
+Remaining foundation / product work (not authorized by backlog presence alone): production SQLite persistence schema; EPUB/HTML/PDF engines; PDF renderer choice and implementation; DTP; AI/Ollama; Save/Open project files.
 
 ## Explicitly out of order
 
@@ -71,5 +75,5 @@ Remaining foundation / product work (not authorized by backlog presence alone): 
 - Making Ollama required for MVP
 - Declaring `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` because documentation or early scaffolds exist
 - Treating the PR #9 SQLite smoke DB as a production persistence schema
-- Installing Tiptap/ProseMirror or building editor UI solely because ADR-0008 exists
 - Letting Tiptap/ProseMirror JSON become a parallel canonical document model
+- Adding Save/Open, SQLite book schema, or publishing engines under an editor UX PR
