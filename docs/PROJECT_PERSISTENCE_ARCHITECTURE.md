@@ -94,12 +94,16 @@ Persistence operations interact with SQLite through the `SqliteConnection` inter
 export interface SqliteConnection {
   execute(sql: string, params?: unknown[]): Promise<QueryExecutionResult>;
   select<T>(sql: string, params?: unknown[]): Promise<T[]>;
+  transaction<T>(action: (conn: SqliteConnection) => Promise<T>): Promise<T>;
   close(): Promise<void>;
 }
 ```
 
-- **Production:** `TauriPluginSqlConnection` delegates to `tauri-plugin-sql` (`Database.load(...)`) within Tauri's native desktop runtime.
-- **Unit Tests:** `InMemorySqliteConnection` provides an in-memory SQL driver implementing table storage, parameter binding, queries, and cascade deletion. This completely avoids coupling tests to Node's experimental `node:sqlite` or requiring running Tauri IPC in Node.
+- **Atomic Transactions:** `saveProject()` executes project row and document row upserts atomically within `connection.transaction()`. If any operation fails, state is rolled back completely to prevent orphan or partial project records.
+- **Foreign-Key Enforcement:** SQLite foreign keys are connection-level and explicitly enabled via `PRAGMA foreign_keys = ON;` in `TauriPluginSqlConnection` and during `SqliteProjectPersistence.initialize()`. The test driver (`InMemorySqliteConnection`) explicitly models and enforces foreign key constraints and cascade deletion.
+- **Integrity Validation:** `getProjectMetadata()` strictly requires the corresponding `project_documents` row; if absent, it returns `CORRUPT_DATA` rather than silently defaulting `bookSchemaVersion`.
+- **Production Driver:** `TauriPluginSqlConnection` delegates to `tauri-plugin-sql` (`Database.load(...)`) within Tauri's native desktop runtime.
+- **Unit Tests:** `InMemorySqliteConnection` provides a self-contained in-memory SQL driver with snapshot/rollback transactions and foreign key constraint enforcement. This completely avoids coupling tests to Node's experimental `node:sqlite` or requiring running Tauri IPC in Node.
 
 ---
 

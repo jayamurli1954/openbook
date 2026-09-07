@@ -3,8 +3,8 @@
  * SQLite driver abstraction for OpenBook desktop.
  *
  * Provides a clean boundary between persistence operations and the underlying SQLite engine:
- * - TauriPluginSqlConnection: Wraps @tauri-apps/plugin-sql in Tauri desktop runtime.
- * - InMemorySqliteConnection: Self-contained in-memory driver for unit tests (zero Node SQLite dependency).
+ * - TauriPluginSqlConnection: Wraps @tauri-apps/plugin-sql in Tauri desktop runtime with foreign keys enabled.
+ * - InMemorySqliteConnection: Self-contained in-memory driver with transaction and foreign-key support for unit tests.
  */
 import Database from "@tauri-apps/plugin-sql";
 
@@ -20,11 +20,13 @@ export interface QueryExecutionResult {
 export interface SqliteConnection {
   execute(sql: string, params?: unknown[]): Promise<QueryExecutionResult>;
   select<T>(sql: string, params?: unknown[]): Promise<T[]>;
+  transaction<T>(action: (conn: SqliteConnection) => Promise<T>): Promise<T>;
   close(): Promise<void>;
 }
 
 /**
  * Production SQLite connection delegating to Tauri's SQL plugin.
+ * Explicitly enables SQLite foreign keys at connection initialization.
  */
 export class TauriPluginSqlConnection implements SqliteConnection {
   private db: Database | null = null;
@@ -37,6 +39,8 @@ export class TauriPluginSqlConnection implements SqliteConnection {
   private async getDb(): Promise<Database> {
     if (!this.db) {
       this.db = await Database.load(this.dbPath);
+      // Explicitly enable foreign keys for SQLite connection
+      await this.db.execute("PRAGMA foreign_keys = ON;");
     }
     return this.db;
   }
@@ -52,6 +56,23 @@ export class TauriPluginSqlConnection implements SqliteConnection {
     return db.select<T[]>(sql, (params ?? []) as unknown[]);
   }
 
+  async transaction<T>(action: (conn: SqliteConnection) => Promise<T>): Promise<T> {
+    const db = await this.getDb();
+    await db.execute("BEGIN TRANSACTION;");
+    try {
+      const result = await action(this);
+      await db.execute("COMMIT;");
+      return result;
+    } catch (err) {
+      try {
+        await db.execute("ROLLBACK;");
+      } catch {
+        // preserve original failure
+      }
+      throw err;
+    }
+  }
+
   async close(): Promise<void> {
     if (this.db) {
       await this.db.close();
@@ -64,6 +85,8 @@ export class TauriPluginSqlConnection implements SqliteConnection {
  * In-memory test connection for unit testing.
  * Implements the minimal SQL subset needed by OpenBook project persistence:
  * - schema_migrations, projects, and project_documents tables
+ * - Atomic transactions with state snapshot and rollback
+ * - SQLite foreign-key enforcement (PRAGMA foreign_keys = ON)
  * - INSERT / UPDATE / SELECT / DELETE
  * - Cascade deletion on project_documents
  * - Parameter substitution (?)
@@ -72,6 +95,8 @@ export class TauriPluginSqlConnection implements SqliteConnection {
  */
 export class InMemorySqliteConnection implements SqliteConnection {
   private isClosed = false;
+  private inTransaction = false;
+  public foreignKeysEnabled = false;
 
   // In-memory table stores
   public migrations: Array<{ version: number; applied_at: string }> = [];
@@ -105,8 +130,17 @@ export class InMemorySqliteConnection implements SqliteConnection {
     this.assertOpen();
     const normalized = sql.trim().replace(/\s+/g, " ");
 
+    if (normalized.toUpperCase().startsWith("PRAGMA FOREIGN_KEYS")) {
+      if (normalized.toUpperCase().includes("= ON")) {
+        this.foreignKeysEnabled = true;
+      } else if (normalized.toUpperCase().includes("= OFF")) {
+        this.foreignKeysEnabled = false;
+      }
+      return { rowsAffected: 0 };
+    }
+
     if (normalized.toUpperCase().startsWith("CREATE TABLE")) {
-      // Table definitions are recorded by existence of tables
+      // Table definitions are recorded by existence of stores
       return { rowsAffected: 0 };
     }
 
@@ -144,6 +178,9 @@ export class InMemorySqliteConnection implements SqliteConnection {
         number,
         string,
       ];
+      if (this.foreignKeysEnabled && !this.projects.has(projectId)) {
+        throw new Error(`FOREIGN KEY constraint failed: project "${projectId}" does not exist.`);
+      }
       this.projectDocuments.set(projectId, {
         project_id: projectId,
         book_payload: bookPayload,
@@ -157,8 +194,10 @@ export class InMemorySqliteConnection implements SqliteConnection {
       const id = params[0] as string;
       const existed = this.projects.delete(id);
       if (existed) {
-        // Cascade delete
-        this.projectDocuments.delete(id);
+        if (this.foreignKeysEnabled) {
+          // Cascade delete enforced by foreign key constraint
+          this.projectDocuments.delete(id);
+        }
         return { rowsAffected: 1 };
       }
       return { rowsAffected: 0 };
@@ -170,6 +209,10 @@ export class InMemorySqliteConnection implements SqliteConnection {
   async select<T>(sql: string, params: unknown[] = []): Promise<T[]> {
     this.assertOpen();
     const normalized = sql.trim().replace(/\s+/g, " ");
+
+    if (normalized.toUpperCase().includes("PRAGMA FOREIGN_KEYS")) {
+      return [{ foreign_keys: this.foreignKeysEnabled ? 1 : 0 }] as unknown as T[];
+    }
 
     if (normalized.toUpperCase().includes("FROM SCHEMA_MIGRATIONS")) {
       return [...this.migrations] as unknown as T[];
@@ -195,6 +238,30 @@ export class InMemorySqliteConnection implements SqliteConnection {
     }
 
     throw new Error(`Unsupported select query in InMemorySqliteConnection: ${sql}`);
+  }
+
+  async transaction<T>(action: (conn: SqliteConnection) => Promise<T>): Promise<T> {
+    this.assertOpen();
+    if (this.inTransaction) {
+      return action(this);
+    }
+
+    this.inTransaction = true;
+    const migrationsSnapshot = [...this.migrations];
+    const projectsSnapshot = new Map(this.projects);
+    const documentsSnapshot = new Map(this.projectDocuments);
+
+    try {
+      const result = await action(this);
+      this.inTransaction = false;
+      return result;
+    } catch (err) {
+      this.migrations = migrationsSnapshot;
+      this.projects = projectsSnapshot;
+      this.projectDocuments = documentsSnapshot;
+      this.inTransaction = false;
+      throw err;
+    }
   }
 
   async close(): Promise<void> {

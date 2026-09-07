@@ -7,6 +7,8 @@
  * - Operates on ProjectPersistence DTOs and canonical Book Model.
  * - Never leaks SQLite or database types to Book or SemanticDocument.
  * - Minimal three-table schema (schema_migrations, projects, project_documents).
+ * - Atomic project saves via transaction boundary.
+ * - Explicit connection-level foreign key enforcement (PRAGMA foreign_keys = ON).
  * - Preserves Unicode text semantics faithfully.
  */
 import {
@@ -66,10 +68,13 @@ export class SqliteProjectPersistence implements ProjectPersistence {
   }
 
   /**
-   * Initialize database tables and record migration.
+   * Initialize database tables, enforce foreign keys, and record migration.
    */
   async initialize(): Promise<PersistenceResult<void>> {
     try {
+      // Explicitly enable foreign key constraints on connection
+      await this.connection.execute("PRAGMA foreign_keys = ON;");
+
       await this.connection.execute(DDL_MIGRATIONS);
       await this.connection.execute(DDL_PROJECTS);
       await this.connection.execute(DDL_PROJECT_DOCUMENTS);
@@ -107,7 +112,7 @@ export class SqliteProjectPersistence implements ProjectPersistence {
   }
 
   /**
-   * Save (insert or update) an OpenBook project.
+   * Save (insert or update) an OpenBook project atomically inside a transaction.
    */
   async saveProject(project: OpenBookProject): Promise<PersistenceResult<SaveSummary>> {
     const initRes = await this.ensureInitialized();
@@ -121,27 +126,30 @@ export class SqliteProjectPersistence implements ProjectPersistence {
     const { project: pRecord, document: dRecord } = serializeRes.value;
 
     try {
-      // Upsert project row
-      await this.connection.execute(
-        `INSERT INTO projects (id, name, created_at, updated_at, schema_version)
-         VALUES (?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET
-           name = excluded.name,
-           updated_at = excluded.updated_at,
-           schema_version = excluded.schema_version`,
-        [pRecord.id, pRecord.name, pRecord.created_at, pRecord.updated_at, pRecord.schema_version],
-      );
+      // Atomic transaction: both projects row and project_documents row must succeed together
+      await this.connection.transaction(async (tx) => {
+        // 1. Upsert project row
+        await tx.execute(
+          `INSERT INTO projects (id, name, created_at, updated_at, schema_version)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+             name = excluded.name,
+             updated_at = excluded.updated_at,
+             schema_version = excluded.schema_version`,
+          [pRecord.id, pRecord.name, pRecord.created_at, pRecord.updated_at, pRecord.schema_version],
+        );
 
-      // Upsert document row
-      await this.connection.execute(
-        `INSERT INTO project_documents (project_id, book_payload, book_schema_version, updated_at)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT(project_id) DO UPDATE SET
-           book_payload = excluded.book_payload,
-           book_schema_version = excluded.book_schema_version,
-           updated_at = excluded.updated_at`,
-        [dRecord.project_id, dRecord.book_payload, dRecord.book_schema_version, dRecord.updated_at],
-      );
+        // 2. Upsert document row
+        await tx.execute(
+          `INSERT INTO project_documents (project_id, book_payload, book_schema_version, updated_at)
+           VALUES (?, ?, ?, ?)
+           ON CONFLICT(project_id) DO UPDATE SET
+             book_payload = excluded.book_payload,
+             book_schema_version = excluded.book_schema_version,
+             updated_at = excluded.updated_at`,
+          [dRecord.project_id, dRecord.book_payload, dRecord.book_schema_version, dRecord.updated_at],
+        );
+      });
 
       return {
         ok: true,
@@ -224,6 +232,7 @@ export class SqliteProjectPersistence implements ProjectPersistence {
 
   /**
    * Get metadata only for a project by ID.
+   * Fails with CORRUPT_DATA if the project exists but its document is missing.
    */
   async getProjectMetadata(
     projectId: string,
@@ -257,7 +266,17 @@ export class SqliteProjectPersistence implements ProjectPersistence {
         [validId],
       );
 
-      const bookSchemaVersion = docRows[0]?.book_schema_version ?? 1;
+      if (docRows.length === 0 || !docRows[0]) {
+        return {
+          ok: false,
+          error: {
+            code: "CORRUPT_DATA",
+            message: `Document content missing for project "${validId}".`,
+          },
+        };
+      }
+
+      const bookSchemaVersion = docRows[0].book_schema_version;
 
       return {
         ok: true,

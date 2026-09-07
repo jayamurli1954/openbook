@@ -396,3 +396,76 @@ test("SQLite persistence end-to-end: initialize, save, load, update, metadata, l
   const closeRes = await persistence.close();
   assert.equal(closeRes.ok, true);
 });
+
+test("atomic save transaction: rolls back project row if document upsert fails", async () => {
+  const driver = new InMemorySqliteConnection();
+  const persistence = new SqliteProjectPersistence(driver);
+  await persistence.initialize();
+
+  // Monkey-patch execute to simulate a mid-transaction database crash during document write
+  const originalExecute = driver.execute.bind(driver);
+  driver.execute = async (sql: string, params: unknown[] = []) => {
+    if (sql.trim().toUpperCase().includes("INSERT INTO PROJECT_DOCUMENTS")) {
+      throw new Error("Disk I/O error while writing document payload");
+    }
+    return originalExecute(sql, params);
+  };
+
+  const id = createProjectId("atomic-test");
+  const project = makeProject(id, "Atomic Test Book", englishBook);
+
+  const saveRes = await persistence.saveProject(project);
+  assert.equal(saveRes.ok, false);
+  if (!saveRes.ok) {
+    assert.equal(saveRes.error.code, "DATABASE_ERROR");
+    assert.match(saveRes.error.message, /Disk I\/O error/);
+  }
+
+  // Verify rollback: project row MUST NOT exist in storage
+  assert.equal(driver.projects.has(id), false, "Project row should have rolled back");
+  assert.equal(driver.projectDocuments.has(id), false, "Document row should not exist");
+});
+
+test("foreign-key enforcement and cascade: PRAGMA foreign_keys = ON is active", async () => {
+  const driver = new InMemorySqliteConnection();
+  const persistence = new SqliteProjectPersistence(driver);
+
+  // Before init: foreign keys not enabled
+  assert.equal(driver.foreignKeysEnabled, false);
+
+  await persistence.initialize();
+
+  // After init: foreign keys explicitly enabled
+  assert.equal(driver.foreignKeysEnabled, true);
+
+  // Inserting document for nonexistent project fails with foreign key error
+  await assert.rejects(
+    async () => {
+      await driver.execute(
+        "INSERT INTO project_documents (project_id, book_payload, book_schema_version, updated_at) VALUES (?, ?, ?, ?)",
+        ["nonexistent-proj", "{}", 1, new Date().toISOString()],
+      );
+    },
+    /FOREIGN KEY constraint failed/,
+  );
+});
+
+test("getProjectMetadata: returns CORRUPT_DATA when project_documents row is missing", async () => {
+  const driver = new InMemorySqliteConnection();
+  const persistence = new SqliteProjectPersistence(driver);
+  await persistence.initialize();
+
+  const orphanId = createProjectId("orphan");
+  // Insert project row directly without document row (simulating corrupted storage)
+  await driver.execute(
+    "INSERT INTO projects (id, name, created_at, updated_at, schema_version) VALUES (?, ?, ?, ?, ?)",
+    [orphanId, "Orphan Project", new Date().toISOString(), new Date().toISOString(), 1],
+  );
+
+  const metaRes = await persistence.getProjectMetadata(orphanId);
+  assert.equal(metaRes.ok, false);
+  if (!metaRes.ok) {
+    assert.equal(metaRes.error.code, "CORRUPT_DATA");
+    assert.match(metaRes.error.message, /Document content missing/);
+  }
+});
