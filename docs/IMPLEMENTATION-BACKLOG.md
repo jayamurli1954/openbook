@@ -12,7 +12,7 @@ FOUNDATION
 ├── Project scaffolding          [DONE on main: apps/desktop via PR #9 / ADR-0007 freeze-lift]
 ├── Tauri 2.11.5                 [FROZEN in ADR-0007; shell scaffolded in PR #9]
 ├── React 19.2.8 + TS 5.9.3      [FROZEN in ADR-0007; shell UI scaffolded in PR #9]
-├── SQLite (tauri-plugin-sql 2.4.1) [FROZEN in ADR-0007; connectivity proof in PR #9; production schema/migrations/domain persistence NOT STARTED]
+├── SQLite (tauri-plugin-sql 2.4.1) [FROZEN in ADR-0007; connectivity proof in PR #9; persistence architecture established in PR #16; Save/Open UI PENDING]
 ├── Book Model                   [DONE on main: executable `@openbook/book-model` (ADR-0006)]
 ├── CI (foundation tests)        [DONE on main: `.github/workflows/ci.yml` runs package tests + desktop frontend build]
 ├── Semantic Document Model      [DONE on main: `@openbook/semantic-document` (PR #11)]
@@ -36,7 +36,7 @@ EDITOR
 ├── Tiptap / ProseMirror         [DONE on main: ADR-0008 pins installed in PR #14]
 ├── EditorAdapter (PM ↔ SDM)     [DONE on main: PR #14 bidirectional TipTap JSON ↔ SDM]
 ├── First editor surface         [DONE on main: PR #14 minimal Tiptap UI + EN/KN round-trips]
-├── Book/chapter operations      [IN PROGRESS / this PR: in-memory multi-chapter session]
+├── Book/chapter operations      [DONE on main: in-memory multi-chapter session (PR #15)]
 ├── semantic document model      [DONE (PR #11); maps to Book Model]
 │
 DTP
@@ -63,9 +63,10 @@ Status against the original ordered list:
 7. **Desktop SDM integration boundary** — **DONE** (PR #12; in-memory Desktop → SDM → Book).
 8. **Editor technology evaluation and decision** — **DONE** (ADR-0008).
 9. **First Tiptap editor implementation** — **DONE** (PR #14; EditorAdapter + minimal UI).
-10. **Editor book/chapter operations** — **authorized slice** (in-memory select/create/rename/delete; no persistence).
+10. **Editor book/chapter operations** — **DONE** (PR #15; in-memory select/create/rename/delete; no persistence).
+11. **SQLite project persistence architecture** — **authorized slice / this PR** (PR #16: `ProjectPersistence` contract, minimal schema, DTOs, and test driver; Save/Open UI remains future work).
 
-Remaining foundation / product work (not authorized by backlog presence alone): production SQLite persistence schema; EPUB/HTML/PDF engines; PDF renderer choice and implementation; DTP; AI/Ollama; Save/Open project files.
+Remaining foundation / product work (not authorized by backlog presence alone): Save/Open project files & UI; EPUB/HTML/PDF engines; PDF renderer choice and implementation; DTP; AI/Ollama.
 
 ## Explicitly out of order
 
