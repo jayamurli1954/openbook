@@ -19,6 +19,9 @@ Authorized by **ADR-0007** freeze-lift only.
 ## Boundaries
 
 - `@openbook/book-model` is the canonical domain model.
+- `@openbook/semantic-document` is the editor-facing contract; the desktop
+  domain boundary projects **Desktop → SDM → Book** in memory only
+  (`src/domain/semanticDocumentBoundary.ts`).
 - SQLite is wired for **connectivity proof only** (`SELECT 1`). No production schema, migrations, or domain database model.
 - No editor, EPUB/HTML/PDF engines, PDF renderer, EPUBCheck changes, AI/Ollama, or publishing workflows.
 
@@ -29,7 +32,9 @@ From the repository root:
 ```bash
 npm ci
 npm run build -w @openbook/book-model
+npm run build -w @openbook/semantic-document
 npm run build -w @openbook/desktop
+npm test -w @openbook/desktop
 npm run tauri:build
 ```
 
