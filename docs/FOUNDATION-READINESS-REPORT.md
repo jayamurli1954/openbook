@@ -1,9 +1,9 @@
 # OpenBook Foundation Readiness Report
 
 - **Original audit date:** 2026-09-03
-- **Reconciled:** 2026-09-07 (post PRs #6–#9; `main` at `ffd0b1d`)
+- **Reconciled:** 2026-09-07 (post PRs #6–#17; `main` at `452fda0`)
 - **Original scope:** Governance, licensing, architecture, and implementation readiness of `main` (`ec79069` at audit start)
-- **Purpose:** Objective picture of foundation readiness; this file now also records post-audit progress so agents do not treat completed work as “NOT STARTED”
+- **Purpose:** Objective picture of foundation readiness; this file records post-audit progress so agents do not treat completed work as “NOT STARTED”
 - **Gate under review:** `FOUNDATION-GOVERNANCE-READY` (scorecard) and `FOUNDATION-READY` (`ROADMAP.md`)
 - **Verdict:** **Not passed.** Do **not** declare either foundation gate complete from this reconciliation alone.
 
@@ -19,23 +19,29 @@ Status vocabulary (this report):
 | NOT STARTED | No repository artefact yet |
 | DONE (partial) | Authorized slice landed; further work in the area remains |
 
-Accepted is **not** Frozen. Frozen means implementation must follow unless a new ADR changes it. As of ADR-0007, exact **Tauri 2.11.5**, **React / react-dom 19.2.8**, **TypeScript 5.9.3**, and **`tauri-plugin-sql` 2.4.1 (`sqlite`)** are Frozen for the desktop baseline. PDF renderer selection remains **UNDECIDED**. Tiptap/editor and Temurin/`jlink` production pins remain not Frozen.
+Accepted is **not** Frozen. Frozen means implementation must follow unless a new ADR changes it. As of ADR-0007 and ADR-0008, exact **Tauri 2.11.5**, **React / react-dom 19.2.8**, **TypeScript 5.9.3**, **`tauri-plugin-sql` 2.4.1 (`sqlite`)**, and **Tiptap/ProseMirror 3.31.3** OSS pins are Frozen. PDF renderer selection remains **UNDECIDED**. Temurin/`jlink` production packaging remains pending.
 
 ---
 
-## Reconciliation summary (PRs #6–#9)
+## Reconciliation summary (PRs #6–#17)
 
 | Item | Status on `main` |
 | --- | --- |
-| Book Model (`@openbook/book-model`, ADR-0006) | **DONE** |
-| CI for foundation package tests (+ desktop frontend build) | **DONE** |
+| Book Model (`@openbook/book-model`, ADR-0006) | **DONE** (canonical source of truth) |
+| CI for foundation package tests (+ desktop frontend build) | **DONE** (`.github/workflows/ci.yml`, 58/58 tests passing) |
 | PDF bake-off plan + multilingual fixtures (PR #6) | **DONE**; renderer **selection PENDING / UNDECIDED** |
 | EPUBCheck 5.3.0 packaging spike + ValidatorService adapter (PR #7) | **SPIKE DONE / evaluated**; production packaging conditional/future |
 | ADR-0007 desktop technology baseline | **Accepted; versions Frozen** |
-| Desktop shell Tauri 2.11.5 + React 19.2.8 + TS 5.9.3 + SQL plugin 2.4.1 (PR #9) | **DONE** (scaffold + SQLite connectivity proof) |
-| SQLite production schema / migrations / domain persistence model | **NOT STARTED** |
+| Desktop shell Tauri 2.11.5 + React 19.2.8 + TS 5.9.3 + SQL plugin 2.4.1 (PR #9) | **DONE** |
+| Semantic Document Model (`@openbook/semantic-document`, PR #11) | **DONE** (editor-independent document contract) |
+| Desktop SDM boundary (Desktop → SDM → Book, PR #12) | **DONE** |
+| ADR-0008 editor technology decision (Tiptap/ProseMirror) | **Accepted; OSS package pins Frozen** (PR #13) |
+| First Tiptap editor surface + EditorAdapter (PR #14) | **DONE** (bidirectional Tiptap JSON ↔ SDM) |
+| In-memory book/chapter operations (PR #15) | **DONE** (`EditorBookSession`: select/create/rename/delete) |
+| SQLite project persistence architecture (PR #16) | **DONE** (`ProjectPersistence`, DTO boundary, minimal schema, atomic save transactions, foreign keys) |
+| Save/Open project workflow (PR #17) | **DONE** (EditorBookSession ↔ ProjectPersistence UI workflow) |
 | EPUB / HTML engines; PDF renderer implementation | **NOT STARTED** |
-| Editor / Tiptap; DTP / page model / layout / typography | **NOT STARTED** |
+| DTP / page model / layout / typography | **NOT STARTED** |
 | AI / Ollama | Not an MVP dependency; **NOT STARTED** |
 | `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` | **Not declared** |
 
@@ -48,10 +54,12 @@ Accepted is **not** Frozen. Frozen means implementation must follow unless a new
 | License | COMPLETE | Apache-2.0 in `LICENSE` and ADR-0003. |
 | Contributor governance | ACCEPTED | Protection/attribution policy exists. CLA/DCO still PENDING DECISION. |
 | Conversation governance | COMPLETE | Policy + archive + audit record. |
-| Architecture documentation | ACCEPTED | Vision/PRD/architecture exist. Newer ADRs remain ahead of `ARCHITECTURE.md` in places. |
-| Book Model | COMPLETE (executable) | `@openbook/book-model` on `main` (ADR-0006). Format-neutral; not SQLite. |
-| Tauri / desktop shell | FROZEN baseline + shell DONE | ADR-0007 pins; `apps/desktop` on `main` (PR #9). |
-| SQLite | FROZEN plugin + connectivity proof; production persistence NOT STARTED | `tauri-plugin-sql` 2.4.1 wired for `SELECT 1` smoke only. |
+| Architecture documentation | ACCEPTED | Vision/PRD/architecture exist. |
+| Book Model | COMPLETE (executable) | `@openbook/book-model` on `main` (ADR-0006). Canonical source of truth; format-neutral. |
+| Semantic Document Model | COMPLETE | `@openbook/semantic-document` on `main` (PR #11). Structured editor contract. |
+| Tauri / desktop shell | FROZEN baseline + shell DONE | ADR-0007 pins; `apps/desktop` on `main`. |
+| SQLite Persistence | DONE (foundation boundary) | Minimal schema (`schema_migrations`, `projects`, `project_documents`), atomic transactions, foreign keys, and DTO boundary on `main` (PR #16). |
+| Editor / Tiptap | DONE (authoring surface) | ADR-0008 pins; PR #14 EditorAdapter; PR #15 chapter operations; PR #17 Save/Open workflow. Book Model remains canonical. |
 | EPUB architecture | ACCEPTED / NOT STARTED | OpenBook TypeScript EPUB 3.3 engine not implemented. |
 | EPUBCheck integration | ACCEPTED + spike DONE | ADR-0005 + PR #7 spike/`@openbook/validator`. Exact Temurin/`jlink` production freeze PENDING. |
 | PDF renderer | PENDING DECISION | Bake-off **plan** + fixtures exist (PR #6). Selection **UNDECIDED**. Implementation NOT STARTED. |
@@ -60,8 +68,7 @@ Accepted is **not** Frozen. Frozen means implementation must follow unless a new
 | Dependency/license inventory | IN PROGRESS | Scorecard + ADR-0007 desktop scorecard exist. No full machine-readable ship inventory / `THIRD-PARTY-NOTICES.txt` yet. |
 | CI/CD | DONE (foundation tests) | `.github/workflows/ci.yml` on `main`. Native Tauri packaging CI still limited (documented in `apps/desktop/README.md`). |
 | Security | NOT STARTED | No `SECURITY.md`, no vulnerability process, no bundled-runtime CVE process in code. |
-| Testing strategy | ACCEPTED / IN PROGRESS | Book Model + validator tests run in CI; desktop shell has frontend build in CI. |
-| Editor / Tiptap | NOT STARTED | Preferred direction only; not Frozen. |
+| Testing strategy | COMPLETE (foundation) | 58/58 tests passing across Book Model, Validator, SDM, and Desktop. |
 | AI / Ollama | NOT STARTED | Intent only; not an MVP dependency. |
 
 ---
@@ -70,7 +77,18 @@ Accepted is **not** Frozen. Frozen means implementation must follow unless a new
 
 Tracked `main` contents **at the 2026-09-03 audit start** were documentation and license only. That snapshot is historical.
 
-**Current `main` (reconciled)** also includes, among other artefacts: `package.json` workspaces, `@openbook/book-model`, `@openbook/validator`, `apps/desktop`, `.github/workflows/ci.yml`, PDF bake-off plan/fixtures, ADR-0005–0007, and related docs. There is still **no** production SQLite schema, **no** EPUB/HTML/PDF engine implementation, **no** editor, and **no** AI stack.
+**Current `main` (reconciled post PR #17)** includes:
+- Monorepo package workspaces:
+  - `packages/book-model` (canonical domain model, ADR-0006)
+  - `packages/validator` (EPUBCheck subprocess adapter spike, ADR-0005)
+  - `packages/semantic-document` (editor-independent document contract, PR #11)
+  - `apps/desktop` (Tauri 2 + React 19 shell, Tiptap editor surface, in-memory chapter operations, SQLite project persistence, and Save/Open workflow)
+- Established end-to-end authoring and persistence loop:
+  `Tiptap → EditorAdapter → SemanticDocument → Desktop Domain → Book Model → ProjectPersistence → SQLite`
+- CI test automation: `.github/workflows/ci.yml` running 58 automated tests across all workspaces plus desktop frontend build.
+- Architectural records: PDF bake-off plan/fixtures (`docs/PDF_RENDERER_BAKEOFF_PLAN.md`), ADR-0005–0008, persistence architecture (`docs/PROJECT_PERSISTENCE_ARCHITECTURE.md`).
+
+There is still **no** EPUB/HTML/PDF engine implementation, **no** PDF renderer selection, **no** DTP engine, and **no** AI stack.
 
 ### Parallel branches (historical note)
 
@@ -78,6 +96,7 @@ Tracked `main` contents **at the 2026-09-03 audit start** were documentation and
 | --- | --- | --- |
 | `cursor/openbook-constitution-ae36` (PR #1) | Book Model candidate + non-canonical material | Book Model reused/reconciled as ADR-0006; ADR-0001 remains unissued |
 | `cursor/setup-docs-dev-environment-dcd9` (PR #2) | Cursor environment + older constitution tree | Not source of truth for architecture |
+| `cursor/ci-testing-vulnscan-1a3d` (PR #5) | Early CI/vulnerability scanning draft | Stale draft PR based on pre-desktop baseline; not merged |
 
 ---
 
@@ -95,7 +114,7 @@ Tracked `main` contents **at the 2026-09-03 audit start** were documentation and
 
 ### Agreement with `PROJECT-CONTEXT.md`
 
-PROJECT-CONTEXT matches ADR-0003 (Apache-2.0), ADR-0004 (publishing engines, PDF bake-off pending), Book Model independence from EPUB OPF, ADR-0005 EPUBCheck direction, and ADR-0007 desktop baseline pins.
+PROJECT-CONTEXT matches ADR-0003 (Apache-2.0), ADR-0004 (publishing engines, PDF bake-off pending), Book Model independence from EPUB OPF, ADR-0005 EPUBCheck direction, ADR-0007 desktop baseline pins, and ADR-0008 editor technology decision.
 
 ### Apache-2.0 documentation consistency
 
@@ -122,25 +141,25 @@ Correctly pending (must not be implemented as if chosen):
 - Exact Temurin/Java version and `jlink` yes/no for **production** freeze
 - Bundled-font policy
 - CLA/DCO mechanism
-- Exact Tiptap / ProseMirror package versions
+- Publishing engine architectures (EPUB 3.3, HTML)
 - Foundation governance readiness declaration
 
 Frozen (must follow unless a new ADR changes them):
 
 - Desktop baseline versions in ADR-0007 (Tauri 2.11.5, `@tauri-apps/api` 2.11.1, CLI 2.11.4, React 19.2.8, TypeScript 5.9.3, `tauri-plugin-sql` 2.4.1)
+- Editor OSS package pins in ADR-0008 (Tiptap / ProseMirror 3.31.3)
 
 Incorrect if treated as Frozen:
 
 - “Typst is the PDF engine”
-- “Tiptap is adopted”
 - “EPUBCheck WASM is the plan”
-- “PR #9 SQLite smoke DB is the OpenBook persistence schema”
+- “Tiptap JSON is the document persistence format” (rejected; Book Model is canonical)
 
 ### Premature implementation
 
-At audit start, `main` had no application implementation — correct for that date.
+Authorized slices since the original audit (Book Model, PDF bake-off plan/fixtures, EPUBCheck spike, ADR-0007, desktop shell, SDM contract, SDM desktop boundary, ADR-0008, editor surface, chapter operations, SQLite persistence architecture, and Save/Open workflow) are on `main`.
 
-Authorized slices since then (Book Model, PDF bake-off plan/fixtures, EPUBCheck spike, ADR-0007, desktop shell) are on `main`. They do **not** authorize engines, editor, AI, PDF renderer selection, or production persistence schema.
+They do **not** authorize publishing engines, AI, PDF renderer selection, or unvetted dependencies.
 
 ---
 
@@ -152,12 +171,12 @@ These do **not** by themselves authorize new implementation. They **do** still m
 | --- | --- | --- | --- |
 | G-01 | `LICENSING_POLICY.md` contradicted ADR-0003 (fixed in original audit PR) | Agents could refuse SPDX headers or re-open AGPL | Fixed |
 | G-02 | `ROADMAP.md` gate is `FOUNDATION-READY`; scorecard gate is `FOUNDATION-GOVERNANCE-READY` | Two names for related gates | Still open |
-| G-03 | `ROADMAP.md` `FOUNDATION-READY` requires a reproducible **application** build and CI | Product gate is stricter than docs-only | CI + desktop scaffold exist; full gate still not declared |
+| G-03 | `ROADMAP.md` `FOUNDATION-READY` requires a reproducible **application** build and CI | Product gate is stricter than docs-only | CI + desktop app build exist; publishing engines still pending |
 | G-04 | `PRODUCT_REQUIREMENTS.md` vs `ROADMAP.md` vs ADR-0004 on PDF/HTML MVP cut | Do not stub a PDF renderer to satisfy the PRD | Still open; selection UNDECIDED |
 | G-05 | `ARCHITECTURE.md` looser on validators than ADR-0004/0005 | Prefer ADR-0004/0005 | Still open |
-| G-06 | `ARCHITECTURE.md` monorepo sketch vs later package names | Layout not fully Frozen | `apps/desktop`, `packages/book-model`, `packages/validator` now exist |
+| G-06 | `ARCHITECTURE.md` monorepo sketch vs later package names | Layout not fully Frozen | All 4 active packages exist and match ADRs |
 | G-07 | No executable Book Model spec on `main` | Schema must be testable | **Closed** by ADR-0006 |
-| G-08 | No `SECURITY.md`, no dependency inventory file, no CI on `main` | Release/compliance gaps | **CI partial closed**; SECURITY.md / full inventory still open |
+| G-08 | No `SECURITY.md`, no dependency inventory file, no CI on `main` | Release/compliance gaps | **CI closed** (58 tests); SECURITY.md / full notices inventory still open |
 | G-09 | `FOSS_STRATEGY.md` still contains research citation tokens (`turn0search…`) | Hygiene | Still open |
 | G-10 | Trademark/name policy still deferred | Branding, not engineering | Still open |
 | G-11 | README on `main` did not point to PROJECT-CONTEXT or LICENSE | Onboarding | Fixed in original audit PR |
@@ -168,21 +187,50 @@ These do **not** by themselves authorize new implementation. They **do** still m
 
 ### `FOUNDATION-GOVERNANCE-READY` (technology scorecard)
 
-**Not declared.** Progress since the original audit: PDF bake-off plan exists; desktop versions Frozen (ADR-0007); Book Model and CI landed. Still open for a full gate declaration include CLA/DCO, fonts, full dependency/notice inventory for ship, SECURITY.md, and any Product Owner gate checklist items not yet closed.
+**Not declared.** Progress since original audit:
+- Book Model executable spec & tests landed (ADR-0006).
+- Desktop foundation technology baseline frozen (ADR-0007).
+- Editor technology stack evaluated and frozen (ADR-0008).
+- PDF renderer bake-off plan and multilingual fixtures published (PR #6).
+- EPUBCheck 5.3.0 subprocess spike verified (`@openbook/validator`, PR #7).
+- 58/58 automated tests passing across 4 packages.
+
+Still required before full gate declaration:
+- CLA/DCO mechanism decision.
+- Bundled-font policy.
+- Machine-readable release dependency inventory / `THIRD-PARTY-NOTICES.txt` covering all transitives.
+- `SECURITY.md` and vulnerability disclosure process.
 
 ### `FOUNDATION-READY` (`ROADMAP.md`)
 
-**Not passed / not declared.** Book Model + CI + a desktop scaffold now exist, but remaining contradictions (G-02–G-06), security/inventory gaps, and unfinished product-foundation items (engines, persistence schema, editor) mean this reconciliation does **not** declare the gate complete.
+**Not passed / not declared.**
+While the editor-to-persistence foundation is established and verified:
+`Tiptap → EditorAdapter → SemanticDocument → Desktop Domain → Book Model → ProjectPersistence → SQLite`
+
+The foundation gate cannot be declared complete until:
+- Publishing engines (EPUB 3.3, HTML) are defined and implemented.
+- PDF renderer bake-off is executed and a selection ADR is accepted.
+- Production EPUBCheck packaging (Temurin JRE / `jlink` freeze) is settled.
+- Remaining cross-document contradictions (G-02–G-05) and security/inventory items are resolved.
 
 ---
 
-## 5. Recommended next step
+## 5. Next architectural decision points
 
-With ordered foundation engineering items 1–5 landed or spiked:
+With the editor authoring surface and SQLite project persistence landed on `main`, the next engineering slices must address one of the following distinct architectural decision points:
 
-1. Keep PDF renderer **UNDECIDED** until bake-off execution and a selection ADR.
-2. Treat EPUBCheck/Temurin production packaging as a later release-governance slice (spike evidence already recorded).
-3. Authorize production SQLite persistence schema only via a new ADR/PR — not implied by PR #9 connectivity proof.
-4. Do not start EPUB/HTML/PDF engines, editor/Tiptap, DTP, or Ollama without explicit authorization.
+1. **EPUB 3.3 Engine Architecture & Implementation:**
+   - Define the OpenBook TypeScript EPUB 3.3 engine package.
+   - Read canonical `Book` and generate compliant EPUB 3.3 packages validated by `ValidatorService`.
+   - Never write EPUB fields back into the Book Model.
+2. **HTML Engine Architecture & Implementation:**
+   - Semantic HTML publishing projection from canonical `Book`.
+3. **PDF Renderer Bake-off & Selection Decision:**
+   - Execute the bake-off against existing fixtures (`docs/PDF_RENDERER_BAKEOFF_PLAN.md`).
+   - Select between Typst, Chromium/Paged.js, and pdf-lib via formal ADR. Renderer remains **UNDECIDED**.
+4. **Production EPUBCheck Packaging:**
+   - Finalize Temurin JRE / `jlink` bundling and isolation strategy for desktop production distribution.
+5. **DTP / Page Model / Typography:**
+   - Address pagination, layout primitives, and complex Indic/Kannada text shaping.
 
-Do **not** install Puppeteer, Typst, Tiptap, or a production JRE merely because they appear in the backlog.
+**DO NOT implement any of these without a dedicated ADR and authorized slice.** None are authorized by this reconciliation document.
