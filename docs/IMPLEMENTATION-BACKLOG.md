@@ -29,7 +29,7 @@ EDITOR & PERSISTENCE
 ├── semantic document model      [DONE (PR #11); maps to Book Model]
 │
 PUBLISHING (NEXT ARCHITECTURAL DECISION POINTS)
-├── EPUB engine                  [ACCEPTED direction: OpenBook TypeScript EPUB 3.3; NOT STARTED]
+├── EPUB engine                  [ACCEPTED: ADR-0009 architecture gate; implementation NOT STARTED]
 ├── HTML engine                  [ACCEPTED direction; NOT STARTED — do not stub]
 ├── PDF renderer bake-off plan   [DONE: docs/PDF_RENDERER_BAKEOFF_PLAN.md + multilingual fixtures (PR #6)]
 ├── PDF renderer selection       [PENDING / UNDECIDED — requires bake-off execution & selection ADR]
@@ -84,7 +84,9 @@ The editor-to-persistence foundation is now established:
 The next engineering slices must address one of the following distinct architectural decision points (none of which are authorized yet):
 
 1. **EPUB 3.3 engine architecture & implementation:**
-   - Defining the OpenBook TypeScript EPUB 3.3 engine package (`@openbook/epub` or similar).
+   - Architecture, boundaries, mapping, and validation defined in **ADR-0009**.
+   - Package boundary established as `@openbook/epub`.
+   - Implementation requires an authorized freeze-lift slice before package creation or dependency installation.
    - Reading canonical `Book` and generating compliant EPUB 3.3 packages validated by `ValidatorService`.
    - Must NOT write EPUB fields back into the Book Model.
 2. **HTML engine architecture & implementation:**
