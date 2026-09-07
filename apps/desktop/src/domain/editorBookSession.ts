@@ -8,8 +8,10 @@
  * Does not persist, does not write Book Model internals directly, and does not
  * invent a second document model.
  */
+import type { Book } from "@openbook/book-model";
 import {
   SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+  bookToSemanticDocument,
   type SemanticDocument,
   type SemanticDocumentMetadata,
   type SemanticInline,
@@ -397,4 +399,42 @@ export function projectSessionToBook(
   session: EditorBookSession,
 ): SemanticDocumentProjectionResult {
   return projectSemanticDocumentToBook(session.document);
+}
+
+/**
+ * Rebuild an editor session from a canonical Book via SDM
+ * (`bookToSemanticDocument`). Does not read Tiptap JSON from storage.
+ *
+ * Selected chapter: prefer `preferredChapterId` when it is a main-matter
+ * section; otherwise select the first main chapter. Fails if none exist.
+ */
+export function createEditorBookSessionFromBook(
+  book: Book,
+  preferredChapterId?: string,
+): SessionResult {
+  const document = bookToSemanticDocument(book);
+  const chapters = listMainChapters(document);
+  if (chapters.length === 0) {
+    return {
+      ok: false,
+      code: "no-chapters",
+      error:
+        "Opened book has no main chapters; the editor session requires at least one.",
+      session: { document, selectedChapterId: "" },
+      warnings: [],
+    };
+  }
+
+  const preferredOk =
+    preferredChapterId !== undefined &&
+    chapters.some((c) => c.id === preferredChapterId);
+  const selectedChapterId = preferredOk
+    ? preferredChapterId!
+    : chapters[0]!.id;
+
+  return {
+    ok: true,
+    session: { document, selectedChapterId },
+    warnings: [],
+  };
 }

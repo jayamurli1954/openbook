@@ -2,7 +2,7 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-09-07
-- **Reconciled to:** `main` after PR #14 (`491a02f`)
+- **Reconciled to:** `main` after PR #16 (`b749a72`)
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not select a final PDF renderer. Do not replace official EPUBCheck. Do not expand beyond authorized editor slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0008-editor-technology-tiptap-prosemirror.md`.
@@ -12,7 +12,7 @@ FOUNDATION
 ├── Project scaffolding          [DONE on main: apps/desktop via PR #9 / ADR-0007 freeze-lift]
 ├── Tauri 2.11.5                 [FROZEN in ADR-0007; shell scaffolded in PR #9]
 ├── React 19.2.8 + TS 5.9.3      [FROZEN in ADR-0007; shell UI scaffolded in PR #9]
-├── SQLite (tauri-plugin-sql 2.4.1) [FROZEN in ADR-0007; connectivity proof in PR #9; persistence architecture established in PR #16; Save/Open UI PENDING]
+├── SQLite (tauri-plugin-sql 2.4.1) [FROZEN in ADR-0007; connectivity proof in PR #9; ProjectPersistence in PR #16; Save/Open workflow in PR #17]
 ├── Book Model                   [DONE on main: executable `@openbook/book-model` (ADR-0006)]
 ├── CI (foundation tests)        [DONE on main: `.github/workflows/ci.yml` runs package tests + desktop frontend build]
 ├── Semantic Document Model      [DONE on main: `@openbook/semantic-document` (PR #11)]
@@ -37,6 +37,8 @@ EDITOR
 ├── EditorAdapter (PM ↔ SDM)     [DONE on main: PR #14 bidirectional TipTap JSON ↔ SDM]
 ├── First editor surface         [DONE on main: PR #14 minimal Tiptap UI + EN/KN round-trips]
 ├── Book/chapter operations      [DONE on main: in-memory multi-chapter session (PR #15)]
+├── Project persistence arch.    [DONE on main: ProjectPersistence + SQLite DTOs (PR #16)]
+├── Save/Open project workflow   [IN PROGRESS / this PR: session ↔ ProjectPersistence UI]
 ├── semantic document model      [DONE (PR #11); maps to Book Model]
 │
 DTP
@@ -64,9 +66,10 @@ Status against the original ordered list:
 8. **Editor technology evaluation and decision** — **DONE** (ADR-0008).
 9. **First Tiptap editor implementation** — **DONE** (PR #14; EditorAdapter + minimal UI).
 10. **Editor book/chapter operations** — **DONE** (PR #15; in-memory select/create/rename/delete; no persistence).
-11. **SQLite project persistence architecture** — **authorized slice / this PR** (PR #16: `ProjectPersistence` contract, minimal schema, DTOs, and test driver; Save/Open UI remains future work).
+11. **SQLite project persistence architecture** — **DONE** (PR #16: `ProjectPersistence` contract, minimal schema, DTOs, test driver).
+12. **Save/Open project workflow** — **authorized slice** (PR #17: editor session ↔ ProjectPersistence; no autosave/cloud/import-export).
 
-Remaining foundation / product work (not authorized by backlog presence alone): Save/Open project files & UI; EPUB/HTML/PDF engines; PDF renderer choice and implementation; DTP; AI/Ollama.
+Remaining foundation / product work (not authorized by backlog presence alone): autosave; cloud sync; filesystem project packages; EPUB/HTML/PDF engines; PDF renderer choice and implementation; DTP; AI/Ollama.
 
 ## Explicitly out of order
 
@@ -77,4 +80,5 @@ Remaining foundation / product work (not authorized by backlog presence alone): 
 - Declaring `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` because documentation or early scaffolds exist
 - Treating the PR #9 SQLite smoke DB as a production persistence schema
 - Letting Tiptap/ProseMirror JSON become a parallel canonical document model
-- Adding Save/Open, SQLite book schema, or publishing engines under an editor UX PR
+- Persisting Tiptap JSON into SQLite instead of the canonical Book Model
+- Adding autosave, cloud sync, or publishing engines under a Save/Open UX PR

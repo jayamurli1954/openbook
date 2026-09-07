@@ -20,16 +20,23 @@ Authorized by **ADR-0007** freeze-lift only.
 
 - `@openbook/book-model` is the canonical domain model.
 - `@openbook/semantic-document` is the editor-facing contract; the desktop
-  domain boundary projects **Desktop → SDM → Book** in memory only
+  domain boundary projects **Desktop → SDM → Book**
   (`src/domain/semanticDocumentBoundary.ts`).
 - Tiptap JSON is editor transport only (`EditorAdapter` in
-  `src/domain/editorAdapter.ts`). Multi-chapter authoring is an in-memory
-  session (`src/domain/editorBookSession.ts`: select / create / rename /
-- SQLite project persistence architecture and contracts are established (`src/persistence/` in PR #16).
-  SQLite is persistence infrastructure, not the canonical domain model; the Book Model remains canonical.
-  The minimal schema tracks migrations, project metadata, and canonical Book payloads.
-  Save/Open project UI, autosave, and project file import/export remain future work.
-- No EPUB/HTML/PDF engines, PDF renderer, EPUBCheck changes, AI/Ollama, Save/Open UI, or publishing workflows.
+  `src/domain/editorAdapter.ts`). Multi-chapter authoring uses an in-memory
+  session (`src/domain/editorBookSession.ts`).
+- Save/Open uses PR #16 `ProjectPersistence` (`src/persistence/`) via the
+  workflow bridge (`src/workflow/projectWorkflow.ts`):
+
+  ```text
+  Tiptap → EditorAdapter → SDM → Book → ProjectPersistence → SQLite
+  SQLite → ProjectPersistence → Book → SDM → EditorBookSession → Tiptap
+  ```
+
+  Tiptap JSON is **never** written to SQLite. Autosave, cloud sync, and
+  filesystem project packages remain out of scope.
+- No EPUB/HTML/PDF engines, PDF renderer, EPUBCheck changes, AI/Ollama, or
+  publishing workflows.
 
 ## Commands
 
