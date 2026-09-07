@@ -4,17 +4,19 @@
   "description": "OpenBook Studio monorepo — Book Model first. Not an EPUB editor.",
   "workspaces": [
     "packages/book-model",
-    "packages/validator"
+    "packages/validator",
+    "apps/desktop"
   ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "build": "npm run build -w @openbook/book-model && npm run build -w @openbook/validator",
-    "test": "npm test -w @openbook/book-model && npm test -w @openbook/validator"
+    "build": "npm run build -w @openbook/book-model && npm run build -w @openbook/validator && npm run build -w @openbook/desktop",
+    "test": "npm test -w @openbook/book-model && npm test -w @openbook/validator",
+    "tauri:build": "npm run tauri:build -w @openbook/desktop"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
-    "typescript": "^5.8.2"
+    "typescript": "5.9.3"
   }
 }

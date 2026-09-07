@@ -1,0 +1,86 @@
+:root {
+  color: #1a1a1a;
+  background: #f6f6f4;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  line-height: 1.45;
+}
+
+body {
+  margin: 0;
+}
+
+.shell {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+}
+
+h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.75rem;
+  font-weight: 650;
+}
+
+h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.lede {
+  margin: 0 0 1rem;
+  color: #444;
+}
+
+dl {
+  margin: 0;
+}
+
+dl > div {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 0.35rem 0.75rem;
+  margin: 0.25rem 0;
+}
+
+dt {
+  color: #555;
+}
+
+dd {
+  margin: 0;
+}
+
+.status {
+  display: inline-block;
+  margin: 0;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.status-ok {
+  border-color: #2f6f3e;
+  color: #2f6f3e;
+}
+
+.status-error {
+  border-color: #8a1f1f;
+  color: #8a1f1f;
+}
+
+.status-running,
+.status-idle {
+  color: #555;
+}
+
+.detail {
+  margin: 0.5rem 0;
+}
+
+.note {
+  margin: 0.75rem 0 0;
+  color: #666;
+  font-size: 0.9rem;
+}
