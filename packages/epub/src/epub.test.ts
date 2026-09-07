@@ -599,6 +599,54 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 1 (In-Memory Package)", () => {
       },
     );
   });
+
+  it("successfully packages image blocks when matching Book.assets and AssetResolver are provided via buildEpubPackage", async () => {
+    const book = createBook({
+      title: "Book With Image Package",
+      language: "en",
+      withOpeningChapter: false,
+    });
+
+    book.assets = [
+      {
+        id: "asset-cover-art",
+        kind: "image",
+        fileName: "cover.png",
+        mediaType: "image/png",
+        altText: "Cover illustration",
+        licence: "CC0",
+      },
+    ];
+
+    book.chapters = [
+      {
+        id: "ch-img",
+        kind: "main",
+        role: "chapter",
+        title: "Chapter With Image",
+        blocks: [
+          {
+            type: "image",
+            id: "img-1",
+            assetId: "asset-cover-art",
+            caption: [{ type: "text", text: "Cover illustration" }],
+          },
+        ],
+      },
+    ];
+
+    const resolver: AssetResolver = {
+      resolve: async () =>
+        Buffer.from(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+          "base64",
+        ),
+    };
+
+    const pkg = await buildEpubPackage(book, { assetResolver: resolver });
+    assert.ok(pkg.files.some((f) => f.path === "EPUB/images/asset-cover-art.png"));
+    assert.ok(pkg.manifest.some((m) => m.href === "images/asset-cover-art.png"));
+  });
 });
 
 describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packaging)", () => {
@@ -998,6 +1046,121 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
         return true;
       },
     );
+  });
+
+  it("verifies that Books containing image blocks fail deterministically when asset requirements are unresolved or missing via buildEpub", async () => {
+    const book = createBook({
+      title: "Book With Unresolved Image",
+      language: "en",
+      withOpeningChapter: false,
+    });
+
+    book.chapters = [
+      {
+        id: "ch-img",
+        kind: "main",
+        role: "chapter",
+        title: "Chapter With Image",
+        blocks: [
+          {
+            type: "image",
+            id: "img-reject",
+            assetId: "cover-art",
+            caption: [],
+          },
+        ],
+      },
+    ];
+
+    // Missing AssetResolver
+    await assert.rejects(
+      async () => buildEpub(book),
+      (err: unknown) => {
+        assert.ok(err instanceof AssetResolutionError);
+        assert.equal(err.code, "MISSING_RESOLVER");
+        return true;
+      },
+    );
+
+    // Missing asset in Book.assets even with resolver
+    const dummyResolver: AssetResolver = {
+      resolve: async () => new Uint8Array([1, 2, 3]),
+    };
+    await assert.rejects(
+      async () => buildEpub(book, { assetResolver: dummyResolver }),
+      (err: unknown) => {
+        assert.ok(err instanceof AssetValidationError);
+        assert.equal(err.code, "MISSING_ASSET_REFERENCE");
+        assert.equal(err.assetId, "cover-art");
+        return true;
+      },
+    );
+  });
+
+  it("verifies that Books containing image blocks succeed via buildEpub when matching Book.assets and AssetResolver are provided", async () => {
+    const pngBytes = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "base64",
+    );
+
+    const book = createBook({
+      title: "Book With Valid Image via buildEpub",
+      language: "en",
+      withOpeningChapter: false,
+    });
+
+    book.assets = [
+      {
+        id: "cover-art",
+        kind: "image",
+        fileName: "cover.png",
+        mediaType: "image/png",
+        altText: "Cover Art",
+        licence: "CC0",
+      },
+    ];
+
+    book.chapters = [
+      {
+        id: "ch-img",
+        kind: "main",
+        role: "chapter",
+        title: "Chapter With Image",
+        blocks: [
+          {
+            type: "image",
+            id: "img-ok",
+            assetId: "cover-art",
+            caption: [{ type: "text", text: "Cover caption" }],
+          },
+        ],
+      },
+    ];
+
+    const resolver: AssetResolver = {
+      resolve: async (asset) => {
+        if (asset.id === "cover-art") return pngBytes;
+        throw new Error("Unknown asset");
+      },
+    };
+
+    const epubBytes = await buildEpub(book, { assetResolver: resolver });
+    assert.ok(epubBytes instanceof Uint8Array);
+    assert.ok(epubBytes.length > 500);
+
+    const unzipped = unzipSync(epubBytes);
+    assert.ok(unzipped["EPUB/images/cover-art.png"]);
+    assert.deepEqual(
+      new Uint8Array(unzipped["EPUB/images/cover-art.png"]),
+      new Uint8Array(pngBytes),
+    );
+
+    const xhtml = new TextDecoder("utf-8").decode(
+      unzipped["EPUB/text/ch_001.xhtml"],
+    );
+    assert.ok(xhtml.includes('<figure id="img-ok">'));
+    assert.ok(xhtml.includes('<img src="../images/cover-art.png" alt="Cover Art" />'));
+    assert.ok(xhtml.includes("<figcaption>Cover caption</figcaption>"));
   });
 
   it("buildEpubArchive consumes EpubPackage only and does not require Book", () => {

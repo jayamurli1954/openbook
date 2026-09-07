@@ -10,6 +10,12 @@ export interface AssetResolver {
   resolve(asset: AssetRef): Promise<Uint8Array>;
 }
 
+/**
+ * Severity level for non-fatal publishing diagnostics.
+ * For Gate 3, diagnostics are non-fatal advisories ("warning" | "info").
+ * Fatal errors (such as invalid asset IDs, resolver failures, or missing references)
+ * throw terminal exceptions (AssetValidationError / AssetResolutionError).
+ */
 export type PublishingDiagnosticSeverity = "warning" | "info";
 
 export interface PublishingDiagnostic {
