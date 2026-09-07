@@ -12,6 +12,7 @@ import type {
 } from "./types.js";
 import { serializeSectionDocument } from "./xhtml-serializer.js";
 import { buildEpubArchive } from "./archive/epub-archive.js";
+import { processBookAssets } from "./assets/asset-pipeline.js";
 
 const DEFAULT_DETERMINISTIC_TIMESTAMP = "2026-01-01T00:00:00Z";
 
@@ -131,14 +132,21 @@ interface SectionDescriptor {
  * 4. Yields bit-for-bit deterministic package files across identical inputs.
  * 5. Strictly adheres to EPUB 3.3 navigation and packaging specifications.
  */
-export function buildEpubPackage(
+export async function buildEpubPackage(
   book: Readonly<Book>,
   options?: EpubBuildOptions,
-): EpubPackage {
+): Promise<EpubPackage> {
   const language = book.metadata.language || "und";
   const bookTitle = book.metadata.title || "Untitled Book";
   const identifier = book.metadata.identifier || "openbook-publication";
   const modified = deriveDeterministicTimestamp(book, options);
+
+  // 0. Process, validate, and resolve any referenced image assets (ADR-0010)
+  const assetResult = await processBookAssets(
+    book,
+    options?.assetResolver,
+    options?.onDiagnostic,
+  );
 
   // 1. Collect all structural sections in deterministic reading order
   const descriptors: SectionDescriptor[] = [];
@@ -176,7 +184,7 @@ export function buildEpubPackage(
     });
   });
 
-  // 2. Build manifest items
+  // 2. Build manifest items (core items + assets + text documents)
   const manifest: EpubManifestItem[] = [
     {
       id: "nav",
@@ -189,6 +197,7 @@ export function buildEpubPackage(
       href: "styles/openbook.css",
       mediaType: "text/css",
     },
+    ...assetResult.manifestItems,
   ];
 
   descriptors.forEach((desc) => {
@@ -263,10 +272,19 @@ export function buildEpubPackage(
   });
 
   // 5.6 Content documents (EPUB/text/*.xhtml)
+  const resolvedImagesMap = new Map<string, { xhtmlHref: string; altText: string }>();
+  for (const [assetId, meta] of assetResult.resolvedImagesByAssetId) {
+    resolvedImagesMap.set(assetId, {
+      xhtmlHref: meta.xhtmlHref,
+      altText: meta.asset.altText || "",
+    });
+  }
+
   descriptors.forEach((desc) => {
     const xhtmlContent = serializeSectionDocument(desc.section, {
       language,
       bookTitle,
+      resolvedImages: resolvedImagesMap,
     });
     files.push({
       path: desc.packagePath,
@@ -275,11 +293,15 @@ export function buildEpubPackage(
     });
   });
 
+  // 5.7 Packaged image resources (EPUB/images/*)
+  files.push(...assetResult.files);
+
   return {
     files,
     metadata,
     manifest,
     spine,
+    diagnostics: assetResult.diagnostics,
   };
 }
 
@@ -287,14 +309,14 @@ export function buildEpubPackage(
  * Compiles a canonical Book Model into a complete, deterministic EPUB 3.3 binary (.epub) as a Uint8Array.
  *
  * Internally runs the two-stage pipeline:
- * 1. buildEpubPackage(book, options) -> EpubPackage (content projection)
+ * 1. buildEpubPackage(book, options) -> EpubPackage (content projection & asset resolution)
  * 2. buildEpubArchive(pkg, options)   -> Uint8Array  (OCF ZIP packaging)
  */
-export function buildEpub(
+export async function buildEpub(
   book: Readonly<Book>,
   options?: EpubBuildOptions,
-): Uint8Array {
-  const pkg = buildEpubPackage(book, options);
+): Promise<Uint8Array> {
+  const pkg = await buildEpubPackage(book, options);
   return buildEpubArchive(pkg, { archiveDate: options?.modifiedDate });
 }
 
