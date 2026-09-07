@@ -1,13 +1,19 @@
 /**
  * SQLite connectivity proof only (ADR-0007 §6).
  *
- * Opens a throwaway DB file, runs `SELECT 1`, and closes.
+ * Opens a temporary smoke database, runs `SELECT 1`, and closes the connection.
  * Must NOT introduce production schema, migrations, or a domain database model.
  * Book Model remains canonical in `@openbook/book-model`.
+ *
+ * Cleanup note: `tauri-plugin-sql` exposes load/select/execute/close only — it does
+ * not delete the on-disk file. `openbook-shell-smoke.db` is therefore a *temporary
+ * smoke database* under the app data directory (relative to Tauri `BaseDirectory::App`).
+ * It is safe to leave or remove manually; it is not an OpenBook project database and
+ * must not be treated as production persistence.
  */
 import Database from "@tauri-apps/plugin-sql";
 
-/** Ephemeral smoke DB name — not an OpenBook project database. */
+/** Temporary smoke DB filename — not an OpenBook project database. */
 const SMOKE_DB = "sqlite:openbook-shell-smoke.db";
 
 export type SqliteConnectivityResult =
