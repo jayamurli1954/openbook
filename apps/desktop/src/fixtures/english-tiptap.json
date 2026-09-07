@@ -1,0 +1,32 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 2 },
+      "content": [{ "type": "text", "text": "Lists and emphasis" }]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        { "type": "text", "text": "A " },
+        { "type": "text", "marks": [{ "type": "bold" }], "text": "strong" },
+        { "type": "text", "text": " word and an " },
+        { "type": "text", "marks": [{ "type": "italic" }], "text": "emphasized" },
+        { "type": "text", "text": " phrase with a " },
+        {
+          "type": "text",
+          "marks": [{ "type": "link", "attrs": { "href": "https://example.org" } }],
+          "text": "link"
+        },
+        { "type": "text", "text": "." }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        { "type": "text", "text": "Edit here. Content projects through SemanticDocument to Book." }
+      ]
+    }
+  ]
+}
