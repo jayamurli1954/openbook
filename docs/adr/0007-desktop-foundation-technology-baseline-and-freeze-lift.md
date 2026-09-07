@@ -157,12 +157,15 @@ This ADR **lifts the freeze** for exactly one subsequent engineering PR, with th
 
 1. Scaffold `apps/desktop` as an empty Tauri **2.11.5** + React **19.2.8** + TypeScript **5.9.3** shell that builds on Windows, macOS, and Linux desktop targets (or documents interim CI limits honestly).
 2. Wire `@tauri-apps/api` **2.11.1** and `@tauri-apps/cli` **2.11.4** as declared dependencies matching this baseline.
-3. Add a minimal SQLite proof via `tauri-plugin-sql` **2.4.1** (`sqlite`) that stores **non-domain** smoke data (e.g. app settings / health row) and/or a round-trip of a **serialized** Book Model fixture without inventing a competing schema language.
+3. **Wire and prove SQLite connectivity only** via `tauri-plugin-sql` **2.4.1** (`sqlite`) — for example open a throwaway/local file, run a non-domain smoke query (health/`SELECT 1`/ephemeral settings row), and close. This proves the plugin and engine are wired. It is **not** authorization to design or ship OpenBook’s production persistence layer.
 4. Keep `@openbook/book-model` and `@openbook/validator` as workspace dependencies where needed; do not fork or dilute them.
 5. Update root workspaces/CI only as required to build/test the empty shell.
 
+**SQLite clarification (governance):** SQLite remains **persistence infrastructure**. The Book Model (`@openbook/book-model`) remains the canonical, format-neutral domain model. The next PR must **not** create the production OpenBook persistence schema, migrations, repositories, ORM mappings, or any domain database model that competes with or replaces the Book Model. Those require a later, separately authorized ADR/PR.
+
 **Hard stop — not authorized in the next PR:**
 
+- production OpenBook persistence schema, migrations, or domain database model;
 - PDF renderer selection or any Typst/pdf-lib/Chromium/Puppeteer production dependency;
 - implementing EPUB, HTML, or PDF publishing engines;
 - modifying ADR-0005 EPUBCheck architecture or shipping Temurin/EPUBCheck production binaries beyond what already exists for the packaging spike;
