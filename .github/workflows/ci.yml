@@ -40,3 +40,27 @@ jobs:
           name: validator-runtime-evidence-linux-x64
           path: .cache/validator-runtime/build-evidence.json
           if-no-files-found: warn
+
+  pdf-runtime:
+    name: Gate 6 PDF Typst runtime (linux-x64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Build Book Model dependency
+        run: npm run build -w @openbook/book-model
+      - name: Build Typst 0.15.1 + OFL fonts runtime
+        run: npm run packaging:build -w @openbook/pdf
+      - name: Run PDF Gate 6 tests with bundled Typst
+        run: npm test -w @openbook/pdf
+      - name: Upload build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-runtime-evidence-linux-x64
+          path: .cache/pdf-runtime/build-evidence.json
+          if-no-files-found: warn

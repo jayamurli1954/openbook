@@ -8,3 +8,4 @@ coverage/
 .vscode/
 .cache/spike/
 .cache/validator-runtime/
+.cache/pdf-runtime/
