@@ -51,6 +51,8 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      - name: Build Book Model dependency
+        run: npm run build -w @openbook/book-model
       - name: Build Typst 0.15.1 + OFL fonts runtime
         run: npm run packaging:build -w @openbook/pdf
       - name: Run PDF Gate 6 tests with bundled Typst

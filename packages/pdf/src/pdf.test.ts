@@ -50,6 +50,9 @@ const TINY_PNG = Uint8Array.from(
   ),
 );
 
+/** True when Gate 6 packaging has produced Typst + fonts under `.cache/pdf-runtime`. */
+const hasRuntime = resolveProductionTypstRuntime({ repoRoot: rootDir }) !== null;
+
 test("inventory pins Typst 0.15.1 with platform SHA-256 digests", () => {
   const inventory = JSON.parse(fs.readFileSync(inventoryPath, "utf8"));
   assert.equal(inventory.typst.version, "0.15.1");
@@ -178,92 +181,102 @@ test("image without AssetResolver fails deterministically", async () => {
   );
 });
 
-test("production packaging evidence records Typst 0.15.1 when runtime is built", () => {
-  const runtime = resolveProductionTypstRuntime({ repoRoot: rootDir });
-  if (!runtime?.evidencePath) {
-    // packaging:build not run yet in this environment
-    assert.equal(runtime, null);
-    return;
-  }
-  const evidence = readBuildEvidence(runtime.evidencePath) as {
-    typst: { version: string; artifactSha256: string };
-  };
-  assert.equal(evidence.typst.version, "0.15.1");
-  assert.ok(evidence.typst.artifactSha256);
-});
+test(
+  "production packaging evidence records Typst 0.15.1 when runtime is built",
+  { skip: !hasRuntime },
+  () => {
+    const runtime = resolveProductionTypstRuntime({ repoRoot: rootDir });
+    assert.ok(runtime?.evidencePath);
+    const evidence = readBuildEvidence(runtime.evidencePath) as {
+      typst: { version: string; artifactSha256: string };
+    };
+    assert.equal(evidence.typst.version, "0.15.1");
+    assert.ok(evidence.typst.artifactSha256);
+  },
+);
 
-async function requireRuntime() {
-  const runtime = resolveProductionTypstRuntime({ repoRoot: rootDir });
-  assert.ok(
-    runtime,
-    "Typst runtime missing. Run: npm run packaging:build -w @openbook/pdf",
-  );
-  return runtime;
-}
+test(
+  "buildPdf compiles bake-off fixtures to PDF with Typst 0.15.1",
+  { skip: !hasRuntime },
+  async () => {
+    for (const name of [
+      "english-prose.json",
+      "kannada-prose.json",
+      "mixed-english-kannada.json",
+      "indic-conjunct-shaping.json",
+    ]) {
+      const book = loadFixture(name);
+      const pub = await buildPdf(book);
+      assert.ok(pub.pdf.byteLength > 1000, `${name} PDF too small`);
+      assert.equal(
+        String.fromCharCode(pub.pdf[0]!, pub.pdf[1]!, pub.pdf[2]!, pub.pdf[3]!),
+        "%PDF",
+      );
+      assert.ok(pub.typstSource.includes("Noto Serif"));
+    }
+  },
+);
 
-test("buildPdf compiles bake-off fixtures to PDF with Typst 0.15.1", async () => {
-  await requireRuntime();
-  for (const name of [
-    "english-prose.json",
-    "kannada-prose.json",
-    "mixed-english-kannada.json",
-    "indic-conjunct-shaping.json",
-  ]) {
-    const book = loadFixture(name);
-    const pub = await buildPdf(book);
-    assert.ok(pub.pdf.byteLength > 1000, `${name} PDF too small`);
-    assert.equal(String.fromCharCode(pub.pdf[0]!, pub.pdf[1]!, pub.pdf[2]!, pub.pdf[3]!), "%PDF");
-    assert.ok(pub.typstSource.includes("Noto Serif"));
-  }
-});
+test(
+  "buildPdf is byte-deterministic for identical Book inputs",
+  { skip: !hasRuntime },
+  async () => {
+    const book = loadFixture("kannada-prose.json");
+    const a = await buildPdf(book);
+    const b = await buildPdf(book);
+    assert.equal(sha256(a.pdf), sha256(b.pdf));
+  },
+);
 
-test("buildPdf is byte-deterministic for identical Book inputs", async () => {
-  await requireRuntime();
-  const book = loadFixture("kannada-prose.json");
-  const a = await buildPdf(book);
-  const b = await buildPdf(book);
-  assert.equal(sha256(a.pdf), sha256(b.pdf));
-});
-
-test("buildPdf embeds image assets via AssetResolver", async () => {
-  await requireRuntime();
-  const asset: AssetRef = {
-    id: "dot",
-    kind: "image",
-    fileName: "dot.png",
-    mediaType: "image/png",
-    altText: "Dot",
-    licence: "test",
-  };
-  const book = createBook({ title: "Image Fixture", language: "en", withOpeningChapter: false });
-  book.metadata.publishedAt = "2026-09-04";
-  book.assets = [asset];
-  book.chapters = [
-    {
-      id: "c1",
-      kind: "main",
-      role: "chapter",
-      title: "Chapter",
-      blocks: [
-        { type: "paragraph", id: "p1", inlines: [{ type: "text", text: "Before image." }] },
-        {
-          type: "image",
-          id: "i1",
-          assetId: "dot",
-          caption: [{ type: "text", text: "A pixel." }],
-        },
-      ],
-    },
-  ];
-
-  const pub = await buildPdf(book, {
-    assetResolver: {
-      async resolve(ref) {
-        assert.equal(ref.id, "dot");
-        return TINY_PNG;
+test(
+  "buildPdf embeds image assets via AssetResolver",
+  { skip: !hasRuntime },
+  async () => {
+    const asset: AssetRef = {
+      id: "dot",
+      kind: "image",
+      fileName: "dot.png",
+      mediaType: "image/png",
+      altText: "Dot",
+      licence: "test",
+    };
+    const book = createBook({
+      title: "Image Fixture",
+      language: "en",
+      withOpeningChapter: false,
+    });
+    book.metadata.publishedAt = "2026-09-04";
+    book.assets = [asset];
+    book.chapters = [
+      {
+        id: "c1",
+        kind: "main",
+        role: "chapter",
+        title: "Chapter",
+        blocks: [
+          { type: "paragraph", id: "p1", inlines: [{ type: "text", text: "Before image." }] },
+          {
+            type: "image",
+            id: "i1",
+            assetId: "dot",
+            caption: [{ type: "text", text: "A pixel." }],
+          },
+        ],
       },
-    },
-  });
-  assert.equal(String.fromCharCode(pub.pdf[0]!, pub.pdf[1]!, pub.pdf[2]!, pub.pdf[3]!), "%PDF");
-  assert.match(pub.typstSource, /image\("assets\/dot\.png"\)/);
-});
+    ];
+
+    const pub = await buildPdf(book, {
+      assetResolver: {
+        async resolve(ref) {
+          assert.equal(ref.id, "dot");
+          return TINY_PNG;
+        },
+      },
+    });
+    assert.equal(
+      String.fromCharCode(pub.pdf[0]!, pub.pdf[1]!, pub.pdf[2]!, pub.pdf[3]!),
+      "%PDF",
+    );
+    assert.match(pub.typstSource, /image\("assets\/dot\.png"\)/);
+  },
+);
