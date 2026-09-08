@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "gate": "Gate 6 — PDF Publishing Engine (first slice)",
+  "adr": "ADR-0013",
+  "recordedAt": "2026-09-08",
+  "typst": {
+    "version": "0.15.1",
+    "gitCommit": "9dfd3a08",
+    "license": "Apache-2.0",
+    "releaseUrlBase": "https://github.com/typst/typst/releases/download/v0.15.1",
+    "platforms": {
+      "windows-x64": {
+        "os": "windows",
+        "arch": "x64",
+        "artifactName": "typst-x86_64-pc-windows-msvc.zip",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-pc-windows-msvc.zip",
+        "sha256": "19ce3551153c2fe7ee9fa2f95208310c8f4d3209fedb699e0333faf8913f6736",
+        "archiveFormat": "zip",
+        "executableRelativePath": "typst.exe"
+      },
+      "windows-aarch64": {
+        "os": "windows",
+        "arch": "aarch64",
+        "artifactName": "typst-aarch64-pc-windows-msvc.zip",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-aarch64-pc-windows-msvc.zip",
+        "sha256": "4ab28e1b71ec3184d38d580ab797f499b6770d952b6b19167be5cea5c2662e14",
+        "archiveFormat": "zip",
+        "executableRelativePath": "typst.exe"
+      },
+      "linux-x64": {
+        "os": "linux",
+        "arch": "x64",
+        "artifactName": "typst-x86_64-unknown-linux-musl.tar.xz",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-unknown-linux-musl.tar.xz",
+        "sha256": "a6d077d0a95eed5a2eba715b2dae06be954f624ccbf85758a03f389ded33118c",
+        "archiveFormat": "tar.xz",
+        "executableRelativePath": "typst"
+      },
+      "linux-aarch64": {
+        "os": "linux",
+        "arch": "aarch64",
+        "artifactName": "typst-aarch64-unknown-linux-musl.tar.xz",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-aarch64-unknown-linux-musl.tar.xz",
+        "sha256": "5aa8d74a3d906e60ea12a66ac2f37f8eef1b14cbad7182a745e393a10c23dcee",
+        "archiveFormat": "tar.xz",
+        "executableRelativePath": "typst"
+      },
+      "mac-x64": {
+        "os": "mac",
+        "arch": "x64",
+        "artifactName": "typst-x86_64-apple-darwin.tar.xz",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-apple-darwin.tar.xz",
+        "sha256": "7f9fdd9584866245de9a79e0add8f9236fae6f40a8a45e2c4771ccc14db4e0fa",
+        "archiveFormat": "tar.xz",
+        "executableRelativePath": "typst"
+      },
+      "mac-aarch64": {
+        "os": "mac",
+        "arch": "aarch64",
+        "artifactName": "typst-aarch64-apple-darwin.tar.xz",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-aarch64-apple-darwin.tar.xz",
+        "sha256": "48f62ed034aa3a7978309579ac6ca00045e2ef0da73114e8af27cfd8e74dc05a",
+        "archiveFormat": "tar.xz",
+        "executableRelativePath": "typst"
+      }
+    }
+  },
+  "fonts": {
+    "license": "OFL-1.1",
+    "source": "google/fonts (jsDelivr CDN pin of main)",
+    "files": {
+      "NotoSerifKannada[wght].ttf": {
+        "family": "Noto Serif Kannada",
+        "role": "body-kannada",
+        "url": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notoserifkannada/NotoSerifKannada%5Bwght%5D.ttf",
+        "sha256": "3d97c98dd59251a85fcc6e95edf9be02b60147e92486927390247f1cd4d5eb37"
+      },
+      "NotoSansKannada[wdth,wght].ttf": {
+        "family": "Noto Sans Kannada",
+        "role": "heading-kannada",
+        "url": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosanskannada/NotoSansKannada%5Bwdth%2Cwght%5D.ttf",
+        "sha256": "cca4f3b3a8cb12fb261f1b43baf5d2f7f59d90fe123d41f0065ed3a183997ec9"
+      },
+      "NotoSerif[wdth,wght].ttf": {
+        "family": "Noto Serif",
+        "role": "body-latin",
+        "url": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notoserif/NotoSerif%5Bwdth%2Cwght%5D.ttf",
+        "sha256": "4d8e6761424656867019081a1a01336f3cb086982682698714054fc33f782713"
+      },
+      "NotoSans[wdth,wght].ttf": {
+        "family": "Noto Sans",
+        "role": "heading-latin",
+        "url": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf",
+        "sha256": "bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d"
+      }
+    }
+  },
+  "layout": {
+    "cacheRoot": ".cache/pdf-runtime",
+    "typstDir": "typst",
+    "fontsDir": "fonts",
+    "evidenceFile": "build-evidence.json"
+  },
+  "cliDefaults": {
+    "format": "pdf",
+    "ignoreSystemFonts": true,
+    "creationTimestampSource": "book.metadata.publishedAt|options.creationTimestamp|0"
+  }
+}

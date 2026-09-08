@@ -1,0 +1,26 @@
+{
+  "name": "@openbook/pdf",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure TypeScript PDF publishing engine for OpenBook. Book Model → Typst → PDF (ADR-0013).",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./packaging/inventory.json": "./packaging/inventory.json"
+  },
+  "files": [
+    "dist",
+    "packaging"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "packaging:build": "node ../../scripts/pdf/build-runtime.mjs",
+    "test": "npm run build && node --test dist/pdf.test.js"
+  },
+  "dependencies": {
+    "@openbook/book-model": "*"
+  }
+}
