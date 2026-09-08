@@ -1,0 +1,20 @@
+{
+  "name": "@openbook/workflow",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenBook end-to-end book production workflow coordinator (ADR-0014 Gate 7 Slice 1). Orchestration state only — never holds canonical Book content.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/workflow.test.js"
+  }
+}

@@ -9,14 +9,15 @@
     "packages/epub",
     "packages/html",
     "packages/pdf",
+    "packages/workflow",
     "apps/desktop"
   ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "build": "npm run build -w @openbook/book-model && npm run build -w @openbook/validator && npm run build -w @openbook/semantic-document && npm run build -w @openbook/epub && npm run build -w @openbook/html && npm run build -w @openbook/pdf && npm run build -w @openbook/desktop",
-    "test": "npm test -w @openbook/book-model && npm test -w @openbook/validator && npm test -w @openbook/semantic-document && npm test -w @openbook/epub && npm test -w @openbook/html && npm test -w @openbook/pdf && npm test -w @openbook/desktop",
+    "build": "npm run build -w @openbook/book-model && npm run build -w @openbook/validator && npm run build -w @openbook/semantic-document && npm run build -w @openbook/epub && npm run build -w @openbook/html && npm run build -w @openbook/pdf && npm run build -w @openbook/workflow && npm run build -w @openbook/desktop",
+    "test": "npm test -w @openbook/book-model && npm test -w @openbook/validator && npm test -w @openbook/semantic-document && npm test -w @openbook/epub && npm test -w @openbook/html && npm test -w @openbook/pdf && npm test -w @openbook/workflow && npm test -w @openbook/desktop",
     "tauri:build": "npm run tauri:build -w @openbook/desktop"
   },
   "devDependencies": {
