@@ -21,8 +21,9 @@ Numbering: files are `docs/adr/NNNN-slug.md`. **ADR-0001 was never issued on `ma
 | ADR-0010 | EPUB 3.3 asset & resource packaging architecture (Gate 3) | Accepted; implementation requires separate explicit authorization | Publishing / EPUB | 2026-09-07 |
 | ADR-0011 | HTML publishing engine architecture (Gate 4) | Accepted; implementation requires separate explicit authorization (already granted) | Publishing / HTML | 2026-09-08 |
 | ADR-0012 | Production EPUBCheck runtime & packaging architecture (Gate 5) | Accepted; implementation requires separate explicit authorization | EPUB / Runtime / Compliance | 2026-09-08 |
+| ADR-0013 | PDF publishing engine architecture and Typst renderer selection (Gate 6) | Accepted; implementation requires separate explicit authorization | Publishing / PDF | 2026-09-08 |
 
-**Accepted is not Frozen.** Frozen means implementation must follow that decision unless a new ADR replaces it. ADR-0007 freezes exact Tauri **2.11.5**, React **19.2.8**, TypeScript **5.9.3**, and `tauri-plugin-sql` **2.4.1** (`sqlite`) for the desktop baseline. ADR-0008 freezes the open-source Tiptap/ProseMirror package pins for the authoring surface. ADR-0009 accepts the EPUB 3.3 engine architecture and Book Model mapping boundary, gating implementation for a follow-up freeze-lift. ADR-0010 accepts the EPUB 3.3 asset & resource packaging architecture (Gate 3), with implementation requiring a separate explicit authorization. ADR-0011 accepts the HTML publishing engine architecture (Gate 4), with implementation requiring a separate explicit authorization (already granted for Gate 4). ADR-0012 accepts the production EPUBCheck 5.3.0 / Temurin 21 LTS family / `jlink` packaging architecture (Gate 5); exact Temurin patch/build and SHA-256 are recorded when implementation is authorized. PDF renderer selection remains UNDECIDED (ADR-0004). Typst remains an evaluation candidate only.
+**Accepted is not Frozen.** Frozen means implementation must follow that decision unless a new ADR replaces it. ADR-0007 freezes exact Tauri **2.11.5**, React **19.2.8**, TypeScript **5.9.3**, and `tauri-plugin-sql` **2.4.1** (`sqlite`) for the desktop baseline. ADR-0008 freezes the open-source Tiptap/ProseMirror package pins for the authoring surface. ADR-0009 accepts the EPUB 3.3 engine architecture and Book Model mapping boundary, gating implementation for a follow-up freeze-lift. ADR-0010 accepts the EPUB 3.3 asset & resource packaging architecture (Gate 3), with implementation requiring a separate explicit authorization. ADR-0011 accepts the HTML publishing engine architecture (Gate 4), with implementation requiring a separate explicit authorization (already granted for Gate 4). ADR-0012 accepts the production EPUBCheck 5.3.0 / Temurin 21 LTS family / `jlink` packaging architecture (Gate 5); exact Temurin patch/build and SHA-256 are recorded when implementation is authorized. ADR-0013 accepts the PDF publishing engine architecture and selects **Typst v0.15.1** as the production PDF renderer (Gate 6), with implementation requiring a separate explicit authorization.
 
 ## Governance
 
@@ -34,7 +35,7 @@ See also `docs/FOUNDATION-READINESS-REPORT.md` and `docs/IMPLEMENTATION-BACKLOG.
 
 ## Pending decisions
 
-- Final PDF renderer after Typst/pdf-lib/Chromium bake-off (plan + multilingual fixtures: `docs/PDF_RENDERER_BAKEOFF_PLAN.md`; **selection still PENDING / UNDECIDED**)
+- ~~Final PDF renderer after Typst/pdf-lib/Chromium bake-off~~ — resolved by ADR-0013: Typst **v0.15.1** selected as production PDF publishing renderer; implementation requires separate explicit authorization
 - Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default **Accepted** in ADR-0012; implementation not authorized)
 - Bundled-font policy
 - Contributor agreement mechanism (CLA/DCO)
