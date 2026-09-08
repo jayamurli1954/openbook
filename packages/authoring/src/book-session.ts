@@ -15,6 +15,7 @@ import {
   SectionNotFoundError,
 } from "./errors.js";
 import { DeterministicIdFactory } from "./ids.js";
+import { isRoleValidForMatter } from "./roles.js";
 import type {
   AddSectionParams,
   BookSessionOptions,
@@ -55,6 +56,22 @@ function emptyParagraph(id: string): ContentBlock {
     id,
     inlines: [{ type: "text", text: "" }],
   };
+}
+
+function collectCanonicalIds(book: Book): Set<string> {
+  const ids = new Set<string>();
+  for (const sections of [book.frontMatter, book.chapters, book.backMatter]) {
+    for (const section of sections) {
+      ids.add(section.id);
+      for (const block of section.blocks) {
+        ids.add(block.id);
+      }
+    }
+  }
+  for (const asset of book.assets) {
+    ids.add(asset.id);
+  }
+  return ids;
 }
 
 function findSection(
@@ -143,14 +160,15 @@ export class BookSession implements IBookSession {
   addSection(params: AddSectionParams): StructuralSection {
     let created!: StructuralSection;
     this.#mutate((candidate) => {
+      const occupied = collectCanonicalIds(candidate);
       const key = matterKey(params.matter);
       const list = [...candidate[key]];
-      const sectionId = this.#ids.nextSectionId();
+      const sectionId = this.#ids.allocateUnique("section", occupied);
       const rawBlocks =
         params.initialBlocks && params.initialBlocks.length > 0
           ? params.initialBlocks
           : [emptyParagraph("temp")];
-      const blocks = rawBlocks.map((block) => this.#assignBlockId(block));
+      const blocks = rawBlocks.map((block) => this.#assignBlockId(block, occupied));
       const section: StructuralSection = {
         id: sectionId,
         kind: params.matter,
@@ -227,6 +245,11 @@ export class BookSession implements IBookSession {
             "Cannot move the last remaining main-matter chapter out of main matter.",
           );
         }
+      }
+      if (!isRoleValidForMatter(String(located.section.role), targetMatter)) {
+        throw new InvalidStructureOperationError(
+          `Role "${String(located.section.role)}" is not valid for target matter "${targetMatter}".`,
+        );
       }
       const sourceKey = matterKey(located.matter);
       const sourceList = [...candidate[sourceKey]];
@@ -308,10 +331,15 @@ export class BookSession implements IBookSession {
         }
       }
       const located = findSection(candidate, sectionId);
+      const occupied = collectCanonicalIds(candidate);
+      // Section's current block IDs will be replaced; free them for reallocation.
+      for (const block of located.section.blocks) {
+        occupied.delete(block.id);
+      }
       const assigned =
         blocks.length > 0
-          ? blocks.map((b) => this.#assignBlockId(b))
-          : [emptyParagraph(this.#ids.nextBlockId())];
+          ? blocks.map((b) => this.#assignBlockId(b, occupied))
+          : [emptyParagraph(this.#ids.allocateUnique("block", occupied))];
       const key = matterKey(located.matter);
       const list = [...candidate[key]];
       list[located.index] = {
@@ -334,8 +362,9 @@ export class BookSession implements IBookSession {
         );
       }
       const located = findSection(candidate, sectionId);
+      const occupied = collectCanonicalIds(candidate);
       const blocks = [...located.section.blocks];
-      const inserted = this.#assignBlockId(block);
+      const inserted = this.#assignBlockId(block, occupied);
       const at = Math.max(0, Math.min(atIndex, blocks.length));
       blocks.splice(at, 0, inserted);
       const key = matterKey(located.matter);
@@ -378,7 +407,11 @@ export class BookSession implements IBookSession {
       }
       blocks.splice(index, 1);
       if (blocks.length === 0) {
-        blocks.push(emptyParagraph(this.#ids.nextBlockId()));
+        const occupied = collectCanonicalIds(candidate);
+        occupied.delete(blockId);
+        blocks.push(
+          emptyParagraph(this.#ids.allocateUnique("block", occupied)),
+        );
       }
       const key = matterKey(located.matter);
       const list = [...candidate[key]];
@@ -427,8 +460,8 @@ export class BookSession implements IBookSession {
     return true;
   }
 
-  #assignBlockId(block: ContentBlock): ContentBlock {
-    const id = this.#ids.nextBlockId();
+  #assignBlockId(block: ContentBlock, occupied: Set<string>): ContentBlock {
+    const id = this.#ids.allocateUnique("block", occupied);
     return { ...block, id } as ContentBlock;
   }
 

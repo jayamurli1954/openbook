@@ -209,6 +209,7 @@ test("structure ops: reorder, move, role, removeBlock guardrail, undo/redo", () 
     title: "Preface",
     role: "preface",
   });
+  session.updateSectionRole(preface.id, "custom");
   session.moveSection(preface.id, "back", 0);
   assert.equal(session.getBook().backMatter[0]?.id, preface.id);
   assert.equal(session.getBook().backMatter[0]?.kind, "back");
@@ -258,5 +259,51 @@ test("updateBlock preserves existing block id", () => {
     (session.getBook().chapters[0]!.blocks[0] as { inlines: Array<{ text: string }> })
       .inlines[0]?.text,
     "Updated",
+  );
+});
+
+test("deterministic ID allocation skips collisions with existing canonical IDs", () => {
+  const book = baseBook();
+  // Pre-occupy the first section ID the factory would emit for this seed.
+  const sessionProbe = new BookSession({ book: baseBook(), idSeed: "collide-seed" });
+  const firstGenerated = sessionProbe.addSection({
+    matter: "main",
+    title: "Probe",
+  }).id;
+  book.chapters[0]!.id = firstGenerated;
+
+  const session = new BookSession({ book, idSeed: "collide-seed" });
+  const added = session.addSection({ matter: "main", title: "Safe" });
+  assert.notEqual(added.id, firstGenerated);
+  assert.match(added.id, /-s0002$/);
+
+  const allIds = [
+    ...session.getBook().chapters.map((c) => c.id),
+    ...session.getBook().chapters.flatMap((c) => c.blocks.map((b) => b.id)),
+  ];
+  assert.equal(new Set(allIds).size, allIds.length);
+});
+
+test("moveSection rejects roles invalid for target matter and rolls back", () => {
+  const session = new BookSession({ book: baseBook(), idSeed: "role-move" });
+  session.addSection({ matter: "main", title: "Keep" });
+  const chapterId = session.getBook().chapters[0]!.id;
+  const before = serializeBook(session.getBook());
+  const rev = session.getState().revision;
+
+  assert.throws(
+    () => session.moveSection(chapterId, "front"),
+    (err: unknown) =>
+      err instanceof InvalidStructureOperationError &&
+      /not valid for target matter "front"/.test(err.message),
+  );
+  assert.equal(serializeBook(session.getBook()), before);
+  assert.equal(session.getState().revision, rev);
+
+  session.updateSectionRole(chapterId, "custom");
+  session.moveSection(chapterId, "front");
+  assert.equal(
+    session.getBook().frontMatter.find((s) => s.id === chapterId)?.kind,
+    "front",
   );
 });

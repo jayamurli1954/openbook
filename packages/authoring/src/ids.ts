@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 /**
  * Deterministic ID factory for authoring mutations (ADR-0016 §2.1).
  * Format intentionally unfrozen; identical seed + sequence ⇒ identical IDs.
+ * Callers must skip values that collide with existing canonical Book IDs.
  */
 export class DeterministicIdFactory {
   readonly #prefix: string;
@@ -23,5 +24,19 @@ export class DeterministicIdFactory {
   nextBlockId(): string {
     this.#block += 1;
     return `${this.#prefix}-b${String(this.#block).padStart(4, "0")}`;
+  }
+
+  /**
+   * Advance the factory until a candidate ID is not present in `occupied`.
+   * Newly allocated IDs are added to `occupied` so multi-alloc mutations stay unique.
+   */
+  allocateUnique(kind: "section" | "block", occupied: Set<string>): string {
+    for (;;) {
+      const id = kind === "section" ? this.nextSectionId() : this.nextBlockId();
+      if (!occupied.has(id)) {
+        occupied.add(id);
+        return id;
+      }
+    }
   }
 }
