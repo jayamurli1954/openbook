@@ -1,6 +1,6 @@
 # ADR-0012: Production EPUBCheck Runtime & Packaging Architecture — Gate 5
 
-* **Status:** Proposed
+* **Status:** Accepted
 * **Date:** 2026-09-08
 * **Decision owner:** SanMitra Tech Solutions
 * **Decision scope:** Production EPUBCheck runtime, distribution, and packaging — Gate 5
@@ -28,9 +28,9 @@ Without this ADR:
 * runtime/process failures might be indistinguishable from EPUB conformance failures;
 * Temurin/EPUBCheck bumps might occur as silent dependency changes.
 
-This ADR **proposes** the production architecture. It is **not Accepted** until Product Owner review. It does **not** authorize implementation or binary bundling.
+This ADR records the production architecture. Acceptance does **not** authorize implementation or binary bundling.
 
-## 2. Decision (Proposed)
+## 2. Decision
 
 OpenBook will run **official EPUBCheck 5.3.0** through the existing `ValidatorService` boundary, using a **private Eclipse Temurin 21 LTS** runtime reduced with **`jlink`**, invoked as an **isolated subprocess**, with **per-platform** images and **release-governed** version pins.
 
@@ -82,14 +82,14 @@ Rationale:
 * ADR-0005 named Temurin as the preferred candidate family.
 * The packaging spike evaluated Temurin 21 LTS against EPUBCheck 5.3.0 and obtained a working `jlink` image and smoke tests.
 
-**Pinning rule (proposed):**
+**Pinning rule:**
 
 * Gate 5 freezes the **vendor + major LTS line** (Eclipse Temurin 21).
 * The exact Adoptium build (for example `21.0.x+y`), OS, architecture, download URL/Maven coordinate, and SHA-256 are **recorded at the first authorized packaging implementation** and on every subsequent runtime update.
 * CPU/security patch updates stay on Temurin 21 LTS unless a new ADR changes the major line.
 * Alternate OpenJDK vendors are out of scope unless Temurin cannot meet a recorded platform/license need.
 
-Spike measurements (Windows x64 Temurin 21.0.12.1) are **evidence**, not a Frozen patch pin in this Proposed ADR.
+Spike measurements (Windows x64 Temurin 21.0.12.1) are **evidence**, not a Frozen patch pin. Exact build and SHA-256 are recorded when implementation is authorized.
 
 ## 6. jlink / Minimized-Runtime Strategy
 
@@ -101,7 +101,7 @@ ADR-0005 required empirical evaluation before making `jlink` mandatory. The spik
 * EPUBCheck 5.3.0 executed successfully against valid and invalid fixtures;
 * cold-start latency comparable to the full JDK.
 
-**Proposed production rules:**
+**Production rules:**
 
 * `jlink` is the default production packaging path for each supported OS/architecture.
 * Module set is derived from `jdeps` on the shipped EPUBCheck 5.3.0 JARs, then documented. Silent module omission that causes runtime failure is a packaging defect.
@@ -137,7 +137,7 @@ Identical pinned artifacts + identical `jlink` inputs must produce equivalent ru
 
 The production strategy is **three desktop operating systems**, with **per-platform runtime images**.
 
-| Platform | Architectures (proposed) | Boundary |
+| Platform | Architectures | Boundary |
 | --- | --- | --- |
 | Windows | x64 (arm64 later if separately recorded) | Bundled `jlink` image + `epubcheck.jar`; invoke `java.exe` via subprocess |
 | macOS | x64 and aarch64 | Same layout inside the app bundle resources; native image per arch |
@@ -217,7 +217,7 @@ First-run or background auto-update of the JRE/EPUBCheck on user machines is **n
 
 ## 13. Explicit Non-Goals
 
-This Proposed ADR does **not** authorize or decide:
+This ADR does **not** authorize or decide:
 
 * PDF renderer selection;
 * PDF implementation;
@@ -233,9 +233,9 @@ This Proposed ADR does **not** authorize or decide:
 
 ### ADR-0005
 
-ADR-0005 remains the parent decision (official EPUBCheck, no user JRE, subprocess, `ValidatorService`, notices, checksums). ADR-0012 proposes the **production freeze** ADR-0005 left open: Temurin 21 LTS family, `jlink` as default minimized runtime, EPUBCheck 5.3.0 as the Gate 5 pin, and per-platform support rules.
+ADR-0005 remains the parent decision (official EPUBCheck, no user JRE, subprocess, `ValidatorService`, notices, checksums). ADR-0012 records the **production architecture** ADR-0005 left open: Temurin 21 LTS family, `jlink` as default minimized runtime, EPUBCheck 5.3.0 as the Gate 5 pin, and per-platform support rules.
 
-This ADR does **not** supersede ADR-0005. It is not Accepted until review.
+This ADR does **not** supersede ADR-0005. Exact Temurin patch/build and SHA-256 remain unfrozen until packaging implementation records them.
 
 ### ADR-0009 / ADR-0010
 
@@ -262,29 +262,32 @@ HTML publishing is a sibling projection and is out of scope for this runtime.
 
 ## 16. Implementation Authorization
 
-This ADR is **Proposed** documentation only.
+This ADR is an architecture decision only.
+
+Acceptance of ADR-0012 does **not** by itself authorize implementation.
+
+After ADR-0012 is accepted, a separate implementation instruction may authorize production EPUBCheck runtime packaging. That instruction has **not** been given.
 
 * It does **not** authorize adding binaries, changing `package.json` dependencies, or modifying validator/EPUB/HTML/desktop source.
-* After **Acceptance**, a **separate explicit implementation instruction** is still required before production packaging work.
 
 Any implementation that appears to require changing Book Model, SemanticDocument, EPUB architecture, HTML architecture, SQLite, or Tiptap must **stop**.
 
-## 17. Acceptance Criteria (for a future Accept decision)
+## 17. Acceptance Criteria for ADR-0012
 
 ADR-0012 may be marked **Accepted** when the Product Owner approves:
 
-* [ ] EPUBCheck 5.3.0 remains the official production validator pin.
-* [ ] Bundled private Java runtime; no user-installed JRE; no first-run download.
-* [ ] Eclipse Temurin 21 LTS is the distribution family; exact builds checksummed at packaging time.
-* [ ] `jlink` is the default minimized-runtime path, with full JRE only as a recorded fallback.
-* [ ] Subprocess isolation behind existing `ValidatorService`.
-* [ ] Windows / macOS / Linux per-platform images; unsupported until smoke-tested.
-* [ ] Deterministic structured handling of validation vs runtime/process failure.
-* [ ] Version bumps are release-governance events.
-* [ ] No Book Model / SDM / SQLite / Tiptap / EPUB / HTML architecture changes.
-* [ ] Implementation of packaging still requires a later explicit authorization.
+* [x] EPUBCheck 5.3.0 remains the official production validator pin.
+* [x] Bundled private Java runtime; no user-installed JRE; no first-run download.
+* [x] Eclipse Temurin 21 LTS is the distribution family; exact builds checksummed at packaging time.
+* [x] `jlink` is the default minimized-runtime path, with full JRE only as a recorded fallback.
+* [x] Subprocess isolation behind existing `ValidatorService`.
+* [x] Windows / macOS / Linux per-platform images; unsupported until smoke-tested.
+* [x] Deterministic structured handling of validation vs runtime/process failure.
+* [x] Version bumps are release-governance events.
+* [x] No Book Model / SDM / SQLite / Tiptap / EPUB / HTML architecture changes.
+* [x] Implementation of packaging still requires a later explicit authorization.
 
-Until then, status remains **Proposed**.
+**Decision:** Accepted. Implementation remains gated and requires a separate explicit implementation instruction. Gate 5 is **not** complete until that implementation is authorized, audited, and merged.
 
 ## Related Documents
 
