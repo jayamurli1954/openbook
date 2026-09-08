@@ -3,16 +3,20 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Minimal ValidatorService boundary and EPUBCheck isolated subprocess adapter proof.",
+  "description": "ValidatorService boundary and official EPUBCheck isolated subprocess adapter (Gate 5 packaging).",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "packaging"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "packaging:build": "node ../../scripts/validator/build-runtime.mjs",
     "test": "npm run build && node --test dist/epubcheck-adapter.test.js"
   }
 }
