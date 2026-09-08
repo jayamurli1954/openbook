@@ -1,7 +1,7 @@
 # OpenBook Architecture & Decision Index
 
 - **Status:** Active
-- **Last updated:** 2026-09-07
+- **Last updated:** 2026-09-08
 
 This index is the navigation point for durable OpenBook decisions. Individual ADRs remain authoritative for their specific subjects.
 
@@ -19,8 +19,9 @@ Numbering: files are `docs/adr/NNNN-slug.md`. **ADR-0001 was never issued on `ma
 | ADR-0008 | Editor technology evaluation and decision (Tiptap/ProseMirror) | Accepted; OSS Tiptap package versions Frozen; editor implementation not authorized by this ADR alone | Editor / Authoring | 2026-09-07 |
 | ADR-0009 | EPUB 3.3 engine architecture and publishing boundary | Accepted; implementation gated for follow-up slice | Publishing / EPUB | 2026-09-07 |
 | ADR-0010 | EPUB 3.3 asset & resource packaging architecture (Gate 3) | Accepted; implementation requires separate explicit authorization | Publishing / EPUB | 2026-09-07 |
+| ADR-0011 | HTML publishing engine architecture (Gate 4) | Accepted; implementation requires separate explicit authorization (already granted) | Publishing / HTML | 2026-09-08 |
 
-**Accepted is not Frozen.** Frozen means implementation must follow that decision unless a new ADR replaces it. ADR-0007 freezes exact Tauri **2.11.5**, React **19.2.8**, TypeScript **5.9.3**, and `tauri-plugin-sql` **2.4.1** (`sqlite`) for the desktop baseline. ADR-0008 freezes the open-source Tiptap/ProseMirror package pins for the authoring surface. ADR-0009 accepts the EPUB 3.3 engine architecture and Book Model mapping boundary, gating implementation for a follow-up freeze-lift. ADR-0010 accepts the EPUB 3.3 asset & resource packaging architecture (Gate 3), with implementation requiring a separate explicit authorization. PDF renderer selection remains UNDECIDED (ADR-0004). Typst remains an evaluation candidate only.
+**Accepted is not Frozen.** Frozen means implementation must follow that decision unless a new ADR replaces it. ADR-0007 freezes exact Tauri **2.11.5**, React **19.2.8**, TypeScript **5.9.3**, and `tauri-plugin-sql` **2.4.1** (`sqlite`) for the desktop baseline. ADR-0008 freezes the open-source Tiptap/ProseMirror package pins for the authoring surface. ADR-0009 accepts the EPUB 3.3 engine architecture and Book Model mapping boundary, gating implementation for a follow-up freeze-lift. ADR-0010 accepts the EPUB 3.3 asset & resource packaging architecture (Gate 3), with implementation requiring a separate explicit authorization. ADR-0011 accepts the HTML publishing engine architecture (Gate 4), with implementation requiring a separate explicit authorization (already granted for Gate 4). PDF renderer selection remains UNDECIDED (ADR-0004). Typst remains an evaluation candidate only.
 
 ## Governance
 

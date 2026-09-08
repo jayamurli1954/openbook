@@ -1,0 +1,23 @@
+{
+  "name": "@openbook/html",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure TypeScript HTML publishing engine for OpenBook. Projections from canonical Book Model.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/html.test.js"
+  },
+  "dependencies": {
+    "@openbook/book-model": "*"
+  }
+}
