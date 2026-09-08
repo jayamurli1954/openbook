@@ -18,3 +18,25 @@ jobs:
       - run: npm test
       - run: npm run build -w @openbook/book-model
       - run: npm run build -w @openbook/desktop
+
+  validator-runtime:
+    name: Gate 5 validator runtime (linux-x64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Build production EPUBCheck jlink runtime
+        run: npm run packaging:build -w @openbook/validator
+      - name: Run validator Gate 5 tests with bundled runtime
+        run: npm test -w @openbook/validator
+      - name: Upload build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validator-runtime-evidence-linux-x64
+          path: .cache/validator-runtime/build-evidence.json
+          if-no-files-found: warn
