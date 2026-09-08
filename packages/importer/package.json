@@ -1,0 +1,27 @@
+{
+  "name": "@openbook/importer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenBook import/ingestion foundation (ADR-0015 Gate 7 Slice 2). Maps Markdown/plain text into canonical Book Model.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/importer.test.js"
+  },
+  "dependencies": {
+    "@openbook/book-model": "*",
+    "markdown-it": "^14.1.0"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2"
+  }
+}
