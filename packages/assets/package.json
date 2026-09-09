@@ -1,0 +1,23 @@
+{
+  "name": "@openbook/assets",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenBook asset management foundation (ADR-0017 Gate 7 Slice 4). SHA-256 CAS storage, ingestion, resolver, auditor.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/assets.test.js"
+  },
+  "dependencies": {
+    "@openbook/book-model": "*"
+  }
+}
