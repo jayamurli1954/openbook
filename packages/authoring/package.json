@@ -1,0 +1,23 @@
+{
+  "name": "@openbook/authoring",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenBook structure and authoring foundation (ADR-0016 Gate 7 Slice 3). Transactional in-memory BookSession.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/authoring.test.js"
+  },
+  "dependencies": {
+    "@openbook/book-model": "*"
+  }
+}
