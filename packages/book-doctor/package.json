@@ -1,0 +1,23 @@
+{
+  "name": "@openbook/book-doctor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenBook Book Doctor validation coordinator (ADR-0018 Gate 7 Slice 5). Aggregates domain, EPUBCheck, and Typst diagnostics.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/book-doctor.test.js"
+  },
+  "dependencies": {
+    "@openbook/book-model": "*"
+  }
+}
