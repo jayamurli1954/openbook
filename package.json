@@ -13,14 +13,15 @@
     "packages/importer",
     "packages/authoring",
     "packages/assets",
+    "packages/book-doctor",
     "apps/desktop"
   ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "build": "npm run build -w @openbook/book-model && npm run build -w @openbook/validator && npm run build -w @openbook/semantic-document && npm run build -w @openbook/epub && npm run build -w @openbook/html && npm run build -w @openbook/pdf && npm run build -w @openbook/workflow && npm run build -w @openbook/importer && npm run build -w @openbook/authoring && npm run build -w @openbook/assets && npm run build -w @openbook/desktop",
-    "test": "npm test -w @openbook/book-model && npm test -w @openbook/validator && npm test -w @openbook/semantic-document && npm test -w @openbook/epub && npm test -w @openbook/html && npm test -w @openbook/pdf && npm test -w @openbook/workflow && npm test -w @openbook/importer && npm test -w @openbook/authoring && npm test -w @openbook/assets && npm test -w @openbook/desktop",
+    "build": "npm run build -w @openbook/book-model && npm run build -w @openbook/validator && npm run build -w @openbook/semantic-document && npm run build -w @openbook/epub && npm run build -w @openbook/html && npm run build -w @openbook/pdf && npm run build -w @openbook/workflow && npm run build -w @openbook/importer && npm run build -w @openbook/authoring && npm run build -w @openbook/assets && npm run build -w @openbook/book-doctor && npm run build -w @openbook/desktop",
+    "test": "npm test -w @openbook/book-model && npm test -w @openbook/validator && npm test -w @openbook/semantic-document && npm test -w @openbook/epub && npm test -w @openbook/html && npm test -w @openbook/pdf && npm test -w @openbook/workflow && npm test -w @openbook/importer && npm test -w @openbook/authoring && npm test -w @openbook/assets && npm test -w @openbook/book-doctor && npm test -w @openbook/desktop",
     "tauri:build": "npm run tauri:build -w @openbook/desktop"
   },
   "devDependencies": {
