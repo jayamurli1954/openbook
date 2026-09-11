@@ -67,8 +67,9 @@ export default function App() {
     <main className="shell">
       <h1>OpenBook Studio</h1>
       <p className="lede">
-        Desktop foundation shell. Book Model is canonical; Semantic Document is
-        the editor contract; SQLite is infrastructure only.
+        Desktop foundation shell. Book Model is canonical; BookSession is the
+        authoring aggregate; Semantic Document remains the editor contract;
+        SQLite is infrastructure only.
       </p>
 
       <section>

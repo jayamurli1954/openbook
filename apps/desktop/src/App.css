@@ -104,12 +104,28 @@ dd {
   gap: 0.35rem;
 }
 
-.project-actions button {
-  font: inherit;
-  padding: 0.25rem 0.55rem;
-  border: 1px solid #bbb;
-  background: #f8f8f6;
-  cursor: pointer;
+.workflow-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0.35rem 0 0.45rem;
+  padding: 0;
+}
+
+.workflow-stage {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  color: #666;
+}
+
+.workflow-stage-active {
+  border-color: #444;
+  background: #e8e8e4;
+  color: #111;
+  font-weight: 600;
 }
 
 .editor-section {

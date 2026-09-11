@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Save/Open project workflow: EditorBookSession ↔ ProjectPersistence.
+ * Save/Open project workflow: canonical Book ↔ ProjectPersistence.
  *
  * Path:
- *   Save: Session → SDM → Book (canonical) → ProjectPersistence → SQLite
- *   Open: SQLite → ProjectPersistence → Book → SDM → EditorBookSession → Tiptap
+ *   Save: BookSession.getBook() → ProjectPersistence → SQLite
+ *   Open: SQLite → ProjectPersistence → Book → BookSession
  *
  * Tiptap JSON is never persisted. Uses PR #16 ProjectPersistence only.
+ * Pipeline stage/job state lives on @openbook/workflow via DesktopStudioCoordinator.
  */
 import {
   BOOK_MODEL_SCHEMA_VERSION,
@@ -22,14 +23,8 @@ import {
   type ProjectSummary,
   type SaveSummary,
 } from "../persistence/index.js";
-import {
-  createEditorBookSessionFromBook,
-  listSessionChapters,
-  projectSessionToBook,
-  type EditorBookSession,
-} from "../domain/editorBookSession.js";
 
-/** Binding between the live editor session and a persisted project row. */
+/** Binding between the live authoring session and a persisted project row. */
 export type ActiveProjectBinding = {
   projectId: string;
   projectName: string;
@@ -108,11 +103,11 @@ function err(
 }
 
 /**
- * Build an OpenBookProject aggregate from the current editor session.
- * Persists the canonical Book only (never Tiptap JSON).
+ * Build an OpenBookProject aggregate from the canonical Book.
+ * Persists the Book only (never Tiptap JSON).
  */
-export function buildOpenBookProjectFromSession(
-  session: EditorBookSession,
+export function buildOpenBookProjectFromBook(
+  book: Book,
   binding: ActiveProjectBinding | null,
   projectName: string,
   now: string = new Date().toISOString(),
@@ -120,14 +115,6 @@ export function buildOpenBookProjectFromSession(
   const name = projectName.trim();
   if (!name) {
     return err("NO_PROJECT_NAME", "Project name is required before save.");
-  }
-
-  const projected = projectSessionToBook(session);
-  if (!projected.ok) {
-    return err(
-      "SESSION_PROJECTION_FAILED",
-      `Cannot project editor session to Book (${projected.stage}): ${projected.error}`,
-    );
   }
 
   const projectId = binding?.projectId ?? createProjectId();
@@ -141,12 +128,12 @@ export function buildOpenBookProjectFromSession(
       schemaVersion: PERSISTENCE_SCHEMA_VERSION,
       bookSchemaVersion: BOOK_MODEL_SCHEMA_VERSION,
     },
-    book: projected.book,
+    book,
   };
 
   return {
     ok: true,
-    value: { project, book: projected.book },
+    value: { project, book },
     message: { code: "SAVE_OK", text: "Project aggregate ready for persistence." },
   };
 }
@@ -170,12 +157,12 @@ export async function ensurePersistenceReady(
 }
 
 /**
- * Save the current editor session through ProjectPersistence.
+ * Save a canonical Book through ProjectPersistence.
  * Requires an active binding or a project name for first-time save.
  */
-export async function saveEditorSession(input: {
+export async function saveBookProject(input: {
   persistence: ProjectPersistence;
-  session: EditorBookSession;
+  book: Book;
   binding: ActiveProjectBinding | null;
   /** Required when binding is null (first save). Ignored name falls back to binding name. */
   projectName?: string;
@@ -198,8 +185,8 @@ export async function saveEditorSession(input: {
     }
   }
 
-  const built = buildOpenBookProjectFromSession(
-    input.session,
+  const built = buildOpenBookProjectFromBook(
+    input.book,
     input.binding,
     name,
   );
@@ -231,17 +218,15 @@ export async function saveEditorSession(input: {
 }
 
 /**
- * Open a saved project and rebuild EditorBookSession from canonical Book.
+ * Open a saved project and return the canonical Book (no Tiptap, no SDM session).
  */
-export async function openEditorProject(input: {
+export async function openBookProject(input: {
   persistence: ProjectPersistence;
   projectId: string;
-  preferredChapterId?: string;
 }): Promise<
   WorkflowResult<{
-    session: EditorBookSession;
-    binding: ActiveProjectBinding;
     book: Book;
+    binding: ActiveProjectBinding;
   }>
 > {
   const trimmed = input.projectId.trim();
@@ -261,31 +246,21 @@ export async function openEditorProject(input: {
     };
   }
 
-  const rebuilt = createEditorBookSessionFromBook(
-    loaded.value.book,
-    input.preferredChapterId,
-  );
-  if (!rebuilt.ok) {
-    return err("SESSION_REBUILD_FAILED", rebuilt.error);
-  }
-
   const binding: ActiveProjectBinding = {
     projectId: loaded.value.metadata.id,
     projectName: loaded.value.metadata.name,
     createdAt: loaded.value.metadata.createdAt,
   };
 
-  const chapters = listSessionChapters(rebuilt.session);
   return {
     ok: true,
     value: {
-      session: rebuilt.session,
-      binding,
       book: loaded.value.book,
+      binding,
     },
     message: {
       code: "OPEN_OK",
-      text: `Opened project “${binding.projectName}” (${chapters.length} chapter(s); selected “${chapters.find((c) => c.id === rebuilt.session.selectedChapterId)?.title ?? rebuilt.session.selectedChapterId}”).`,
+      text: `Opened project “${binding.projectName}” (${loaded.value.book.chapters.length} chapter(s)).`,
     },
   };
 }

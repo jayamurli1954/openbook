@@ -1,97 +1,66 @@
 /**
  * SPDX-License-Identifier: Apache-2.0
  *
- * Tiptap authoring surface with in-memory multi-chapter operations and
- * Save/Open through ProjectPersistence (canonical Book only; never Tiptap JSON).
+ * Tiptap authoring surface coordinated by DesktopStudioCoordinator
+ * (canonical BookSession + @openbook/workflow + ProjectPersistence).
+ * Tiptap JSON is editor transport only and is never persisted.
  */
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import { useEffect, useRef, useState } from "react";
 import { bookToSemanticDocument } from "@openbook/semantic-document";
+import { nextStage, WORKFLOW_STAGES } from "@openbook/workflow";
 import {
   normalizeTipTapDoc,
   semanticDocumentToTipTapJson,
   type TipTapDocJSON,
 } from "./domain/editorAdapter";
 import {
-  applyTipTapToSelectedChapter,
-  createChapter,
-  createEditorBookSession,
-  deleteChapter,
-  listSessionChapters,
-  projectSessionToBook,
-  renameChapter,
-  selectChapter,
-  selectedChapterToTipTap,
-  type EditorBookSession,
-} from "./domain/editorBookSession";
+  DesktopStudioCoordinator,
+} from "./domain/desktopStudioCoordinator";
 import { SqliteProjectPersistence } from "./persistence/sqlitePersistence";
-import type { ProjectPersistence, ProjectSummary } from "./persistence/types";
-import {
-  listEditorProjects,
-  openEditorProject,
-  saveEditorSession,
-  type ActiveProjectBinding,
-} from "./workflow/projectWorkflow";
+import type { ProjectSummary } from "./persistence/types";
 import englishFixture from "./fixtures/english-tiptap.json";
 
 type ProjectionStatus = "idle" | "ok" | "error";
 
-function emptyMetadata(language: string, title: string) {
-  return {
-    title,
-    subtitle: "",
-    authors: ["OpenBook"],
-    contributors: [] as string[],
-    language,
-    identifier: "",
-    publisher: "",
-    publishedAt: "",
-    copyright: "",
-    description: "",
-    subjects: [] as string[],
-    rights: "",
-  };
+function seedDraft(coordinator: DesktopStudioCoordinator, fixture: TipTapDocJSON) {
+  const first = coordinator.listChapters()[0];
+  if (first) {
+    coordinator.getSession().updateSectionTitle(first.id, "Chapter 1");
+    coordinator.selectSection(first.id);
+    coordinator.applyActiveSectionTipTap(fixture);
+  }
+  coordinator.getSession().addSection({ matter: "main", title: "Chapter 2" });
+  const chapters = coordinator.listChapters();
+  if (chapters[0]) coordinator.selectSection(chapters[0].id);
 }
 
-function initialSession(): EditorBookSession {
-  const result = createEditorBookSession({
-    metadata: emptyMetadata("en", "Desktop editor draft"),
-    chapters: [
-      {
-        id: "sec-chapter-1",
-        title: "Chapter 1",
-        tipTap: englishFixture as TipTapDocJSON,
-      },
-      { id: "sec-chapter-2", title: "Chapter 2" },
-    ],
+function createUiCoordinator(): DesktopStudioCoordinator {
+  const coordinator = new DesktopStudioCoordinator({
+    persistence: new SqliteProjectPersistence(),
+    idSeed: "desktop-ui-draft",
   });
-  if (!result.ok) {
-    throw new Error(result.error);
-  }
-  return result.session;
+  seedDraft(coordinator, englishFixture as TipTapDocJSON);
+  return coordinator;
 }
 
 export default function EditorSurface() {
-  const [session, setSession] = useState<EditorBookSession>(() => initialSession());
-  const sessionRef = useRef(session);
-  sessionRef.current = session;
+  const [coordinator] = useState(() => createUiCoordinator());
+  const [studio, setStudio] = useState(() => coordinator.getState());
+  const refresh = () => setStudio(coordinator.getState());
 
   const [status, setStatus] = useState<ProjectionStatus>("idle");
-  const [detail, setDetail] = useState("Edit to project through SDM → Book");
+  const [detail, setDetail] = useState("Edit to project through BookSession → Book");
   const [roundTrip, setRoundTrip] = useState("Not checked");
-  const [sessionNote, setSessionNote] = useState("In-memory multi-chapter session");
-  const [binding, setBinding] = useState<ActiveProjectBinding | null>(null);
-  const bindingRef = useRef(binding);
-  bindingRef.current = binding;
+  const [sessionNote, setSessionNote] = useState("Canonical BookSession (Gate 8 Slice 1)");
   const [persistStatus, setPersistStatus] = useState("Persistence: not initialized");
   const [projectList, setProjectList] = useState<ProjectSummary[]>([]);
   const switchingRef = useRef(false);
-  const persistenceRef = useRef<ProjectPersistence | null>(null);
 
-  const chapters = listSessionChapters(session);
-  const selected = chapters.find((c) => c.id === session.selectedChapterId);
+  const chapters = coordinator.listChapters();
+  const selected = chapters.find((c) => c.id === studio.selectedSectionId);
 
   const editor = useEditor({
     extensions: [
@@ -102,7 +71,7 @@ export default function EditorSurface() {
         defaultProtocol: "https",
       }),
     ],
-    content: selectedChapterToTipTap(session).doc,
+    content: coordinator.activeSectionToTipTap().doc,
     editorProps: {
       attributes: {
         class: "tiptap-surface",
@@ -113,59 +82,51 @@ export default function EditorSurface() {
   });
 
   useEffect(() => {
-    const persistence = new SqliteProjectPersistence();
-    persistenceRef.current = persistence;
-    void persistence.initialize().then((result) => {
-      if (!result.ok) {
-        setPersistStatus(`Persistence: ${result.error.message}`);
-        return;
-      }
-      setPersistStatus("Persistence: ready (SQLite ProjectPersistence)");
-      void listEditorProjects(persistence).then((listed) => {
-        if (listed.ok) setProjectList(listed.value);
+    void coordinator
+      .listProjects()
+      .then((listed) => {
+        setProjectList(listed);
+        setPersistStatus("Persistence: ready (SQLite ProjectPersistence)");
+      })
+      .catch((err: unknown) => {
+        setPersistStatus(err instanceof Error ? err.message : String(err));
       });
-    });
     return () => {
-      void persistence.close();
-      persistenceRef.current = null;
+      void coordinator.close();
     };
-  }, []);
+  }, [coordinator]);
 
-  const projectFromSession = (next: EditorBookSession, warningsCount: number) => {
-    const result = projectSessionToBook(next);
-    if (!result.ok) {
+  const projectFromBook = (warningsCount: number) => {
+    const book = coordinator.getBook();
+    const selectedId = coordinator.getState().selectedSectionId;
+    if (!selectedId) {
       setStatus("error");
-      setDetail(`${result.stage}: ${result.error}`);
+      setDetail("No section selected");
       setRoundTrip("n/a");
       return;
     }
 
-    const back = bookToSemanticDocument(result.book);
-    const selectedId = next.selectedChapterId;
-    const sdmChapter = next.document.sections.find((s) => s.id === selectedId);
-    const bookChapter = back.sections.find((s) => s.id === selectedId);
+    const back = bookToSemanticDocument(book);
+    const sdmChapter = back.sections.find((s) => s.id === selectedId);
     let matched = false;
-    if (sdmChapter && bookChapter) {
-      const tipFromSdm = semanticDocumentToTipTapJson({
-        ...next.document,
-        sections: [sdmChapter],
-      }).doc;
+    if (sdmChapter) {
       const tipFromBook = semanticDocumentToTipTapJson({
         ...back,
-        sections: [bookChapter],
+        sections: [sdmChapter],
       }).doc;
+      const tipFromSession = coordinator.activeSectionToTipTap().doc;
       matched =
-        JSON.stringify(normalizeTipTapDoc(tipFromSdm)) ===
-        JSON.stringify(normalizeTipTapDoc(tipFromBook));
+        JSON.stringify(normalizeTipTapDoc(tipFromBook)) ===
+        JSON.stringify(normalizeTipTapDoc(tipFromSession));
     }
 
     setStatus("ok");
     setDetail(
-      `Tiptap → SDM (${listSessionChapters(next).length} ch) → Book v${result.book.schemaVersion}; warnings=${warningsCount}`,
+      `Tiptap → EditorAdapter → BookSession (${coordinator.listChapters().length} ch) → Book v${book.schemaVersion}; warnings=${warningsCount}`,
     );
     setRoundTrip(
       matched
-        ? "Selected chapter: SDM → Book → SDM → Tiptap match"
+        ? "Selected chapter: BookSession → Book → SDM → Tiptap match"
         : "round-trip mismatch",
     );
   };
@@ -176,15 +137,14 @@ export default function EditorSurface() {
     const onUpdate = () => {
       if (switchingRef.current) return;
       const json = editor.getJSON() as TipTapDocJSON;
-      const applied = applyTipTapToSelectedChapter(sessionRef.current, json);
-      if (!applied.ok) {
+      try {
+        const warnings = coordinator.applyActiveSectionTipTap(json);
+        refresh();
+        projectFromBook(warnings.length);
+      } catch (err) {
         setStatus("error");
-        setDetail(applied.error);
-        return;
+        setDetail(err instanceof Error ? err.message : String(err));
       }
-      sessionRef.current = applied.session;
-      setSession(applied.session);
-      projectFromSession(applied.session, applied.warnings.length);
     };
 
     onUpdate();
@@ -194,208 +154,216 @@ export default function EditorSurface() {
     };
   }, [editor]);
 
-  const flushEditorIntoSession = (): EditorBookSession | null => {
-    if (!editor) return sessionRef.current;
-    const applied = applyTipTapToSelectedChapter(
-      sessionRef.current,
-      editor.getJSON() as TipTapDocJSON,
-    );
-    if (!applied.ok) {
-      setSessionNote(applied.error);
-      return null;
+  const flushEditorIntoSession = (): boolean => {
+    if (!editor) return true;
+    try {
+      coordinator.applyActiveSectionTipTap(editor.getJSON() as TipTapDocJSON);
+      refresh();
+      return true;
+    } catch (err) {
+      setSessionNote(err instanceof Error ? err.message : String(err));
+      return false;
     }
-    sessionRef.current = applied.session;
-    setSession(applied.session);
-    return applied.session;
   };
 
-  const loadChapterIntoEditor = (next: EditorBookSession) => {
+  const loadSectionIntoEditor = () => {
     if (!editor) return;
     switchingRef.current = true;
-    const { doc } = selectedChapterToTipTap(next);
+    const { doc } = coordinator.activeSectionToTipTap();
     editor.commands.setContent(doc, { emitUpdate: false });
     switchingRef.current = false;
-    projectFromSession(next, 0);
+    projectFromBook(0);
+    refresh();
   };
 
-  const refreshProjectList = async (persistence: ProjectPersistence) => {
-    const listed = await listEditorProjects(persistence);
-    if (listed.ok) setProjectList(listed.value);
+  const refreshProjectList = async () => {
+    try {
+      setProjectList(await coordinator.listProjects());
+    } catch {
+      // persistStatus is set by the caller on failure
+    }
   };
 
   const onSelectChapter = (chapterId: string) => {
-    const flushed = flushEditorIntoSession();
-    if (!flushed) return;
-    const selectedNext = selectChapter(flushed, chapterId);
-    if (!selectedNext.ok) {
-      setSessionNote(selectedNext.error);
-      return;
+    if (!flushEditorIntoSession()) return;
+    try {
+      coordinator.selectSection(chapterId);
+      setSessionNote(
+        `Selected “${coordinator.listChapters().find((c) => c.id === chapterId)?.title ?? chapterId}”`,
+      );
+      loadSectionIntoEditor();
+    } catch (err) {
+      setSessionNote(err instanceof Error ? err.message : String(err));
     }
-    sessionRef.current = selectedNext.session;
-    setSession(selectedNext.session);
-    setSessionNote(
-      `Selected “${listSessionChapters(selectedNext.session).find((c) => c.id === chapterId)?.title ?? chapterId}”`,
-    );
-    loadChapterIntoEditor(selectedNext.session);
   };
 
   const onCreateChapter = () => {
-    const flushed = flushEditorIntoSession();
-    if (!flushed) return;
-    const n = listSessionChapters(flushed).length + 1;
-    const created = createChapter(flushed, `Chapter ${n}`);
-    if (!created.ok) {
-      setSessionNote(created.error);
-      return;
+    if (!flushEditorIntoSession()) return;
+    const n = coordinator.listChapters().length + 1;
+    try {
+      coordinator.getSession().addSection({ matter: "main", title: `Chapter ${n}` });
+      setSessionNote(`Created “Chapter ${n}”`);
+      loadSectionIntoEditor();
+    } catch (err) {
+      setSessionNote(err instanceof Error ? err.message : String(err));
     }
-    sessionRef.current = created.session;
-    setSession(created.session);
-    setSessionNote(`Created “Chapter ${n}”`);
-    loadChapterIntoEditor(created.session);
   };
 
   const onRenameChapter = () => {
-    const current = listSessionChapters(sessionRef.current).find(
-      (c) => c.id === sessionRef.current.selectedChapterId,
-    );
+    const current = coordinator
+      .listChapters()
+      .find((c) => c.id === coordinator.getState().selectedSectionId);
     if (!current) return;
     const nextTitle = window.prompt("Rename chapter", current.title);
     if (nextTitle === null) return;
-    const flushed = flushEditorIntoSession();
-    if (!flushed) return;
-    const renamed = renameChapter(flushed, current.id, nextTitle);
-    if (!renamed.ok) {
-      setSessionNote(renamed.error);
-      return;
+    if (!flushEditorIntoSession()) return;
+    try {
+      coordinator.getSession().updateSectionTitle(current.id, nextTitle);
+      setSessionNote(`Renamed to “${nextTitle.trim() || current.title}”`);
+      projectFromBook(0);
+      refresh();
+    } catch (err) {
+      setSessionNote(err instanceof Error ? err.message : String(err));
     }
-    sessionRef.current = renamed.session;
-    setSession(renamed.session);
-    setSessionNote(`Renamed to “${nextTitle.trim() || "Untitled chapter"}”`);
-    projectFromSession(renamed.session, 0);
   };
 
   const onDeleteChapter = () => {
-    const flushed = flushEditorIntoSession();
-    if (!flushed) return;
-    const id = flushed.selectedChapterId;
-    const deleted = deleteChapter(flushed, id);
-    if (!deleted.ok) {
-      setSessionNote(deleted.error);
-      return;
+    if (!flushEditorIntoSession()) return;
+    const id = coordinator.getState().selectedSectionId;
+    if (!id) return;
+    try {
+      coordinator.getSession().removeSection(id);
+      setSessionNote("Chapter deleted");
+      loadSectionIntoEditor();
+    } catch (err) {
+      setSessionNote(err instanceof Error ? err.message : String(err));
     }
-    sessionRef.current = deleted.session;
-    setSession(deleted.session);
-    setSessionNote("Chapter deleted");
-    loadChapterIntoEditor(deleted.session);
   };
 
   const onNewBook = () => {
-    const next = initialSession();
-    sessionRef.current = next;
-    setSession(next);
-    setBinding(null);
-    bindingRef.current = null;
-    setSessionNote("Started a new unsaved book session");
-    setPersistStatus("Persistence: ready (unsaved new book)");
-    loadChapterIntoEditor(next);
+    void coordinator.newProject("Desktop editor draft").then(() => {
+      seedDraft(coordinator, englishFixture as TipTapDocJSON);
+      setSessionNote("Started a new unsaved book session");
+      setPersistStatus("Persistence: ready (unsaved new book)");
+      loadSectionIntoEditor();
+    });
   };
 
   const onSaveProject = async () => {
-    const persistence = persistenceRef.current;
-    if (!persistence) {
-      setPersistStatus("Persistence: not available");
-      return;
-    }
-    const flushed = flushEditorIntoSession();
-    if (!flushed) return;
+    if (!flushEditorIntoSession()) return;
 
     let projectName: string | undefined;
-    if (!bindingRef.current) {
-      const suggested = flushed.document.metadata.title || "Untitled Project";
+    if (!coordinator.getState().binding) {
+      const suggested = coordinator.getBook().metadata.title || "Untitled Project";
       const entered = window.prompt("Save project as", suggested);
       if (entered === null) return;
       projectName = entered;
     }
 
-    const result = await saveEditorSession({
-      persistence,
-      session: flushed,
-      binding: bindingRef.current,
-      projectName,
-    });
-    if (!result.ok) {
-      setPersistStatus(result.message.text);
-      return;
+    try {
+      await coordinator.saveProject(projectName);
+      refresh();
+      const binding = coordinator.getState().binding;
+      setPersistStatus(
+        binding
+          ? `Saved project “${binding.projectName}” (${binding.projectId}).`
+          : "Saved project.",
+      );
+      await refreshProjectList();
+    } catch (err) {
+      setPersistStatus(err instanceof Error ? err.message : String(err));
     }
-    setBinding(result.value.binding);
-    bindingRef.current = result.value.binding;
-    setPersistStatus(result.message.text);
-    await refreshProjectList(persistence);
   };
 
   const onOpenProject = async () => {
-    const persistence = persistenceRef.current;
-    if (!persistence) {
-      setPersistStatus("Persistence: not available");
-      return;
-    }
-    await refreshProjectList(persistence);
-    const listed = await listEditorProjects(persistence);
-    if (!listed.ok) {
-      setPersistStatus(listed.message.text);
-      return;
-    }
-    if (listed.value.length === 0) {
-      setPersistStatus("No project selected. No saved projects available.");
-      return;
-    }
+    try {
+      await refreshProjectList();
+      const listed = await coordinator.listProjects();
+      if (listed.length === 0) {
+        setPersistStatus("No project selected. No saved projects available.");
+        return;
+      }
 
-    const choices = listed.value
-      .map((p, i) => `${i + 1}. ${p.name} (${p.id})`)
-      .join("\n");
-    const entered = window.prompt(
-      `Open project — enter number or project id:\n${choices}`,
-      "1",
-    );
-    if (entered === null) return;
-    const trimmed = entered.trim();
-    const asIndex = Number.parseInt(trimmed, 10);
-    const projectId =
-      Number.isFinite(asIndex) && asIndex >= 1 && asIndex <= listed.value.length
-        ? listed.value[asIndex - 1]!.id
-        : trimmed;
+      const choices = listed.map((p, i) => `${i + 1}. ${p.name} (${p.id})`).join("\n");
+      const entered = window.prompt(
+        `Open project — enter number or project id:\n${choices}`,
+        "1",
+      );
+      if (entered === null) return;
+      const trimmed = entered.trim();
+      const asIndex = Number.parseInt(trimmed, 10);
+      const projectId =
+        Number.isFinite(asIndex) && asIndex >= 1 && asIndex <= listed.length
+          ? listed[asIndex - 1]!.id
+          : trimmed;
 
-    if (!projectId) {
-      setPersistStatus("No project selected to open.");
-      return;
+      if (!projectId) {
+        setPersistStatus("No project selected to open.");
+        return;
+      }
+
+      await coordinator.openProject(projectId, coordinator.getState().selectedSectionId ?? undefined);
+      const opened = coordinator.getState().binding;
+      setPersistStatus(
+        opened
+          ? `Opened project “${opened.projectName}”.`
+          : "Opened project.",
+      );
+      setSessionNote(opened ? `Opened “${opened.projectName}”` : "Opened project");
+      loadSectionIntoEditor();
+    } catch (err) {
+      setPersistStatus(err instanceof Error ? err.message : String(err));
     }
-
-    const opened = await openEditorProject({
-      persistence,
-      projectId,
-      preferredChapterId: sessionRef.current.selectedChapterId,
-    });
-    if (!opened.ok) {
-      setPersistStatus(opened.message.text);
-      return;
-    }
-
-    sessionRef.current = opened.value.session;
-    setSession(opened.value.session);
-    setBinding(opened.value.binding);
-    bindingRef.current = opened.value.binding;
-    setPersistStatus(opened.message.text);
-    setSessionNote(`Opened “${opened.value.binding.projectName}”`);
-    loadChapterIntoEditor(opened.value.session);
   };
+
+  const onAdvanceStage = () => {
+    const to = nextStage(studio.stage);
+    if (!to) return;
+    try {
+      coordinator.transitionStage(to);
+      refresh();
+    } catch (err) {
+      setSessionNote(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const binding = studio.binding;
 
   return (
     <section className="editor-section">
       <h2>Editor (Tiptap)</h2>
       <p className="note">
-        Path: Tiptap → EditorAdapter → SDM → Book (canonical) → ProjectPersistence →
-        SQLite. Tiptap JSON is never saved.
+        Path: Tiptap → EditorAdapter → BookSession.getBook() → ProjectPersistence →
+        SQLite. Tiptap JSON is never saved. Pipeline state is @openbook/workflow.
       </p>
+
+      <div className="project-bar" aria-label="Workflow stage">
+        <span className="project-binding" data-testid="workflow-stage">
+          Stage: {studio.stage} ({studio.jobStatus}
+          {studio.activeJobId ? ` / ${studio.activeJobId}` : ""})
+        </span>
+        <ol className="workflow-stages">
+          {WORKFLOW_STAGES.map((stage) => (
+            <li
+              key={stage}
+              className={
+                stage === studio.stage ? "workflow-stage workflow-stage-active" : "workflow-stage"
+              }
+            >
+              {stage}
+            </li>
+          ))}
+        </ol>
+        <div className="project-actions">
+          <button
+            type="button"
+            onClick={onAdvanceStage}
+            disabled={!nextStage(studio.stage)}
+          >
+            Next stage
+          </button>
+        </div>
+      </div>
 
       <div className="project-bar" aria-label="Project">
         <span className="project-binding" data-testid="project-binding">
@@ -431,7 +399,7 @@ export default function EditorSurface() {
                 <button
                   type="button"
                   className={
-                    chapter.id === session.selectedChapterId
+                    chapter.id === studio.selectedSectionId
                       ? "chapter-item chapter-item-active"
                       : "chapter-item"
                   }

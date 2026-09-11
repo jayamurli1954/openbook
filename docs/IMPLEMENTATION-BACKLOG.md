@@ -45,8 +45,8 @@ END-TO-END WORKFLOW & FOUNDATION SLICES (GATE 7)
 ├── Asset management             [DONE on main: `@openbook/assets` content-addressed asset store (ADR-0017; PR #36; Gate 7 Slice 4)]
 ├── Book Doctor coordinator      [DONE on main: `@openbook/book-doctor` (ADR-0018; PR #38; Gate 7 Slice 5)]
 │
-DESKTOP INTEGRATION (NEXT ARCHITECTURAL DECISION POINT)
-├── Desktop Studio integration   [GATE 8: Next architectural boundary (ADR-0019) — NOT STARTED]
+DESKTOP INTEGRATION (GATE 8)
+├── Desktop Studio integration   [GATE 8 Slice 1 IN THIS PR: DesktopStudioCoordinator + BookSession + workflow state; Slices 2–5 remain gated]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -97,7 +97,7 @@ Status against the ordered list:
   - `@openbook/authoring`: 13 tests passing (Gate 7 Slice 3)
   - `@openbook/assets`: 10 tests passing (Gate 7 Slice 4)
   - `@openbook/book-doctor`: 8 tests passing (Gate 7 Slice 5)
-  - `@openbook/desktop`: 36 tests passing (19 domain + 11 persistence + 6 workflow)
+  - `@openbook/desktop`: 49 tests passing (19 domain + 11 persistence + 6 workflow + 13 coordinator)
 
 ## Next architectural decision points
 
@@ -109,12 +109,8 @@ Gates 1 through 7 are now complete on `main`:
 The immediate next architectural decision point is:
 
 1. **Gate 8: Desktop Studio Integration (ADR-0019)**
-   - Integrating the Gate 7 foundation packages (`@openbook/workflow`, `@openbook/importer`, `@openbook/authoring`, `@openbook/assets`, `@openbook/book-doctor`) into the desktop studio (`apps/desktop`).
-   - Architectural flow:
-     `Desktop UI → Workflow Coordinator → Import / Authoring / Assets / Book Doctor → Canonical Book Model → Publishing Engines (EPUB, HTML, PDF)`
-   - Requires formal architecture design and acceptance (ADR-0019) before any implementation slice is authorized.
-
-**DO NOT implement Gate 8 yet.** It requires an authorized architecture decision and explicit slice authorization prior to any code changes.
+   - Slice 1 (Coordinator & Authoring Integration) is authorized and implemented: `DesktopStudioCoordinator` wires `@openbook/workflow` and `@openbook/authoring` `BookSession` to the existing `EditorAdapter` and `ProjectPersistence`.
+   - Slices 2–5 remain gated: importer, assets, Book Doctor, and publishing/export UI require separate explicit authorization.
 
 Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama.
 
@@ -129,4 +125,4 @@ Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ol
 - Letting Tiptap/ProseMirror JSON become a parallel canonical document model
 - Persisting Tiptap JSON into SQLite instead of the canonical Book Model
 - Adding autosave, cloud sync, or publishing engines under a Save/Open UX PR
-- Implementing Gate 8 desktop wiring before ADR-0019 architecture review and slice authorization
+- Implementing Gate 8 Slices 2–5 (importer, assets, Book Doctor, publishing/export) before those slices are explicitly authorized

@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Save/Open workflow tests (PR #17).
- * Session → Book → ProjectPersistence → Book → Session; never Tiptap in SQLite.
+ * Save/Open workflow tests: canonical Book → ProjectPersistence → Book.
+ * Tiptap JSON is never written to SQLite.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { BookSession } from "@openbook/authoring";
+import type { Book, ContentBlock } from "@openbook/book-model";
 import {
-  applyTipTapToSelectedChapter,
-  createEditorBookSession,
-  createEditorBookSessionFromBook,
-  listSessionChapters,
-  selectChapter,
-  selectedChapterToTipTap,
-  type EditorBookSession,
-} from "../domain/editorBookSession.js";
+  bookMetadataToSemantic,
+  createDesktopDraftBook,
+  sectionBlocksToTipTap,
+  tipTapJsonToContentBlocks,
+} from "../domain/editorSessionAdapter.js";
 import {
   normalizeTipTapDoc,
   type TipTapDocJSON,
@@ -24,13 +23,12 @@ import {
 import { InMemorySqliteConnection } from "../persistence/sqliteDriver.js";
 import { SqliteProjectPersistence } from "../persistence/sqlitePersistence.js";
 import {
-  buildOpenBookProjectFromSession,
-  openEditorProject,
-  saveEditorSession,
+  buildOpenBookProjectFromBook,
+  openBookProject,
+  saveBookProject,
 } from "./projectWorkflow.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
-// Compiled to dist-workflow/workflow/; four levels up reaches the repo root.
 const fixturesDir = join(here, "..", "..", "..", "..", "tests", "fixtures", "editor");
 
 function loadTipTap(name: string): TipTapDocJSON {
@@ -45,26 +43,7 @@ function sequentialIds() {
   };
 }
 
-function metadata(language: string, title: string) {
-  return {
-    title,
-    subtitle: "",
-    authors: ["OpenBook"],
-    contributors: [] as string[],
-    language,
-    identifier: `wf-${language}`,
-    publisher: "",
-    publishedAt: "",
-    copyright: "",
-    description: "",
-    subjects: [] as string[],
-    rights: "",
-  };
-}
-
-function chapterText(session: EditorBookSession, chapterId: string): string {
-  const section = session.document.sections.find((s) => s.id === chapterId);
-  if (!section) return "";
+function collectText(blocks: ContentBlock[]): string {
   let out = "";
   const walk = (inlines: { type: string; text?: string; children?: unknown[] }[]) => {
     for (const inline of inlines) {
@@ -77,13 +56,33 @@ function chapterText(session: EditorBookSession, chapterId: string): string {
       }
     }
   };
-  for (const block of section.blocks) {
+  for (const block of blocks) {
     if (block.type === "paragraph" || block.type === "heading" || block.type === "quote") {
       walk(block.inlines);
     }
     if (block.type === "list") for (const item of block.items) walk(item);
   }
   return out;
+}
+
+function chapterText(book: Book, chapterId: string): string {
+  const section = book.chapters.find((c) => c.id === chapterId);
+  if (!section) return "";
+  return collectText(section.blocks);
+}
+
+function applyTipTap(session: BookSession, tipTap: TipTapDocJSON, title: string): void {
+  const sectionId = session.getState().selectedSectionId;
+  session.updateSectionTitle(sectionId, title);
+  const blocks = tipTapJsonToContentBlocks(tipTap, {
+    metadata: bookMetadataToSemantic(session.getBook()),
+    sectionId,
+    sectionTitle: title,
+    matter: "main",
+    role: "chapter",
+    createId: sequentialIds(),
+  }).blocks;
+  session.setSectionBlocks(sectionId, blocks);
 }
 
 async function freshPersistence() {
@@ -98,22 +97,27 @@ test("save/open round-trip preserves English and Kannada chapter content", async
   const persistence = await freshPersistence();
   const en = loadTipTap("english-tiptap.json");
   const kn = loadTipTap("kannada-tiptap.json");
-  const createId = sequentialIds();
 
-  const started = createEditorBookSession({
-    metadata: metadata("en", "Bilingual Save Book"),
-    chapters: [
-      { id: "ch-en", title: "English", tipTap: en },
-      { id: "ch-kn", title: "ಕನ್ನಡ", tipTap: kn },
-    ],
-    createId,
+  const session = new BookSession({
+    book: createDesktopDraftBook({ title: "Bilingual Save Book", language: "en" }),
+    idSeed: "bilingual",
   });
-  assert.equal(started.ok, true);
-  if (!started.ok) return;
+  const enId = session.getState().selectedSectionId;
+  applyTipTap(session, en, "English");
+  const knSection = session.addSection({ matter: "main", title: "ಕನ್ನಡ" });
+  const knBlocks = tipTapJsonToContentBlocks(kn, {
+    metadata: bookMetadataToSemantic(session.getBook()),
+    sectionId: knSection.id,
+    sectionTitle: "ಕನ್ನಡ",
+    matter: "main",
+    role: "chapter",
+    createId: sequentialIds(),
+  }).blocks;
+  session.setSectionBlocks(knSection.id, knBlocks);
 
-  const saved = await saveEditorSession({
+  const saved = await saveBookProject({
     persistence,
-    session: started.session,
+    book: session.getBook(),
     binding: null,
     projectName: "Bilingual Project",
   });
@@ -122,8 +126,8 @@ test("save/open round-trip preserves English and Kannada chapter content", async
   assert.equal(saved.message.code, "SAVE_OK");
   assert.match(saved.message.text, /Saved project/);
 
-  const built = buildOpenBookProjectFromSession(
-    started.session,
+  const built = buildOpenBookProjectFromBook(
+    session.getBook(),
     saved.value.binding,
     "Bilingual Project",
   );
@@ -133,52 +137,47 @@ test("save/open round-trip preserves English and Kannada chapter content", async
   assert.equal(built.value.book.schemaVersion, 1);
   assert.ok(!("manifest" in built.value.book));
 
-  const opened = await openEditorProject({
+  const opened = await openBookProject({
     persistence,
     projectId: saved.value.binding.projectId,
-    preferredChapterId: "ch-kn",
   });
   assert.equal(opened.ok, true);
   if (!opened.ok) return;
   assert.equal(opened.message.code, "OPEN_OK");
-  assert.equal(opened.value.session.selectedChapterId, "ch-kn");
-  assert.ok(chapterText(opened.value.session, "ch-en").includes("strong"));
-  assert.ok(chapterText(opened.value.session, "ch-kn").includes("ಕನ್ನಡ"));
-  assert.ok(chapterText(opened.value.session, "ch-kn").includes("ಗುರುತು"));
+  assert.ok(chapterText(opened.value.book, enId).includes("strong"));
+  assert.ok(chapterText(opened.value.book, knSection.id).includes("ಕನ್ನಡ"));
+  assert.ok(chapterText(opened.value.book, knSection.id).includes("ಗುರುತು"));
 
-  const tipKn = selectedChapterToTipTap(opened.value.session);
+  const rebuilt = new BookSession({
+    book: opened.value.book,
+    idSeed: "rebuilt",
+    initialSelectedSectionId: knSection.id,
+  });
+  assert.equal(rebuilt.getState().selectedSectionId, knSection.id);
+  const tipKn = sectionBlocksToTipTap(rebuilt.getBook(), knSection.id);
   assert.deepEqual(normalizeTipTapDoc(tipKn.doc), normalizeTipTapDoc(kn));
 });
 
 test("edits survive Save → Open", async () => {
   const persistence = await freshPersistence();
-  const createId = sequentialIds();
-  const started = createEditorBookSession({
-    metadata: metadata("en", "Edit Survive"),
-    chapters: [
-      { id: "c1", title: "One" },
-      { id: "c2", title: "Two" },
-    ],
-    createId,
+  const session = new BookSession({
+    book: createDesktopDraftBook({ title: "Edit Survive", language: "en" }),
+    idSeed: "edit-survive",
   });
-  assert.equal(started.ok, true);
-  if (!started.ok) return;
+  session.updateSectionTitle(session.getState().selectedSectionId, "One");
+  session.addSection({ matter: "main", title: "Two" });
 
-  let session = started.session;
-  const firstSave = await saveEditorSession({
+  const firstSave = await saveBookProject({
     persistence,
-    session,
+    book: session.getBook(),
     binding: null,
     projectName: "Edit Survive Project",
   });
   assert.equal(firstSave.ok, true);
   if (!firstSave.ok) return;
 
-  const toTwo = selectChapter(session, "c2");
-  assert.equal(toTwo.ok, true);
-  if (!toTwo.ok) return;
-  session = toTwo.session;
-
+  const twoId = session.getBook().chapters[1]!.id;
+  session.selectSection(twoId);
   const edited: TipTapDocJSON = {
     type: "doc",
     content: [
@@ -188,29 +187,38 @@ test("edits survive Save → Open", async () => {
       },
     ],
   };
-  const applied = applyTipTapToSelectedChapter(session, edited, createId);
-  assert.equal(applied.ok, true);
-  if (!applied.ok) return;
-  session = applied.session;
+  session.setSectionBlocks(
+    twoId,
+    tipTapJsonToContentBlocks(edited, {
+      metadata: bookMetadataToSemantic(session.getBook()),
+      sectionId: twoId,
+      sectionTitle: "Two",
+      matter: "main",
+      role: "chapter",
+    }).blocks,
+  );
 
-  const secondSave = await saveEditorSession({
+  const secondSave = await saveBookProject({
     persistence,
-    session,
+    book: session.getBook(),
     binding: firstSave.value.binding,
   });
   assert.equal(secondSave.ok, true);
   if (!secondSave.ok) return;
 
-  const opened = await openEditorProject({
+  const opened = await openBookProject({
     persistence,
     projectId: firstSave.value.binding.projectId,
-    preferredChapterId: "c2",
   });
   assert.equal(opened.ok, true);
   if (!opened.ok) return;
-  assert.equal(chapterText(opened.value.session, "c2"), "Edited after first save");
+  assert.equal(chapterText(opened.value.book, twoId), "Edited after first save");
+  const rebuilt = new BookSession({
+    book: opened.value.book,
+    initialSelectedSectionId: twoId,
+  });
   assert.deepEqual(
-    normalizeTipTapDoc(selectedChapterToTipTap(opened.value.session).doc),
+    normalizeTipTapDoc(sectionBlocksToTipTap(rebuilt.getBook(), twoId).doc),
     normalizeTipTapDoc(edited),
   );
 });
@@ -218,18 +226,16 @@ test("edits survive Save → Open", async () => {
 test("Kannada Unicode survives Save → edit → Save → Open", async () => {
   const persistence = await freshPersistence();
   const kn = loadTipTap("kannada-tiptap.json");
-  const createId = sequentialIds();
-  const started = createEditorBookSession({
-    metadata: metadata("kn", "ಕನ್ನಡ ಉಳಿಕೆ"),
-    chapters: [{ id: "kn-main", title: "ಮುಖ್ಯ", tipTap: kn }],
-    createId,
+  const session = new BookSession({
+    book: createDesktopDraftBook({ title: "ಕನ್ನಡ ಉಳಿಕೆ", language: "kn" }),
+    idSeed: "kn-persist",
   });
-  assert.equal(started.ok, true);
-  if (!started.ok) return;
+  const mainId = session.getState().selectedSectionId;
+  applyTipTap(session, kn, "ಮುಖ್ಯ");
 
-  const saved = await saveEditorSession({
+  const saved = await saveBookProject({
     persistence,
-    session: started.session,
+    book: session.getBook(),
     binding: null,
     projectName: "Kannada Project",
   });
@@ -246,25 +252,32 @@ test("Kannada Unicode survives Save → edit → Save → Open", async () => {
       },
     ],
   };
-  const applied = applyTipTapToSelectedChapter(started.session, more, createId);
-  assert.equal(applied.ok, true);
-  if (!applied.ok) return;
+  session.setSectionBlocks(
+    mainId,
+    tipTapJsonToContentBlocks(more, {
+      metadata: bookMetadataToSemantic(session.getBook()),
+      sectionId: mainId,
+      sectionTitle: "ಮುಖ್ಯ",
+      matter: "main",
+      role: "chapter",
+    }).blocks,
+  );
 
-  const saved2 = await saveEditorSession({
+  const saved2 = await saveBookProject({
     persistence,
-    session: applied.session,
+    book: session.getBook(),
     binding: saved.value.binding,
   });
   assert.equal(saved2.ok, true);
   if (!saved2.ok) return;
 
-  const opened = await openEditorProject({
+  const opened = await openBookProject({
     persistence,
     projectId: saved.value.binding.projectId,
   });
   assert.equal(opened.ok, true);
   if (!opened.ok) return;
-  const text = chapterText(opened.value.session, "kn-main");
+  const text = chapterText(opened.value.book, mainId);
   assert.ok(text.includes("ಕನ್ನಡ"));
   assert.ok(text.includes("ಹೊಸ ವಾಕ್ಯ"));
 });
@@ -272,12 +285,12 @@ test("Kannada Unicode survives Save → edit → Save → Open", async () => {
 test("missing project and empty selection produce deterministic errors", async () => {
   const persistence = await freshPersistence();
 
-  const noId = await openEditorProject({ persistence, projectId: "   " });
+  const noId = await openBookProject({ persistence, projectId: "   " });
   assert.equal(noId.ok, false);
   if (noId.ok) return;
   assert.equal(noId.message.code, "NO_PROJECT_SELECTED");
 
-  const missing = await openEditorProject({
+  const missing = await openBookProject({
     persistence,
     projectId: "proj-does-not-exist-000",
   });
@@ -285,17 +298,14 @@ test("missing project and empty selection produce deterministic errors", async (
   if (missing.ok) return;
   assert.equal(missing.message.code, "NOT_FOUND");
 
-  const started = createEditorBookSession({
-    metadata: metadata("en", "Nameless"),
-    chapters: [{ id: "only", title: "Only" }],
-    createId: sequentialIds(),
+  const session = new BookSession({
+    book: createDesktopDraftBook({ title: "Nameless", language: "en" }),
+    idSeed: "nameless",
   });
-  assert.equal(started.ok, true);
-  if (!started.ok) return;
 
-  const noName = await saveEditorSession({
+  const noName = await saveBookProject({
     persistence,
-    session: started.session,
+    book: session.getBook(),
     binding: null,
     projectName: "  ",
   });
@@ -322,7 +332,7 @@ test("corrupt persistence payload is rejected on open path via loadProject", asy
     ["proj-corrupt-001", "{not-json", 1, now],
   );
 
-  const opened = await openEditorProject({
+  const opened = await openBookProject({
     persistence,
     projectId: "proj-corrupt-001",
   });
@@ -331,35 +341,30 @@ test("corrupt persistence payload is rejected on open path via loadProject", asy
   assert.equal(opened.message.code, "CORRUPT_DATA");
 });
 
-test("createEditorBookSessionFromBook restores preferred chapter safely", () => {
+test("opened Book restores preferred chapter when BookSession is reconstructed", () => {
   const en = loadTipTap("english-tiptap.json");
-  const started = createEditorBookSession({
-    metadata: metadata("en", "From Book"),
-    chapters: [
-      { id: "a", title: "A", tipTap: en },
-      { id: "b", title: "B" },
-    ],
-    createId: sequentialIds(),
+  const session = new BookSession({
+    book: createDesktopDraftBook({ title: "From Book", language: "en" }),
+    idSeed: "from-book",
   });
-  assert.equal(started.ok, true);
-  if (!started.ok) return;
+  applyTipTap(session, en, "A");
+  const b = session.addSection({ matter: "main", title: "B" });
 
-  const projected = buildOpenBookProjectFromSession(
-    started.session,
+  const projected = buildOpenBookProjectFromBook(
+    session.getBook(),
     null,
     "From Book Project",
   );
   assert.equal(projected.ok, true);
   if (!projected.ok) return;
 
-  const rebuilt = createEditorBookSessionFromBook(projected.value.book, "b");
-  assert.equal(rebuilt.ok, true);
-  if (!rebuilt.ok) return;
-  assert.equal(rebuilt.session.selectedChapterId, "b");
-  assert.equal(listSessionChapters(rebuilt.session).length, 2);
+  const rebuilt = new BookSession({
+    book: projected.value.book,
+    initialSelectedSectionId: b.id,
+  });
+  assert.equal(rebuilt.getState().selectedSectionId, b.id);
+  assert.equal(rebuilt.getBook().chapters.length, 2);
 
-  const fallback = createEditorBookSessionFromBook(projected.value.book, "missing");
-  assert.equal(fallback.ok, true);
-  if (!fallback.ok) return;
-  assert.equal(fallback.session.selectedChapterId, "a");
+  const fallback = new BookSession({ book: projected.value.book });
+  assert.equal(fallback.getState().selectedSectionId, session.getBook().chapters[0]!.id);
 });
