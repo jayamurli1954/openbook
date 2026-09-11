@@ -5,7 +5,7 @@
 * **Decision owner:** SanMitra Tech Solutions
 * **Decision scope:** Desktop Import & Ingestion Surface Architecture — Gate 8 Slice 2
 * **Depends on:** ADR-0006, ADR-0007, ADR-0014, ADR-0015, ADR-0016, ADR-0019
-* **Implementation status:** Gated — Requires separate explicit authorization (implementation NOT authorized by this ADR alone)
+* **Implementation status:** Slice 2 implemented (DesktopStudioCoordinator.importContent). Slices 3–5 remain gated.
 
 ---
 

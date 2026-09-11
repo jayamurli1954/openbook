@@ -5,7 +5,7 @@
 * **Decision owner:** SanMitra Tech Solutions
 * **Decision scope:** Desktop Studio Integration Architecture — Gate 8
 * **Depends on:** ADR-0006, ADR-0007, ADR-0008, ADR-0009, ADR-0010, ADR-0011, ADR-0012, ADR-0013, ADR-0014, ADR-0015, ADR-0016, ADR-0017, ADR-0018
-* **Implementation status:** Slice 1 authorized and implemented (Coordinator & Authoring Integration). Slices 2–5 remain gated and require separate explicit authorization.
+* **Implementation status:** Slice 1 authorized and implemented (Coordinator & Authoring Integration). Slice 2 authorized and implemented (Import & Ingestion Surface). Slices 3–5 remain gated and require separate explicit authorization.
 
 ---
 
@@ -162,5 +162,5 @@ To preserve rigorous verification and avoid monolithic changes, Gate 8 is broken
 * Keeps Tiptap JSON strictly ephemeral and prevents persistence leaks.
 
 ### Governance Constraints
-* **Slice 1 is authorized and implemented.** Slices 2 through 5 remain gated and require subsequent explicit authorizations.
+* **Slice 1 is authorized and implemented. Slice 2 is authorized and implemented.** Slices 3 through 5 remain gated and require subsequent explicit authorizations.
 * Code changes for Slice 1 must not introduce publishing engines or import UI prematurely.

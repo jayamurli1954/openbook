@@ -46,7 +46,7 @@ END-TO-END WORKFLOW & FOUNDATION SLICES (GATE 7)
 ├── Book Doctor coordinator      [DONE on main: `@openbook/book-doctor` (ADR-0018; PR #38; Gate 7 Slice 5)]
 │
 DESKTOP INTEGRATION (GATE 8)
-├── Desktop Studio integration   [GATE 8 Slice 1 IN THIS PR: DesktopStudioCoordinator + BookSession + workflow state; Slices 2–5 remain gated]
+├── Desktop Studio integration   [GATE 8 Slices 1–2 IN THIS PR: coordinator + BookSession + importer ingestion; Slices 3–5 remain gated]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -97,7 +97,7 @@ Status against the ordered list:
   - `@openbook/authoring`: 13 tests passing (Gate 7 Slice 3)
   - `@openbook/assets`: 10 tests passing (Gate 7 Slice 4)
   - `@openbook/book-doctor`: 8 tests passing (Gate 7 Slice 5)
-  - `@openbook/desktop`: 49 tests passing (19 domain + 11 persistence + 6 workflow + 13 coordinator)
+  - `@openbook/desktop`: 60 tests passing (19 domain + 11 persistence + 6 workflow + 24 coordinator)
 
 ## Next architectural decision points
 
@@ -108,9 +108,10 @@ Gates 1 through 7 are now complete on `main`:
 
 The immediate next architectural decision point is:
 
-1. **Gate 8: Desktop Studio Integration (ADR-0019)**
+1. **Gate 8: Desktop Studio Integration (ADR-0019 / ADR-0020)**
    - Slice 1 (Coordinator & Authoring Integration) is authorized and implemented: `DesktopStudioCoordinator` wires `@openbook/workflow` and `@openbook/authoring` `BookSession` to the existing `EditorAdapter` and `ProjectPersistence`.
-   - Slices 2–5 remain gated: importer, assets, Book Doctor, and publishing/export UI require separate explicit authorization.
+   - Slice 2 (Import & Ingestion Surface) is authorized and implemented: `importContent` wires `@openbook/importer` into the `IMPORT` stage with `new-project` and `append-sections` modes.
+   - Slices 3–5 remain gated: assets, Book Doctor, and publishing/export UI require separate explicit authorization.
 
 Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama.
 
@@ -125,4 +126,4 @@ Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ol
 - Letting Tiptap/ProseMirror JSON become a parallel canonical document model
 - Persisting Tiptap JSON into SQLite instead of the canonical Book Model
 - Adding autosave, cloud sync, or publishing engines under a Save/Open UX PR
-- Implementing Gate 8 Slices 2–5 (importer, assets, Book Doctor, publishing/export) before those slices are explicitly authorized
+- Implementing Gate 8 Slices 3–5 (assets, Book Doctor, publishing/export) before those slices are explicitly authorized
