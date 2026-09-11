@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Browser/Tauri shim for `node:crypto` used by `@openbook/book-model` and
- * `@openbook/authoring` (randomUUID + SHA-256). Vite aliases `node:crypto`
+ * `@openbook/authoring`, and `@openbook/importer` (randomUUID + SHA-256). Vite aliases `node:crypto`
  * here so BookSession can run in the desktop renderer without modifying
  * Gate 7 packages.
  */

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  * Tiptap authoring surface coordinated by DesktopStudioCoordinator
- * (canonical BookSession + @openbook/workflow + ProjectPersistence).
+ * (canonical BookSession + @openbook/workflow + @openbook/importer + ProjectPersistence).
  * Tiptap JSON is editor transport only and is never persisted.
  */
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -11,6 +11,7 @@ import Link from "@tiptap/extension-link";
 import { useEffect, useRef, useState } from "react";
 import { bookToSemanticDocument } from "@openbook/semantic-document";
 import { nextStage, WORKFLOW_STAGES } from "@openbook/workflow";
+import type { ImportSource } from "@openbook/importer";
 import {
   normalizeTipTapDoc,
   semanticDocumentToTipTapJson,
@@ -18,6 +19,7 @@ import {
 } from "./domain/editorAdapter";
 import {
   DesktopStudioCoordinator,
+  DesktopStudioError,
 } from "./domain/desktopStudioCoordinator";
 import { SqliteProjectPersistence } from "./persistence/sqlitePersistence";
 import type { ProjectSummary } from "./persistence/types";
@@ -54,9 +56,13 @@ export default function EditorSurface() {
   const [status, setStatus] = useState<ProjectionStatus>("idle");
   const [detail, setDetail] = useState("Edit to project through BookSession → Book");
   const [roundTrip, setRoundTrip] = useState("Not checked");
-  const [sessionNote, setSessionNote] = useState("Canonical BookSession (Gate 8 Slice 1)");
+  const [sessionNote, setSessionNote] = useState("Canonical BookSession (Gate 8 Slice 2)");
   const [persistStatus, setPersistStatus] = useState("Persistence: not initialized");
   const [projectList, setProjectList] = useState<ProjectSummary[]>([]);
+  const [importText, setImportText] = useState("");
+  const [importFormat, setImportFormat] = useState<ImportSource["format"]>("markdown");
+  const [importFilename, setImportFilename] = useState("manuscript.md");
+  const [importNote, setImportNote] = useState("Paste Markdown or plain text, then import. Nothing is saved until Save.");
   const switchingRef = useRef(false);
 
   const chapters = coordinator.listChapters();
@@ -327,6 +333,47 @@ export default function EditorSurface() {
     }
   };
 
+  const onPickImportFile = (file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const raw = typeof reader.result === "string" ? reader.result : "";
+      setImportText(raw.replace(/^\uFEFF/, ""));
+      setImportFilename(file.name);
+      const lower = file.name.toLowerCase();
+      if (lower.endsWith(".md") || lower.endsWith(".markdown")) {
+        setImportFormat("markdown");
+      } else if (lower.endsWith(".txt")) {
+        setImportFormat("text");
+      }
+    };
+    reader.readAsText(file, "UTF-8");
+  };
+
+  const runImport = async (mode: "new-project" | "append-sections") => {
+    const content = importText.replace(/^\uFEFF/, "");
+    if (!content.trim()) {
+      setImportNote("Import source is empty.");
+      return;
+    }
+    try {
+      const result = await coordinator.importContent(
+        { format: importFormat, content, filename: importFilename },
+        { mode },
+      );
+      setImportNote(
+        `Imported ${result.sectionCount} sections (${result.mode}); job ${coordinator.getState().jobStatus}. Save explicitly to persist.`,
+      );
+      setSessionNote(`Imported “${coordinator.getBook().metadata.title}”`);
+      loadSectionIntoEditor();
+      refresh();
+    } catch (err) {
+      const message = err instanceof DesktopStudioError ? err.message : err instanceof Error ? err.message : String(err);
+      setImportNote(message);
+      refresh();
+    }
+  };
+
   const binding = studio.binding;
 
   return (
@@ -363,6 +410,69 @@ export default function EditorSurface() {
             Next stage
           </button>
         </div>
+      </div>
+
+      <div className="project-bar import-panel" aria-label="Import manuscript">
+        <span className="project-binding">Import (Markdown / plain text)</span>
+        <p className="note">
+          Coordinator receives pre-decoded Unicode only. Import stays in memory until Save.
+        </p>
+        <label className="import-file">
+          File
+          <input
+            type="file"
+            accept=".md,.markdown,.txt,text/markdown,text/plain"
+            data-testid="import-file"
+            onChange={(event) => onPickImportFile(event.target.files?.[0])}
+          />
+        </label>
+        <label className="import-file">
+          Format
+          <select
+            value={importFormat}
+            data-testid="import-format"
+            onChange={(event) =>
+              setImportFormat(event.target.value === "text" ? "text" : "markdown")
+            }
+          >
+            <option value="markdown">Markdown</option>
+            <option value="text">Plain text</option>
+          </select>
+        </label>
+        <textarea
+          className="import-source"
+          data-testid="import-source"
+          rows={6}
+          spellCheck={false}
+          value={importText}
+          placeholder="# Chapter title&#10;&#10;Paste manuscript text…"
+          onChange={(event) => setImportText(event.target.value)}
+        />
+        <div className="project-actions">
+          <button
+            type="button"
+            data-testid="import-new-project"
+            onClick={() => void runImport("new-project")}
+            disabled={studio.stage !== "IMPORT"}
+            title={
+              studio.stage !== "IMPORT"
+                ? "New-project import is only allowed during IMPORT"
+                : "Replace the in-memory session from this source"
+            }
+          >
+            Import as new project
+          </button>
+          <button
+            type="button"
+            data-testid="import-append"
+            onClick={() => void runImport("append-sections")}
+          >
+            Append sections
+          </button>
+        </div>
+        <p className="detail" data-testid="import-status">
+          {importNote}
+        </p>
       </div>
 
       <div className="project-bar" aria-label="Project">

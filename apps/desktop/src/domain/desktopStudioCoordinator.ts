@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Headless Desktop Studio coordinator (ADR-0019 Gate 8 Slice 1).
+ * Headless Desktop Studio coordinator (ADR-0019 Gate 8 Slice 1–2).
  *
  * Pure TypeScript aggregate: no @tauri-apps/*, React, or DOM globals.
  * Slice 1 wires @openbook/workflow + @openbook/authoring BookSession to the
- * existing EditorAdapter and ProjectPersistence. Slices 2–5 are not implemented.
+ * existing EditorAdapter and ProjectPersistence.
+ * Slice 2 (ADR-0020) adds @openbook/importer ingestion. Slices 3–5 are not implemented.
  */
 import {
   BOOK_MODEL_SCHEMA_VERSION,
+  validateBook,
   type Book,
   type ContentBlock,
+  type StructuralSection,
 } from "@openbook/book-model";
 import {
   BookSession,
@@ -17,6 +20,13 @@ import {
   InvalidStructureOperationError,
   SectionNotFoundError,
 } from "@openbook/authoring";
+import {
+  ImportService,
+  type ImportIssue,
+  type ImportOptions,
+  type ImportSource,
+  type SupportedImportFormat,
+} from "@openbook/importer";
 import {
   assertNoCanonicalBookContent,
   nextStage,
@@ -44,6 +54,7 @@ import {
   listMainChapters,
   sectionBlocksToTipTap,
   tipTapJsonToContentBlocks,
+  type ChapterSummary,
   type TipTapDocConversion,
 } from "./editorSessionAdapter.js";
 import type { EditorConversionWarning, TipTapDocJSON } from "./editorAdapter.js";
@@ -63,7 +74,24 @@ export interface DesktopStudioState {
   validationReport: null;
 }
 
-/** Slice 1 coordinator contract (ADR-0019 §4.2, methods authorized for this slice only). */
+export type StudioImportMode = "new-project" | "append-sections";
+
+/** Slice 2 ingestion options (ADR-0020 §4.1). */
+export interface StudioImportOptions extends ImportOptions {
+  readonly mode?: StudioImportMode;
+  readonly projectName?: string;
+}
+
+export interface StudioImportResult {
+  readonly success: boolean;
+  readonly mode: StudioImportMode;
+  readonly sectionCount: number;
+  readonly blockCount: number;
+  readonly wordCount: number;
+  readonly issues: readonly ImportIssue[];
+}
+
+/** Slice 1–2 coordinator contract (ADR-0019 §4.2, ADR-0020 §4.2). */
 export interface IDesktopStudioCoordinator {
   getState(): DesktopStudioState;
   getBook(): Book;
@@ -75,13 +103,31 @@ export interface IDesktopStudioCoordinator {
   listProjects(): Promise<ProjectSummary[]>;
 
   transitionStage(to: WorkflowStage): void;
+  canTransitionTo(to: WorkflowStage): boolean;
+  advanceStage(): WorkflowStage | undefined;
 
   selectSection(sectionId: string): void;
   updateActiveSectionBlocks(blocks: ContentBlock[]): void;
+  applyActiveSectionTipTap(
+    tipTap: TipTapDocJSON,
+    createId?: (prefix: string) => string,
+  ): EditorConversionWarning[];
+  activeSectionToTipTap(): TipTapDocConversion;
+  listChapters(): ChapterSummary[];
+  close(): Promise<void>;
+
+  importContent(source: ImportSource, options?: StudioImportOptions): Promise<StudioImportResult>;
 }
 
 export class DesktopStudioError extends Error {
-  readonly code: WorkflowErrorCode | "SECTION_NOT_FOUND" | "DOMAIN_VALIDATION" | "INVALID_STRUCTURE";
+  readonly code:
+    | WorkflowErrorCode
+    | "SECTION_NOT_FOUND"
+    | "DOMAIN_VALIDATION"
+    | "INVALID_STRUCTURE"
+    | "IMPORT_FAILED"
+    | "UNSUPPORTED_FORMAT"
+    | "IMPORT_NOT_PERMITTED";
 
   constructor(code: DesktopStudioError["code"], message: string) {
     super(message);
@@ -108,23 +154,27 @@ export type DesktopStudioCoordinatorOptions = {
 export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   readonly #persistence: ProjectPersistence;
   readonly #now: () => string;
+  #idSeed: string;
   #session: BookSession;
   #workflow: WorkflowCoordinator;
   #binding: ActiveProjectBinding | null;
   #pendingName: string;
+  readonly #importer: ImportService;
 
   constructor(options: DesktopStudioCoordinatorOptions) {
     this.#persistence = options.persistence;
     this.#now = options.now ?? (() => new Date().toISOString());
     const book = options.book ?? createDesktopDraftBook({ title: "Untitled Project" });
+    this.#idSeed = options.idSeed ?? (book.metadata.title || "desktop-studio");
     this.#session = new BookSession({
       book,
-      idSeed: options.idSeed ?? (book.metadata.title || "desktop-studio"),
+      idSeed: this.#idSeed,
       initialSelectedSectionId: options.initialSelectedSectionId,
     });
     this.#workflow = new WorkflowCoordinator();
     this.#binding = null;
     this.#pendingName = book.metadata.title.trim();
+    this.#importer = new ImportService();
   }
 
   getState(): DesktopStudioState {
@@ -332,12 +382,204 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     await this.#persistence.close();
   }
 
+  async importContent(
+    source: ImportSource,
+    options?: StudioImportOptions,
+  ): Promise<StudioImportResult> {
+    const mode: StudioImportMode = options?.mode ?? "new-project";
+    if (mode === "new-project") {
+      return this.#importNewProject(source, options);
+    }
+    return this.#importAppendSections(source, options);
+  }
+
+  async #importNewProject(
+    source: ImportSource,
+    options?: StudioImportOptions,
+  ): Promise<StudioImportResult> {
+    if (this.#workflow.getStage() !== "IMPORT") {
+      throw new DesktopStudioError(
+        "IMPORT_NOT_PERMITTED",
+        `Ingestion is permitted only during the IMPORT stage (current stage: ${this.#workflow.getStage()}).`,
+      );
+    }
+
+    const jobId = createProjectId("import");
+    this.#beginImportJob(jobId);
+
+    try {
+      this.#assertSupportedFormat(source.format);
+      const result = await this.#runImport(source, options);
+      if (!result.success || result.book === undefined) {
+        this.#failImportJob();
+        throw new DesktopStudioError("IMPORT_FAILED", combinedIssueMessages(result.issues));
+      }
+
+      const imported = result.book;
+      const seed = options?.idSeed ?? (imported.metadata.title || this.#idSeed);
+      this.#replaceSession(imported, seed);
+      this.#binding = null;
+      this.#pendingName = (options?.projectName ?? imported.metadata.title).trim();
+      this.#session.updateMetadata({ title: imported.metadata.title });
+
+      const firstChapterId = this.#session.getBook().chapters[0]?.id ?? null;
+      if (firstChapterId) {
+        this.#session.selectSection(firstChapterId);
+      }
+
+      this.#succeedImportJob();
+      this.#workflow.requestTransition({ to: "STRUCTURE" });
+
+      return toStudioImportResult("new-project", result.issues, result.stats);
+    } catch (err) {
+      this.#failImportJob();
+      if (err instanceof DesktopStudioError) {
+        throw err;
+      }
+      throw new DesktopStudioError(
+        "IMPORT_FAILED",
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  }
+
+  async #importAppendSections(
+    source: ImportSource,
+    options?: StudioImportOptions,
+  ): Promise<StudioImportResult> {
+    if (this.#session.getBook().chapters.length < 1) {
+      throw new DesktopStudioError(
+        "IMPORT_FAILED",
+        "append-sections requires an active session with at least one chapter.",
+      );
+    }
+
+    const preImportSnapshot = this.#session.getBook();
+    const preSelected = this.#session.getState().selectedSectionId;
+    const restoreSeed = this.#idSeed;
+    const jobId = createProjectId("import-append");
+    this.#beginImportJob(jobId);
+
+    const restore = (): void => {
+      this.#replaceSession(preImportSnapshot, restoreSeed, preSelected);
+    };
+
+    try {
+      this.#assertSupportedFormat(source.format);
+      const result = await this.#runImport(source, options);
+      if (!result.success || result.book === undefined) {
+        this.#failImportJob();
+        throw new DesktopStudioError("IMPORT_FAILED", combinedIssueMessages(result.issues));
+      }
+
+      const importedBook = result.book;
+      const partitions: ReadonlyArray<readonly StructuralSection[]> = [
+        importedBook.frontMatter,
+        importedBook.chapters,
+        importedBook.backMatter,
+      ];
+      let firstImportedMainId: string | undefined;
+
+      for (const sections of partitions) {
+        for (const section of sections) {
+          try {
+            const added = this.#session.addSection({
+              matter: section.kind,
+              title: section.title,
+              role: section.role,
+              initialBlocks: section.blocks,
+            });
+            if (section.kind === "main" && firstImportedMainId === undefined) {
+              firstImportedMainId = added.id;
+            }
+          } catch (err) {
+            restore();
+            this.#failImportJob();
+            const message = err instanceof Error ? err.message : String(err);
+            throw new DesktopStudioError(
+              "IMPORT_FAILED",
+              `Append failed on section "${section.title}": ${message}. All changes rolled back.`,
+            );
+          }
+        }
+      }
+
+      const errors = validateBook(this.#session.getBook()).filter((i) => i.severity === "error");
+      if (errors.length > 0) {
+        restore();
+        this.#failImportJob();
+        throw new DesktopStudioError(
+          "IMPORT_FAILED",
+          `Append failed on section "${importedBook.chapters[0]?.title ?? "unknown"}": ${errors.map((e) => e.message).join("; ")}. All changes rolled back.`,
+        );
+      }
+
+      if (firstImportedMainId) {
+        this.#session.selectSection(firstImportedMainId);
+      }
+
+      this.#succeedImportJob();
+      return toStudioImportResult("append-sections", result.issues, result.stats);
+    } catch (err) {
+      this.#failImportJob();
+      if (err instanceof DesktopStudioError) {
+        throw err;
+      }
+      restore();
+      throw new DesktopStudioError(
+        "IMPORT_FAILED",
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  }
+
+  #beginImportJob(jobId: string): void {
+    const status = this.#workflow.getJobStatus();
+    if (status === "running") {
+      throw new DesktopStudioError("IMPORT_FAILED", "An import job is already running.");
+    }
+    this.#workflow.requestJobStatus({ to: "running", jobId });
+  }
+
+  #failImportJob(): void {
+    if (this.#workflow.getJobStatus() === "running") {
+      this.#workflow.requestJobStatus({ to: "failed" });
+    }
+  }
+
+  #succeedImportJob(): void {
+    this.#workflow.requestJobStatus({ to: "succeeded" });
+    this.#workflow.requestJobStatus({ to: "idle" });
+  }
+
+  #assertSupportedFormat(format: string): asserts format is SupportedImportFormat {
+    if (format !== "markdown" && format !== "text") {
+      throw new DesktopStudioError(
+        "UNSUPPORTED_FORMAT",
+        `Unsupported import format "${format}". Supported: markdown, text.`,
+      );
+    }
+  }
+
+  async #runImport(source: ImportSource, options?: StudioImportOptions) {
+    const splitStrategy =
+      options?.splitStrategy ??
+      (source.format === "text" ? "single-chapter" : "heading-1");
+    return this.#importer.import(source, {
+      splitStrategy,
+      defaultLanguage: options?.defaultLanguage,
+      metadataOverrides: options?.metadataOverrides,
+      idSeed: options?.idSeed,
+    });
+  }
+
   #replaceSession(book: Book, idSeed: string, preferredSectionId?: string): void {
     const preferredOk =
       preferredSectionId !== undefined &&
       [...book.frontMatter, ...book.chapters, ...book.backMatter].some(
         (section) => section.id === preferredSectionId,
       );
+    this.#idSeed = idSeed;
     this.#session = new BookSession({
       book,
       idSeed,
@@ -378,4 +620,26 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     }
     throw err;
   }
+}
+
+function combinedIssueMessages(issues: readonly ImportIssue[]): string {
+  if (issues.length === 0) {
+    return "Import failed.";
+  }
+  return issues.map((issue) => issue.message).join("; ");
+}
+
+function toStudioImportResult(
+  mode: StudioImportMode,
+  issues: readonly ImportIssue[],
+  stats: { sectionCount: number; blockCount: number; wordCount: number },
+): StudioImportResult {
+  return {
+    success: true,
+    mode,
+    sectionCount: stats.sectionCount,
+    blockCount: stats.blockCount,
+    wordCount: stats.wordCount,
+    issues,
+  };
 }

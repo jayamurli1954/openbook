@@ -128,6 +128,26 @@ dd {
   font-weight: 600;
 }
 
+.import-file {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.35rem 0;
+  font-size: 0.85rem;
+}
+
+.import-source {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0.35rem 0;
+  padding: 0.45rem;
+  border: 1px solid #ccc;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
 .editor-section {
   margin-top: 0.5rem;
 }
