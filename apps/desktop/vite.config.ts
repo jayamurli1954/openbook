@@ -2,11 +2,23 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 // @ts-expect-error type error without @types/node package
 import process from "node:process";
+// @ts-expect-error type error without @types/node package
+import path from "node:path";
+// @ts-expect-error type error without @types/node package
+import { fileURLToPath } from "node:url";
+
 const host = process.env.TAURI_DEV_HOST;
+const here = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
   plugins: [react()],
+  resolve: {
+    alias: {
+      // BookSession / createBook import node:crypto; shim for the Tauri webview.
+      "node:crypto": path.resolve(here, "src/nodeCryptoShim.ts"),
+    },
+  },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

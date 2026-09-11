@@ -3,18 +3,20 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "OpenBook Studio desktop shell (Tauri 2 + React). Tiptap editor with Save/Open via ProjectPersistence; Book Model remains canonical.",
+  "description": "OpenBook Studio desktop shell (Tauri 2 + React). DesktopStudioCoordinator wires BookSession and @openbook/workflow to Save/Open via ProjectPersistence; Book Model remains canonical.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "tsc -p tsconfig.domain.json && tsc -p tsconfig.persistence.json && tsc -p tsconfig.workflow.json && node --test dist-domain/semanticDocumentBoundary.test.js dist-domain/editorAdapter.test.js dist-domain/editorBookSession.test.js dist-persistence/projectPersistence.test.js dist-workflow/workflow/projectWorkflow.test.js",
+    "test": "tsc -p tsconfig.domain.json && tsc -p tsconfig.persistence.json && tsc -p tsconfig.workflow.json && node --test dist-domain/semanticDocumentBoundary.test.js dist-domain/editorAdapter.test.js dist-domain/editorSessionAdapter.test.js dist-persistence/projectPersistence.test.js dist-workflow/workflow/projectWorkflow.test.js dist-workflow/domain/desktopStudioCoordinator.test.js",
     "tauri": "tauri",
     "tauri:build": "tauri build"
   },
   "dependencies": {
     "@openbook/book-model": "*",
     "@openbook/semantic-document": "*",
+    "@openbook/authoring": "*",
+    "@openbook/workflow": "*",
     "@tauri-apps/api": "2.11.1",
     "@tauri-apps/plugin-sql": "2.4.1",
     "@tiptap/core": "3.31.3",

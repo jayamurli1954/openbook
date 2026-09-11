@@ -19,24 +19,32 @@ Authorized by **ADR-0007** freeze-lift only.
 ## Boundaries
 
 - `@openbook/book-model` is the canonical domain model.
+- `@openbook/authoring` `BookSession` is the desktop authoring aggregate
+  (`src/domain/desktopStudioCoordinator.ts`). The prototype
+  `EditorBookSession` shim is retired (ADR-0019 Gate 8 Slice 1).
+- `@openbook/workflow` owns pipeline stage and job status. Workflow state
+  never holds canonical Book content.
 - `@openbook/semantic-document` is the editor-facing contract; the desktop
   domain boundary projects **Desktop → SDM → Book**
   (`src/domain/semanticDocumentBoundary.ts`).
 - Tiptap JSON is editor transport only (`EditorAdapter` in
-  `src/domain/editorAdapter.ts`). Multi-chapter authoring uses an in-memory
-  session (`src/domain/editorBookSession.ts`).
-- Save/Open uses PR #16 `ProjectPersistence` (`src/persistence/`) via the
-  workflow bridge (`src/workflow/projectWorkflow.ts`):
+  `src/domain/editorAdapter.ts`). The coordinator converts the active
+  section through EditorAdapter into `ContentBlock[]` for `BookSession`.
+- Save/Open uses PR #16 `ProjectPersistence` (`src/persistence/`) via
+  `DesktopStudioCoordinator`:
 
   ```text
-  Tiptap → EditorAdapter → SDM → Book → ProjectPersistence → SQLite
-  SQLite → ProjectPersistence → Book → SDM → EditorBookSession → Tiptap
+  Tiptap → EditorAdapter → BookSession.getBook() → ProjectPersistence → SQLite
+  SQLite → ProjectPersistence → Book → BookSession → EditorAdapter → Tiptap
   ```
 
   Tiptap JSON is **never** written to SQLite. Autosave, cloud sync, and
   filesystem project packages remain out of scope.
-- No EPUB/HTML/PDF engines, PDF renderer, EPUBCheck changes, AI/Ollama, or
-  publishing workflows.
+- Gate 8 Slices 2–5 (importer, assets, Book Doctor, EPUB/HTML/PDF
+  publishing UI) are not implemented in this slice.
+- `@openbook/authoring` hashes IDs with `node:crypto`. The desktop Vite
+  bundle aliases that module to `src/nodeCryptoShim.ts` so BookSession can
+  run in the Tauri webview without changing Gate 7 packages.
 
 ## Commands
 
@@ -46,6 +54,8 @@ From the repository root:
 npm ci
 npm run build -w @openbook/book-model
 npm run build -w @openbook/semantic-document
+npm run build -w @openbook/authoring
+npm run build -w @openbook/workflow
 npm run build -w @openbook/desktop
 npm test -w @openbook/desktop
 npm run tauri:build

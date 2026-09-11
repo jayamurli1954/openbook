@@ -14,5 +14,9 @@
     "verbatimModuleSyntax": true,
     "types": ["node"]
   },
-  "include": ["src/domain/**/*.ts"]
+  "include": ["src/domain/**/*.ts"],
+  "exclude": [
+    "src/domain/desktopStudioCoordinator.ts",
+    "src/domain/desktopStudioCoordinator.test.ts"
+  ]
 }
