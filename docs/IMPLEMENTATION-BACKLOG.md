@@ -46,7 +46,7 @@ END-TO-END WORKFLOW & FOUNDATION SLICES (GATE 7)
 ├── Book Doctor coordinator      [DONE on main: `@openbook/book-doctor` foundation (ADR-0018; PR #38; Gate 7 Slice 5)]
 │
 DESKTOP INTEGRATION (GATE 8)
-├── Desktop Studio integration   [GATE 8 Slices 1–3 implemented; Slice 4 proposed/gated (ADR-0022: desktop Book Doctor integration); Slice 5 publishing/export remains gated]
+├── Desktop Studio integration   [GATE 8 Slices 1–3 implemented; Slice 4 architecture accepted/merged (ADR-0022, PR #47) — implementation still gated; Slice 5 publishing/export remains future/gated]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -108,12 +108,12 @@ Gates 1 through 7 are now complete on `main`:
 
 The immediate next architectural decision point is:
 
-1. **Gate 8: Desktop Studio Integration (ADR-0019 / ADR-0020 / ADR-0021 / proposed ADR-0022)**
+1. **Gate 8: Desktop Studio Integration (ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022)**
    - Slice 1 (Coordinator & Authoring Integration) is authorized and implemented: `DesktopStudioCoordinator` wires `@openbook/workflow` and `@openbook/authoring` `BookSession` to the existing `EditorAdapter` and `ProjectPersistence`.
    - Slice 2 (Import & Ingestion Surface) is authorized and implemented: `importContent` wires `@openbook/importer` into the `IMPORT` stage with `new-project` and `append-sections` modes.
    - Slice 3 (Asset Management & Media Boundary) is authorized and implemented: `MemoryAssetStore` is the default injectable `IAssetStore`; `ingestAsset` / atomic `insertImageBlock` run at `ASSETS`; existing-ref image blocks are authorable at `AUTHORING` and `ASSETS`; binaries stay out of SQLite.
-   - Slice 4 (Desktop Studio Book Doctor integration, ADR-0022) is **proposed/gated**: wires `@openbook/book-doctor` `ValidationCoordinator` into the `VALIDATION` stage, provides ephemeral `BookValidationReport` caching, hard cache invalidation upon content edit, and pre-`PREVIEW` transition gating via coordinator policy. Requires ADR acceptance plus separate explicit implementation authorization. This is not Gate 7 Slice 5 (ADR-0018 foundation, already on `main`).
-   - Slice 5 (desktop publishing/export) remains gated: `@openbook/epub`, `@openbook/html`, and `@openbook/pdf` UI/integration require separate explicit authorization.
+   - Slice 4 (Desktop Studio Book Doctor integration, ADR-0022) **architecture is accepted and merged** (PR #47, `572c9fb`). **Implementation remains gated** and requires a separate explicit authorization. This is not Gate 7 Slice 5 (ADR-0018 foundation, already on `main`).
+   - Slice 5 (desktop publishing/export) remains future/gated: `@openbook/epub`, `@openbook/html`, and `@openbook/pdf` UI/integration require separate explicit authorization.
 
 Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama.
 
