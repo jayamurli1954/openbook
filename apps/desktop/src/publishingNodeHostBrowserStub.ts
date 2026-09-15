@@ -15,6 +15,14 @@ export const defaultPdfPublisher = {
   },
 };
 
+export async function execFileWithAbortSignal(): Promise<never> {
+  unavailable("PDF subprocess");
+}
+
+export async function invokeTypstCompileWithAbort(): Promise<never> {
+  unavailable("Typst compile");
+}
+
 export const productionValidatorService = {
   async validateEpub(): Promise<never> {
     unavailable("EPUBCheck");

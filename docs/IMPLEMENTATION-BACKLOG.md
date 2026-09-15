@@ -85,7 +85,7 @@ Status against the ordered list:
 20. **Import, authoring, assets, and Book Doctor foundations (Gate 7 Slices 2–5)** — **DONE** (ADR-0015–ADR-0018; PRs #32, #34, #36, #38).
 
 **Current Test Suite State:**
-- **229 / 229 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages:
+- **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages:
   - `@openbook/book-model`: 11 tests passing
   - `@openbook/validator`: 9 tests passing (updated in Gate 5)
   - `@openbook/semantic-document`: 8 tests passing
@@ -97,7 +97,7 @@ Status against the ordered list:
   - `@openbook/authoring`: 16 tests passing (Gate 7 Slice 3)
   - `@openbook/assets`: 10 tests passing (Gate 7 Slice 4)
   - `@openbook/book-doctor`: 8 tests passing (Gate 7 Slice 5)
-  - `@openbook/desktop`: 91 tests passing (19 domain + 11 persistence + 6 workflow + 55 coordinator)
+  - `@openbook/desktop`: 93 tests passing (19 domain + 11 persistence + 6 workflow + 57 coordinator)
 
 ## Next architectural decision points
 

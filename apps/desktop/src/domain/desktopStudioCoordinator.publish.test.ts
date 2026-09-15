@@ -150,6 +150,38 @@ class MockPdfPublisher implements IPdfPublisher {
   }
 }
 
+class HangingPdfPublisher implements IPdfPublisher {
+  readonly started: Promise<void>;
+  #notifyStarted!: () => void;
+  receivedSignal: AbortSignal | undefined;
+
+  constructor() {
+    this.started = new Promise((resolve) => {
+      this.#notifyStarted = resolve;
+    });
+  }
+
+  async publishPdf(
+    _book: Readonly<Book>,
+    options: { assetResolver: AssetResolver; signal?: AbortSignal },
+  ): Promise<PdfPublication> {
+    this.receivedSignal = options.signal;
+    this.#notifyStarted();
+    return new Promise((_resolve, reject) => {
+      const onAbort = () => {
+        const err = new Error("The operation was aborted.");
+        err.name = "AbortError";
+        reject(err);
+      };
+      if (options.signal?.aborted) {
+        onAbort();
+        return;
+      }
+      options.signal?.addEventListener("abort", onAbort, { once: true });
+    });
+  }
+}
+
 class FailingPdfPublisher implements IPdfPublisher {
   async publishPdf(): Promise<PdfPublication> {
     const err = new Error("unknown variable at main.typ:3");
@@ -447,6 +479,39 @@ test("AbortSignal throws OPERATION_ABORTED and fails the job", async () => {
   );
   assert.equal(coordinator.getState().jobStatus, "failed");
   hanging.release();
+});
+
+test("exportPdf AbortSignal reaches the PDF publisher and fails the job", async () => {
+  const hanging = new HangingPdfPublisher();
+  const coordinator = freshCoordinator("pdf-abort", { pdfPublisher: hanging });
+  await readyForExport(coordinator, "PREVIEW");
+  const controller = new AbortController();
+  const pending = coordinator.exportPdf({ signal: controller.signal });
+  await hanging.started;
+  assert.equal(hanging.receivedSignal, controller.signal);
+  controller.abort();
+  await assert.rejects(
+    () => pending,
+    (err: unknown) =>
+      err instanceof DesktopStudioError && err.code === "OPERATION_ABORTED",
+  );
+  assert.equal(coordinator.getState().jobStatus, "failed");
+});
+
+test("production PDF host execFileWithAbortSignal terminates the child", async () => {
+  const { execFileWithAbortSignal } = await import("./publishingNodeHost.js");
+  const controller = new AbortController();
+  const pending = execFileWithAbortSignal(
+    process.execPath,
+    ["-e", "setTimeout(() => {}, 60_000)"],
+    { signal: controller.signal },
+  );
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  controller.abort();
+  await assert.rejects(
+    () => pending,
+    (err: unknown) => err instanceof Error && err.name === "AbortError",
+  );
 });
 
 test("export does not write SQLite and does not mutate Book", async () => {
