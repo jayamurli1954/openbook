@@ -46,7 +46,7 @@ END-TO-END WORKFLOW & FOUNDATION SLICES (GATE 7)
 ├── Book Doctor coordinator      [DONE on main: `@openbook/book-doctor` foundation (ADR-0018; PR #38; Gate 7 Slice 5)]
 │
 DESKTOP INTEGRATION (GATE 8)
-├── Desktop Studio integration   [GATE 8 Slices 1–4 implemented (ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022); Slice 5 architecture proposed (ADR-0023) — implementation still gated]
+├── Desktop Studio integration   [GATE 8 Slices 1–5 implemented (ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022 / ADR-0023)]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -85,7 +85,7 @@ Status against the ordered list:
 20. **Import, authoring, assets, and Book Doctor foundations (Gate 7 Slices 2–5)** — **DONE** (ADR-0015–ADR-0018; PRs #32, #34, #36, #38).
 
 **Current Test Suite State:**
-- **216 / 216 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages:
+- **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages:
   - `@openbook/book-model`: 11 tests passing
   - `@openbook/validator`: 9 tests passing (updated in Gate 5)
   - `@openbook/semantic-document`: 8 tests passing
@@ -97,7 +97,7 @@ Status against the ordered list:
   - `@openbook/authoring`: 16 tests passing (Gate 7 Slice 3)
   - `@openbook/assets`: 10 tests passing (Gate 7 Slice 4)
   - `@openbook/book-doctor`: 8 tests passing (Gate 7 Slice 5)
-  - `@openbook/desktop`: 78 tests passing (19 domain + 11 persistence + 6 workflow + 42 coordinator)
+  - `@openbook/desktop`: 93 tests passing (19 domain + 11 persistence + 6 workflow + 57 coordinator)
 
 ## Next architectural decision points
 
@@ -113,9 +113,9 @@ The immediate next architectural decision point is:
    - Slice 2 (Import & Ingestion Surface) is authorized and implemented: `importContent` wires `@openbook/importer` into the `IMPORT` stage with `new-project` and `append-sections` modes.
    - Slice 3 (Asset Management & Media Boundary) is authorized and implemented: `MemoryAssetStore` is the default injectable `IAssetStore`; `ingestAsset` / atomic `insertImageBlock` run at `ASSETS`; existing-ref image blocks are authorable at `AUTHORING` and `ASSETS`; binaries stay out of SQLite.
    - Slice 4 (Desktop Studio Book Doctor integration, ADR-0022) is authorized and implemented: `runValidation` / `getValidationReport` wire `@openbook/book-doctor` into the `VALIDATION` stage with ephemeral `BookValidationReport` caching, hard invalidation on mutation, and `PREVIEW` gating. This is not Gate 7 Slice 5 (ADR-0018 foundation, already on `main`).
-   - Slice 5 (desktop publishing/export, ADR-0023) **architecture is proposed**. Implementation remains gated and requires ADR acceptance plus a separate explicit authorization. This is not the engine packages themselves (`@openbook/epub`, `@openbook/html`, `@openbook/pdf`, `@openbook/validator`), which are already on `main`.
+   - Slice 5 (desktop publishing/export, ADR-0023) is authorized and implemented: `exportEpub` / `exportHtml` / `exportPdf` generate in-memory artifacts during `PREVIEW` and `PUBLISH` with Phase 1 Book Doctor gating, mandatory EPUBCheck in `PUBLISH`, and no SQLite writes. Host-layer file dialogs and export UI remain out of scope.
 
-Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama.
+Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama; export UI.
 
 ## Explicitly out of order
 
@@ -128,4 +128,4 @@ Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ol
 - Letting Tiptap/ProseMirror JSON become a parallel canonical document model
 - Persisting Tiptap JSON into SQLite instead of the canonical Book Model
 - Adding autosave, cloud sync, or publishing engines under a Save/Open UX PR
-- Implementing Gate 8 Slice 5 (publishing/export) before that slice is explicitly authorized
+- Implementing Gate 8 export UI, host file dialogs, autosave, or cloud sync before those items are explicitly authorized

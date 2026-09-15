@@ -1,11 +1,11 @@
 # ADR-0023: Desktop Studio Publishing & Export Integration Architecture — Gate 8 Slice 5
 
-* **Status:** Proposed
+* **Status:** Accepted
 * **Date:** 2026-09-15
 * **Decision owner:** SanMitra Tech Solutions
 * **Decision scope:** Desktop Studio Publishing & Export Integration Architecture — Gate 8 Slice 5
 * **Depends on:** ADR-0006, ADR-0007, ADR-0009, ADR-0010, ADR-0011, ADR-0012, ADR-0013, ADR-0014, ADR-0017, ADR-0018, ADR-0019, ADR-0020, ADR-0021, ADR-0022
-* **Implementation status:** Requires separate explicit authorization (implementation NOT authorized by this ADR alone)
+* **Implementation status:** Slice 5 implemented (`DesktopStudioCoordinator.exportEpub` / `exportHtml` / `exportPdf`). Acceptance does not authorize later/unrelated work (Tauri/React export UI, SQLite schema changes, AI/Ollama, cloud/network export, a new HTML validator, or DTP redesign).
 
 ---
 
@@ -44,7 +44,7 @@ This ADR defines **Gate 8 Slice 5: Desktop Publishing & Export Integration Archi
 11. Persistence firewall: generated binaries are never written to SQLite.
 12. Headless domain isolation: zero Tauri, React, or browser DOM dependencies in the coordinator; host layer handles native file dialogs and disk writing.
 
-**Acceptance of this ADR does not authorize implementation.** Implementation remains strictly gated and requires separate explicit authorization.
+**Acceptance of this ADR does not authorize later or unrelated work.** Slice 5 implementation is authorized separately and is now implemented. Host-layer file dialogs, export UI, SQLite schema changes, AI/Ollama, cloud/network export, a dedicated HTML validator, and DTP redesign remain out of scope.
 
 ---
 
@@ -371,14 +371,13 @@ Implementation of Slice 5 requires automated domain unit tests in `apps/desktop/
 * Integrates existing production runtimes (Typst 0.15.1, EPUBCheck 5.3.0 + Temurin 21) safely behind discrete subprocess boundaries.
 
 ### Governance Constraints
-* **Acceptance of this ADR does not authorize implementation.**
-* Slice 5 is **eligible for implementation authorization** only after formal PO acceptance.
-* **Out of scope for Slice 5:** DTP/page layout redesign, custom CSS authoring UI, AI/Ollama generation, cloud sync/export, dedicated external HTML validator, and SQLite schema modifications.
+* Slice 5 architecture is accepted and merged; Slice 5 **implementation is complete** on the authorized implementation PR. Later/unrelated work remains gated.
+* **Out of scope for Slice 5:** DTP/page layout redesign, custom CSS authoring UI, AI/Ollama generation, cloud sync/export, dedicated external HTML validator, SQLite schema modifications, and Tauri/React export UI.
 
 ---
 
 ## 8. Implementation Boundary
 
-**Acceptance of ADR-0023 does NOT authorize implementation.**
+**Acceptance of ADR-0023 does NOT authorize later or unrelated work.**
 
-This ADR defines architecture only. Implementation of Gate 8 Slice 5 requires a separate explicit implementation handoff after this ADR is reviewed, accepted, and merged.
+This ADR is the accepted architecture decision for Gate 8 Slice 5. Slice 5 implementation is complete. Host-layer disk writing, export UI, and later publishing work remain out of scope unless separately authorized.
