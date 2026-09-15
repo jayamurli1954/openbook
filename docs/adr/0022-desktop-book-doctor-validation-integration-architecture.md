@@ -5,7 +5,7 @@
 * **Decision owner:** SanMitra Tech Solutions
 * **Decision scope:** Desktop Studio Book Doctor Validation Integration Architecture — Gate 8 Slice 4
 * **Depends on:** ADR-0006, ADR-0007, ADR-0014, ADR-0016, ADR-0017, ADR-0018, ADR-0019, ADR-0020, ADR-0021
-* **Implementation status:** Architecture accepted and merged (PR #47, `572c9fb`). Slice 4 implementation remains gated and is NOT authorized by this ADR alone.
+* **Implementation status:** Slice 4 implemented (`DesktopStudioCoordinator.runValidation` / `getValidationReport`). Slice 5 (publishing/export) remains gated.
 
 ---
 
@@ -41,7 +41,7 @@ This ADR defines **Gate 8 Slice 4: Desktop Studio Book Doctor Validation Integra
 8. Absolute persistence firewall: diagnostic reports remain ephemeral and never write to SQLite.
 9. Strict headless domain boundaries: no Tauri, React, or DOM dependencies.
 
-**Acceptance of this ADR does not authorize implementation.** Implementation remains strictly gated and requires separate explicit authorization.
+**Acceptance of this ADR does not authorize implementation of later slices.** Slice 4 implementation is authorized separately and is now implemented. Gate 8 Slice 5 (desktop publishing/export) remains gated.
 
 ---
 
@@ -257,7 +257,7 @@ Implementation of Slice 4 (when separately authorized) requires automated domain
 9. **Stage Policy Gate (INV-9):** Blocks `PREVIEW` transition when unvalidated or invalid.
 10. **Persistence Firewall:** Zero writes to SQLite; Book remains immutable.
 
-This ADR does not authorize those tests or any coordinator changes.
+This ADR does not authorize Gate 8 Slice 5 (publishing/export) or UI work.
 
 ---
 
@@ -272,14 +272,13 @@ This ADR does not authorize those tests or any coordinator changes.
 * Preserves pure headless domain testability.
 
 ### Governance Constraints
-* **Acceptance of this ADR does not authorize implementation.**
-* Slice 4 architecture is accepted and merged; Slice 4 **implementation remains gated** and requires a separate explicit authorization.
+* Slice 4 architecture is accepted and merged; Slice 4 **implementation is complete** on the authorized implementation PR. Slice 5 remains gated.
 * **Out of scope for Slice 4:** UI components; publishing/export (Gate 8 Slice 5); native/Java subprocess execution; automated repair engines; AI/Ollama; changing `@openbook/book-doctor` (Gate 7 Slice 5 / ADR-0018) into a workflow or publishing package.
 
 ---
 
 ## 8. Implementation Boundary
 
-**Acceptance of this ADR does NOT authorize implementation.**
+**Acceptance of this ADR does NOT authorize later slices.**
 
-This ADR is the accepted architecture decision for Gate 8 Slice 4. Implementation still requires a separate explicit implementation handoff. Gate 8 Slice 5 (desktop publishing/export) remains out of scope.
+This ADR is the accepted architecture decision for Gate 8 Slice 4. Slice 4 implementation is complete. Gate 8 Slice 5 (desktop publishing/export) remains out of scope.

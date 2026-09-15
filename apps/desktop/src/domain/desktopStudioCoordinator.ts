@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Headless Desktop Studio coordinator (ADR-0019 Gate 8 Slice 1–3).
+ * Headless Desktop Studio coordinator (ADR-0019 Gate 8 Slice 1–4).
  *
  * Pure TypeScript aggregate: no @tauri-apps/*, React, or DOM globals.
  * Slice 1 wires @openbook/workflow + @openbook/authoring BookSession to the
  * existing EditorAdapter and ProjectPersistence.
  * Slice 2 (ADR-0020) adds @openbook/importer ingestion.
  * Slice 3 (ADR-0021) adds @openbook/assets MemoryAssetStore / IAssetStore.
- * Slices 4–5 are not implemented.
+ * Slice 4 (ADR-0022) adds @openbook/book-doctor ValidationCoordinator.
+ * Slice 5 (publishing/export) is not implemented.
  */
 import {
   BOOK_MODEL_SCHEMA_VERSION,
@@ -35,6 +36,13 @@ import {
   type AssetResolver,
   type IAssetStore,
 } from "@openbook/assets";
+import {
+  ValidationCoordinator,
+  type BookDiagnostic,
+  type BookValidationReport,
+  type IValidationCoordinator,
+  type TypstDiagnosticInput,
+} from "@openbook/book-doctor";
 import {
   ImportService,
   type ImportIssue,
@@ -75,8 +83,45 @@ import {
 import type { EditorConversionWarning, TipTapDocJSON } from "./editorAdapter.js";
 
 /**
- * Slice 1 studio snapshot (ADR-0019 §4.1).
- * `validationReport` stays null until Slice 4; Book Doctor is not imported.
+ * Narrow structural contract for host-supplied Gate 5 EPUBCheck diagnostics.
+ * Compatible with Gate 5 ValidationReport without importing @openbook/validator.
+ */
+export interface EpubCheckDiagnosticInput {
+  readonly validatorName?: string;
+  readonly targetPath?: string;
+  readonly isValid?: boolean;
+  readonly failureKind?:
+    | "none"
+    | "conformance"
+    | "missing_runtime"
+    | "missing_epubcheck"
+    | "invalid_path"
+    | "timeout"
+    | "process_error"
+    | string;
+  readonly messages?: readonly {
+    readonly id?: string;
+    readonly severity?: "FATAL" | "ERROR" | "WARNING" | "INFO" | "USAGE" | string;
+    readonly message?: string;
+    readonly suggestion?: string | null;
+    readonly locations?: readonly {
+      readonly path?: string;
+      readonly line?: number;
+      readonly column?: number;
+    }[];
+  }[];
+}
+
+export interface ValidationRunOptions {
+  /** Optional pre-computed Gate 5 EPUBCheck diagnostics. */
+  readonly epubCheckReport?: EpubCheckDiagnosticInput;
+  /** Optional pre-computed Typst compiler diagnostics. */
+  readonly typstDiagnostics?: TypstDiagnosticInput;
+}
+
+/**
+ * Slice 1–4 studio snapshot (ADR-0019 §4.1, ADR-0022 §4.3).
+ * `validationReport` is populated after runValidation() and reset on mutation.
  */
 export interface DesktopStudioState {
   stage: WorkflowStage;
@@ -86,7 +131,7 @@ export interface DesktopStudioState {
   isDirty: boolean;
   revision: number;
   selectedSectionId: string | null;
-  validationReport: null;
+  validationReport: BookValidationReport | null;
 }
 
 export type StudioImportMode = "new-project" | "append-sections";
@@ -106,7 +151,7 @@ export interface StudioImportResult {
   readonly issues: readonly ImportIssue[];
 }
 
-/** Slice 1–3 coordinator contract (ADR-0019 §4.2, ADR-0020 §4.2, ADR-0021 §4.3). */
+/** Slice 1–4 coordinator contract (ADR-0019 §4.2, ADR-0020 §4.2, ADR-0021 §4.3, ADR-0022 §4.3). */
 export interface IDesktopStudioCoordinator {
   getState(): DesktopStudioState;
   getBook(): Book;
@@ -142,6 +187,9 @@ export interface IDesktopStudioCoordinator {
   insertExistingImageBlock(sectionId: string, atIndex: number, assetId: string): ContentBlock;
   removeImageBlock(sectionId: string, blockId: string): void;
   getAssetResolver(): AssetResolver;
+
+  runValidation(options?: ValidationRunOptions): Promise<BookValidationReport>;
+  getValidationReport(): BookValidationReport | null;
 }
 
 export class DesktopStudioError extends Error {
@@ -156,7 +204,9 @@ export class DesktopStudioError extends Error {
     | "ASSET_NOT_PERMITTED"
     | "ASSET_INGEST_FAILED"
     | "ASSET_NOT_FOUND"
-    | "BLOCK_NOT_FOUND";
+    | "BLOCK_NOT_FOUND"
+    | "VALIDATION_NOT_PERMITTED"
+    | "VALIDATION_FAILED";
 
   constructor(code: DesktopStudioError["code"], message: string) {
     super(message);
@@ -177,6 +227,11 @@ export type DesktopStudioCoordinatorOptions = {
   now?: () => string;
   /** Defaults to MemoryAssetStore when omitted (ADR-0021 INV-1). */
   assetStore?: IAssetStore;
+  /**
+   * Validation coordinator instance.
+   * Defaults to new ValidationCoordinator() when omitted (ADR-0022).
+   */
+  validationCoordinator?: IValidationCoordinator;
 };
 
 /**
@@ -192,10 +247,13 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   #binding: ActiveProjectBinding | null;
   #pendingName: string;
   readonly #importer: ImportService;
+  readonly #validationCoordinator: IValidationCoordinator;
   #assetStore: IAssetStore;
   #assetRegistry!: AssetRegistry;
   #pipeline!: AssetIngestionPipeline;
   #resolver!: StoreBackedAssetResolver;
+  #validationReport: BookValidationReport | null;
+  #validatedRevision: number | null;
 
   constructor(options: DesktopStudioCoordinatorOptions) {
     this.#persistence = options.persistence;
@@ -203,13 +261,20 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     this.#assetStoreInjected = options.assetStore !== undefined;
     this.#assetStore = options.assetStore ?? new MemoryAssetStore();
     this.#bindAssetPipeline();
+    this.#validationCoordinator =
+      options.validationCoordinator ?? new ValidationCoordinator();
+    this.#validationReport = null;
+    this.#validatedRevision = null;
     const book = options.book ?? createDesktopDraftBook({ title: "Untitled Project" });
     this.#idSeed = options.idSeed ?? (book.metadata.title || "desktop-studio");
-    this.#session = new BookSession({
-      book,
-      idSeed: this.#idSeed,
-      initialSelectedSectionId: options.initialSelectedSectionId,
-    });
+    this.#session = wrapSessionForInvalidation(
+      new BookSession({
+        book,
+        idSeed: this.#idSeed,
+        initialSelectedSectionId: options.initialSelectedSectionId,
+      }),
+      () => this.#clearValidationReport(),
+    );
     this.#workflow = new WorkflowCoordinator();
     this.#binding = null;
     this.#pendingName = book.metadata.title.trim();
@@ -217,6 +282,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   }
 
   getState(): DesktopStudioState {
+    this.#syncValidationInvalidation();
     const workflow = this.#workflow.getState();
     assertNoCanonicalBookContent(workflow);
     const session = this.#session.getState();
@@ -227,7 +293,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       isDirty: session.isDirty,
       revision: session.revision,
       selectedSectionId: session.selectedSectionId,
-      validationReport: null,
+      validationReport: cloneValidationReport(this.#validationReport),
     };
     if (workflow.jobId !== undefined) {
       state.activeJobId = workflow.jobId;
@@ -241,6 +307,56 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
 
   getSession(): BookSession {
     return this.#session;
+  }
+
+  getValidationReport(): BookValidationReport | null {
+    this.#syncValidationInvalidation();
+    return cloneValidationReport(this.#validationReport);
+  }
+
+  async runValidation(options?: ValidationRunOptions): Promise<BookValidationReport> {
+    if (this.#workflow.getStage() !== "VALIDATION") {
+      throw new DesktopStudioError(
+        "VALIDATION_NOT_PERMITTED",
+        "Validation is permitted only during the VALIDATION stage.",
+      );
+    }
+
+    const jobId = createProjectId("validation");
+    this.#beginStudioJob(
+      jobId,
+      "VALIDATION_FAILED",
+      "A validation job is already running.",
+    );
+
+    try {
+      const book = this.#session.getBook();
+      const domainDiags = await this.#validationCoordinator.runDomainValidation(book);
+      const diagnosticSets: (readonly BookDiagnostic[])[] = [
+        domainDiags,
+      ];
+      if (options?.epubCheckReport !== undefined) {
+        diagnosticSets.push(
+          await this.#validationCoordinator.normalizeEpubCheckReport(options.epubCheckReport),
+        );
+      }
+      if (options?.typstDiagnostics !== undefined) {
+        diagnosticSets.push(
+          await this.#validationCoordinator.normalizeTypstDiagnostics(options.typstDiagnostics),
+        );
+      }
+      const report = this.#validationCoordinator.aggregate(diagnosticSets);
+      this.#validationReport = report;
+      this.#validatedRevision = this.#session.getState().revision;
+      this.#succeedStudioJob();
+      return cloneValidationReport(report)!;
+    } catch (err) {
+      this.#failStudioJob();
+      throw new DesktopStudioError(
+        "VALIDATION_FAILED",
+        err instanceof Error ? err.message : String(err),
+      );
+    }
   }
 
   async newProject(name: string, language: string = "en"): Promise<void> {
@@ -349,6 +465,21 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   }
 
   transitionStage(to: WorkflowStage): void {
+    this.#syncValidationInvalidation();
+    if (this.#workflow.getStage() === "VALIDATION" && to === "PREVIEW") {
+      if (this.#validationReport === null) {
+        throw new DesktopStudioError(
+          "VALIDATION_FAILED",
+          "Cannot transition to PREVIEW: Book Doctor validation has not been run.",
+        );
+      }
+      if (!this.#validationReport.summary.isClean) {
+        throw new DesktopStudioError(
+          "VALIDATION_FAILED",
+          `Cannot transition to PREVIEW: Book has ${this.#validationReport.summary.totalFatal} fatal and ${this.#validationReport.summary.totalErrors} error diagnostics.`,
+        );
+      }
+    }
     this.#workflow.requestTransition({ to });
   }
 
@@ -783,11 +914,29 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         (section) => section.id === preferredSectionId,
       );
     this.#idSeed = idSeed;
-    this.#session = new BookSession({
-      book,
-      idSeed,
-      initialSelectedSectionId: preferredOk ? preferredSectionId : undefined,
-    });
+    this.#session = wrapSessionForInvalidation(
+      new BookSession({
+        book,
+        idSeed,
+        initialSelectedSectionId: preferredOk ? preferredSectionId : undefined,
+      }),
+      () => this.#clearValidationReport(),
+    );
+    this.#clearValidationReport();
+  }
+
+  #clearValidationReport(): void {
+    this.#validationReport = null;
+    this.#validatedRevision = null;
+  }
+
+  #syncValidationInvalidation(): void {
+    if (this.#validationReport === null) {
+      return;
+    }
+    if (this.#session.getState().revision !== this.#validatedRevision) {
+      this.#clearValidationReport();
+    }
   }
 
   #buildProject(book: Book, projectName: string): OpenBookProject {
@@ -855,4 +1004,56 @@ function toStudioImportResult(
     wordCount: stats.wordCount,
     issues,
   };
+}
+
+const SESSION_MUTATORS = new Set([
+  "addSection",
+  "removeSection",
+  "reorderSection",
+  "moveSection",
+  "updateSectionTitle",
+  "updateSectionRole",
+  "updateMetadata",
+  "setSectionBlocks",
+  "insertBlock",
+  "updateBlock",
+  "removeBlock",
+  "addAsset",
+  "removeAsset",
+  "undo",
+  "redo",
+]);
+
+function wrapSessionForInvalidation(
+  session: BookSession,
+  onMutate: () => void,
+): BookSession {
+  return new Proxy(session, {
+    get(target, prop) {
+      const value = Reflect.get(target, prop, target) as unknown;
+      if (typeof value !== "function" || typeof prop !== "string") {
+        return value;
+      }
+      if (!SESSION_MUTATORS.has(prop)) {
+        return value.bind(target);
+      }
+      return (...args: unknown[]) => {
+        const result = (value as (...inner: unknown[]) => unknown).apply(target, args);
+        if ((prop === "undo" || prop === "redo") && result === false) {
+          return result;
+        }
+        onMutate();
+        return result;
+      };
+    },
+  });
+}
+
+function cloneValidationReport(
+  report: BookValidationReport | null,
+): BookValidationReport | null {
+  if (report === null) {
+    return null;
+  }
+  return structuredClone(report);
 }
