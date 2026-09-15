@@ -8,6 +8,7 @@ import {
   createBook,
   serializeBook,
   validateBook,
+  type AssetRef,
   type ContentBlock,
 } from "@openbook/book-model";
 import {
@@ -185,6 +186,7 @@ test("INV-9: package has no workflow/importer/publishing/sqlite deps", () => {
   for (const banned of [
     "@openbook/workflow",
     "@openbook/importer",
+    "@openbook/assets",
     "@openbook/epub",
     "@openbook/pdf",
     "@openbook/html",
@@ -306,4 +308,80 @@ test("moveSection rejects roles invalid for target matter and rolls back", () =>
     session.getBook().frontMatter.find((s) => s.id === chapterId)?.kind,
     "front",
   );
+});
+
+function sampleAsset(id = "asset-cover") {
+  return {
+    id,
+    kind: "image" as const,
+    fileName: "cover.png",
+    mediaType: "image/png",
+    altText: "Cover",
+    licence: "CC-BY-4.0",
+  };
+}
+
+test("addAsset registers AssetRef metadata only and isolates returned copies", () => {
+  const session = new BookSession({ book: baseBook(), idSeed: "assets" });
+  const added = session.addAsset({
+    ...sampleAsset(),
+    bytes: Uint8Array.from([1, 2, 3]),
+  } as AssetRef);
+  assert.equal(added.id, "asset-cover");
+  assert.equal("bytes" in added, false);
+  assert.equal("bytes" in session.getBook().assets[0]!, false);
+  added.altText = "mutated";
+  assert.equal(session.getBook().assets[0]!.altText, "Cover");
+  assert.equal(session.getState().isDirty, true);
+});
+
+test("addAsset duplicate id and removeAsset missing id roll back", () => {
+  const session = new BookSession({ book: baseBook(), idSeed: "assets-dup" });
+  session.addAsset(sampleAsset());
+  const before = serializeBook(session.getBook());
+  const rev = session.getState().revision;
+  assert.throws(
+    () => session.addAsset(sampleAsset()),
+    (err: unknown) =>
+      err instanceof InvalidStructureOperationError && /already registered/.test(err.message),
+  );
+  assert.equal(serializeBook(session.getBook()), before);
+  assert.equal(session.getState().revision, rev);
+
+  assert.throws(
+    () => session.removeAsset("missing-asset"),
+    (err: unknown) =>
+      err instanceof InvalidStructureOperationError && /was not found/.test(err.message),
+  );
+  assert.equal(serializeBook(session.getBook()), before);
+});
+
+test("Kannada altText and image caption round-trip through BookSession", () => {
+  const session = new BookSession({ book: baseBook(), idSeed: "assets-kn" });
+  const added = session.addAsset({
+    ...sampleAsset("asset-kn"),
+    altText: "ನದಿಯ ಚಿತ್ರ",
+    fileName: "ನದಿ.png",
+  });
+  const chapterId = session.getBook().chapters[0]!.id;
+  session.insertBlock(chapterId, 0, {
+    type: "image",
+    id: "pending",
+    assetId: added.id,
+    caption: [{ type: "text", text: "ಹರಿಯುವ ನೀರು" }],
+  });
+  const book = session.getBook();
+  assert.equal(book.assets[0]?.altText, "ನದಿಯ ಚಿತ್ರ");
+  assert.equal(book.assets[0]?.fileName, "ನದಿ.png");
+  const image = book.chapters[0]!.blocks.find((b) => b.type === "image");
+  assert.equal(image?.type, "image");
+  if (image?.type === "image") {
+    assert.equal(image.assetId, "asset-kn");
+    assert.equal(
+      image.caption[0]?.type === "text" ? image.caption[0].text : "",
+      "ಹರಿಯುವ ನೀರು",
+    );
+  }
+  session.removeAsset(added.id);
+  assert.equal(session.getBook().assets.length, 0);
 });

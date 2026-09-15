@@ -1,25 +1,40 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Headless Desktop Studio coordinator (ADR-0019 Gate 8 Slice 1–2).
+ * Headless Desktop Studio coordinator (ADR-0019 Gate 8 Slice 1–3).
  *
  * Pure TypeScript aggregate: no @tauri-apps/*, React, or DOM globals.
  * Slice 1 wires @openbook/workflow + @openbook/authoring BookSession to the
  * existing EditorAdapter and ProjectPersistence.
- * Slice 2 (ADR-0020) adds @openbook/importer ingestion. Slices 3–5 are not implemented.
+ * Slice 2 (ADR-0020) adds @openbook/importer ingestion.
+ * Slice 3 (ADR-0021) adds @openbook/assets MemoryAssetStore / IAssetStore.
+ * Slices 4–5 are not implemented.
  */
 import {
   BOOK_MODEL_SCHEMA_VERSION,
   validateBook,
+  type AssetRef,
   type Book,
   type ContentBlock,
   type StructuralSection,
 } from "@openbook/book-model";
 import {
   BookSession,
+  BlockNotFoundError,
   DomainValidationError,
   InvalidStructureOperationError,
   SectionNotFoundError,
 } from "@openbook/authoring";
+import {
+  AssetIngestionPipeline,
+  AssetRegistry,
+  MemoryAssetStore,
+  StoreBackedAssetResolver,
+  type AssetIngestInput,
+  type AssetIngestResult,
+  type AssetIssue,
+  type AssetResolver,
+  type IAssetStore,
+} from "@openbook/assets";
 import {
   ImportService,
   type ImportIssue,
@@ -91,7 +106,7 @@ export interface StudioImportResult {
   readonly issues: readonly ImportIssue[];
 }
 
-/** Slice 1–2 coordinator contract (ADR-0019 §4.2, ADR-0020 §4.2). */
+/** Slice 1–3 coordinator contract (ADR-0019 §4.2, ADR-0020 §4.2, ADR-0021 §4.3). */
 export interface IDesktopStudioCoordinator {
   getState(): DesktopStudioState;
   getBook(): Book;
@@ -117,6 +132,16 @@ export interface IDesktopStudioCoordinator {
   close(): Promise<void>;
 
   importContent(source: ImportSource, options?: StudioImportOptions): Promise<StudioImportResult>;
+
+  ingestAsset(input: AssetIngestInput): Promise<AssetIngestResult>;
+  insertImageBlock(input: {
+    sectionId: string;
+    atIndex: number;
+    ingest: AssetIngestInput;
+  }): Promise<{ assetRef: AssetRef; block: ContentBlock }>;
+  insertExistingImageBlock(sectionId: string, atIndex: number, assetId: string): ContentBlock;
+  removeImageBlock(sectionId: string, blockId: string): void;
+  getAssetResolver(): AssetResolver;
 }
 
 export class DesktopStudioError extends Error {
@@ -127,7 +152,11 @@ export class DesktopStudioError extends Error {
     | "INVALID_STRUCTURE"
     | "IMPORT_FAILED"
     | "UNSUPPORTED_FORMAT"
-    | "IMPORT_NOT_PERMITTED";
+    | "IMPORT_NOT_PERMITTED"
+    | "ASSET_NOT_PERMITTED"
+    | "ASSET_INGEST_FAILED"
+    | "ASSET_NOT_FOUND"
+    | "BLOCK_NOT_FOUND";
 
   constructor(code: DesktopStudioError["code"], message: string) {
     super(message);
@@ -146,6 +175,8 @@ export type DesktopStudioCoordinatorOptions = {
   idSeed?: string;
   initialSelectedSectionId?: string;
   now?: () => string;
+  /** Defaults to MemoryAssetStore when omitted (ADR-0021 INV-1). */
+  assetStore?: IAssetStore;
 };
 
 /**
@@ -154,16 +185,24 @@ export type DesktopStudioCoordinatorOptions = {
 export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   readonly #persistence: ProjectPersistence;
   readonly #now: () => string;
+  readonly #assetStoreInjected: boolean;
   #idSeed: string;
   #session: BookSession;
   #workflow: WorkflowCoordinator;
   #binding: ActiveProjectBinding | null;
   #pendingName: string;
   readonly #importer: ImportService;
+  #assetStore: IAssetStore;
+  #assetRegistry!: AssetRegistry;
+  #pipeline!: AssetIngestionPipeline;
+  #resolver!: StoreBackedAssetResolver;
 
   constructor(options: DesktopStudioCoordinatorOptions) {
     this.#persistence = options.persistence;
     this.#now = options.now ?? (() => new Date().toISOString());
+    this.#assetStoreInjected = options.assetStore !== undefined;
+    this.#assetStore = options.assetStore ?? new MemoryAssetStore();
+    this.#bindAssetPipeline();
     const book = options.book ?? createDesktopDraftBook({ title: "Untitled Project" });
     this.#idSeed = options.idSeed ?? (book.metadata.title || "desktop-studio");
     this.#session = new BookSession({
@@ -217,6 +256,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       createDesktopDraftBook({ title, language }),
       title,
     );
+    this.#resetAssetRuntime();
     this.#binding = null;
     this.#pendingName = title;
     this.#workflow = new WorkflowCoordinator();
@@ -247,6 +287,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       }
       throw err;
     }
+    this.#resetAssetRuntime();
 
     this.#binding = {
       projectId: loaded.value.metadata.id,
@@ -393,6 +434,115 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     return this.#importAppendSections(source, options);
   }
 
+  async ingestAsset(input: AssetIngestInput): Promise<AssetIngestResult> {
+    this.#assertAssetsStage();
+    const jobId = createProjectId("asset");
+    this.#beginStudioJob(jobId, "ASSET_INGEST_FAILED", "An asset job is already running.");
+    try {
+      const result = await this.#ingestAndAttach(input);
+      this.#succeedStudioJob();
+      return result;
+    } catch (err) {
+      this.#failStudioJob();
+      if (err instanceof DesktopStudioError) {
+        throw err;
+      }
+      this.#rethrowAuthoring(err);
+    }
+  }
+
+  async insertImageBlock(input: {
+    sectionId: string;
+    atIndex: number;
+    ingest: AssetIngestInput;
+  }): Promise<{ assetRef: AssetRef; block: ContentBlock }> {
+    this.#assertAssetsStage();
+    if (input.ingest.kind !== "image") {
+      throw new DesktopStudioError(
+        "ASSET_INGEST_FAILED",
+        `insertImageBlock requires ingest kind "image" (received "${input.ingest.kind}").`,
+      );
+    }
+
+    const snapshotBook = this.#session.getBook();
+    const snapshotSelected = this.#session.getState().selectedSectionId;
+    const snapshotSeed = this.#idSeed;
+    const jobId = createProjectId("asset");
+    this.#beginStudioJob(jobId, "ASSET_INGEST_FAILED", "An asset job is already running.");
+
+    try {
+      const result = await this.#ingestAndAttach(input.ingest);
+      const assetRef = result.assetRef!;
+      const alt = input.ingest.altText?.trim() ?? "";
+      const block = this.#session.insertBlock(input.sectionId, input.atIndex, {
+        type: "image",
+        id: "pending-image",
+        assetId: assetRef.id,
+        caption: alt.length > 0 ? [{ type: "text", text: alt }] : [],
+      });
+      this.#succeedStudioJob();
+      return { assetRef, block };
+    } catch (err) {
+      this.#replaceSession(snapshotBook, snapshotSeed, snapshotSelected);
+      this.#failStudioJob();
+      if (err instanceof DesktopStudioError) {
+        throw err;
+      }
+      this.#rethrowAuthoring(err);
+    }
+  }
+
+  insertExistingImageBlock(sectionId: string, atIndex: number, assetId: string): ContentBlock {
+    this.#assertImageAuthoringStage();
+    if (!this.#session.getBook().assets.some((asset) => asset.id === assetId)) {
+      throw new DesktopStudioError(
+        "ASSET_NOT_FOUND",
+        `Asset "${assetId}" is not registered on this Book.`,
+      );
+    }
+    try {
+      return this.#session.insertBlock(sectionId, atIndex, {
+        type: "image",
+        id: "pending-image",
+        assetId,
+        caption: [],
+      });
+    } catch (err) {
+      this.#rethrowAuthoring(err);
+    }
+  }
+
+  removeImageBlock(sectionId: string, blockId: string): void {
+    this.#assertImageAuthoringStage();
+    const section = [...this.#session.getBook().frontMatter, ...this.#session.getBook().chapters, ...this.#session.getBook().backMatter]
+      .find((item) => item.id === sectionId);
+    if (!section) {
+      throw new DesktopStudioError("SECTION_NOT_FOUND", `Section "${sectionId}" was not found in the active Book.`);
+    }
+    const block = section.blocks.find((item) => item.id === blockId);
+    if (!block) {
+      throw new DesktopStudioError(
+        "BLOCK_NOT_FOUND",
+        `Block "${blockId}" was not found in section "${sectionId}".`,
+      );
+    }
+    if (block.type !== "image") {
+      throw new DesktopStudioError(
+        "INVALID_STRUCTURE",
+        `Block "${blockId}" is not an image block.`,
+      );
+    }
+    try {
+      this.#session.removeBlock(sectionId, blockId);
+    } catch (err) {
+      this.#rethrowAuthoring(err);
+    }
+  }
+
+  getAssetResolver(): AssetResolver {
+    return this.#resolver;
+  }
+
   async #importNewProject(
     source: ImportSource,
     options?: StudioImportOptions,
@@ -405,19 +555,20 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     }
 
     const jobId = createProjectId("import");
-    this.#beginImportJob(jobId);
+    this.#beginStudioJob(jobId, "IMPORT_FAILED", "An import job is already running.");
 
     try {
       this.#assertSupportedFormat(source.format);
       const result = await this.#runImport(source, options);
       if (!result.success || result.book === undefined) {
-        this.#failImportJob();
+        this.#failStudioJob();
         throw new DesktopStudioError("IMPORT_FAILED", combinedIssueMessages(result.issues));
       }
 
       const imported = result.book;
       const seed = options?.idSeed ?? (imported.metadata.title || this.#idSeed);
       this.#replaceSession(imported, seed);
+      this.#resetAssetRuntime();
       this.#binding = null;
       this.#pendingName = (options?.projectName ?? imported.metadata.title).trim();
       this.#session.updateMetadata({ title: imported.metadata.title });
@@ -427,12 +578,12 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         this.#session.selectSection(firstChapterId);
       }
 
-      this.#succeedImportJob();
+      this.#succeedStudioJob();
       this.#workflow.requestTransition({ to: "STRUCTURE" });
 
       return toStudioImportResult("new-project", result.issues, result.stats);
     } catch (err) {
-      this.#failImportJob();
+      this.#failStudioJob();
       if (err instanceof DesktopStudioError) {
         throw err;
       }
@@ -458,7 +609,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     const preSelected = this.#session.getState().selectedSectionId;
     const restoreSeed = this.#idSeed;
     const jobId = createProjectId("import-append");
-    this.#beginImportJob(jobId);
+    this.#beginStudioJob(jobId, "IMPORT_FAILED", "An import job is already running.");
 
     const restore = (): void => {
       this.#replaceSession(preImportSnapshot, restoreSeed, preSelected);
@@ -468,7 +619,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       this.#assertSupportedFormat(source.format);
       const result = await this.#runImport(source, options);
       if (!result.success || result.book === undefined) {
-        this.#failImportJob();
+        this.#failStudioJob();
         throw new DesktopStudioError("IMPORT_FAILED", combinedIssueMessages(result.issues));
       }
 
@@ -494,7 +645,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
             }
           } catch (err) {
             restore();
-            this.#failImportJob();
+            this.#failStudioJob();
             const message = err instanceof Error ? err.message : String(err);
             throw new DesktopStudioError(
               "IMPORT_FAILED",
@@ -507,7 +658,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       const errors = validateBook(this.#session.getBook()).filter((i) => i.severity === "error");
       if (errors.length > 0) {
         restore();
-        this.#failImportJob();
+        this.#failStudioJob();
         throw new DesktopStudioError(
           "IMPORT_FAILED",
           `Append failed on section "${importedBook.chapters[0]?.title ?? "unknown"}": ${errors.map((e) => e.message).join("; ")}. All changes rolled back.`,
@@ -518,10 +669,10 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         this.#session.selectSection(firstImportedMainId);
       }
 
-      this.#succeedImportJob();
+      this.#succeedStudioJob();
       return toStudioImportResult("append-sections", result.issues, result.stats);
     } catch (err) {
-      this.#failImportJob();
+      this.#failStudioJob();
       if (err instanceof DesktopStudioError) {
         throw err;
       }
@@ -533,23 +684,75 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     }
   }
 
-  #beginImportJob(jobId: string): void {
+  #beginStudioJob(
+    jobId: string,
+    busyCode: DesktopStudioError["code"],
+    busyMessage: string,
+  ): void {
     const status = this.#workflow.getJobStatus();
     if (status === "running") {
-      throw new DesktopStudioError("IMPORT_FAILED", "An import job is already running.");
+      throw new DesktopStudioError(busyCode, busyMessage);
     }
     this.#workflow.requestJobStatus({ to: "running", jobId });
   }
 
-  #failImportJob(): void {
+  #failStudioJob(): void {
     if (this.#workflow.getJobStatus() === "running") {
       this.#workflow.requestJobStatus({ to: "failed" });
     }
   }
 
-  #succeedImportJob(): void {
+  #succeedStudioJob(): void {
     this.#workflow.requestJobStatus({ to: "succeeded" });
     this.#workflow.requestJobStatus({ to: "idle" });
+  }
+
+  #bindAssetPipeline(): void {
+    this.#assetRegistry = new AssetRegistry();
+    this.#pipeline = new AssetIngestionPipeline(this.#assetStore, this.#assetRegistry);
+    this.#resolver = new StoreBackedAssetResolver(this.#assetStore, this.#assetRegistry);
+  }
+
+  #resetAssetRuntime(): void {
+    if (!this.#assetStoreInjected) {
+      this.#assetStore = new MemoryAssetStore();
+    }
+    this.#bindAssetPipeline();
+  }
+
+  #assertAssetsStage(): void {
+    const stage = this.#workflow.getStage();
+    if (stage !== "ASSETS") {
+      throw new DesktopStudioError(
+        "ASSET_NOT_PERMITTED",
+        `Asset ingestion is permitted only during the ASSETS stage (current stage: ${stage}).`,
+      );
+    }
+  }
+
+  #assertImageAuthoringStage(): void {
+    const stage = this.#workflow.getStage();
+    if (stage !== "AUTHORING" && stage !== "ASSETS") {
+      throw new DesktopStudioError(
+        "ASSET_NOT_PERMITTED",
+        `Image-block authoring is permitted only during AUTHORING or ASSETS (current stage: ${stage}).`,
+      );
+    }
+  }
+
+  async #ingestAndAttach(input: AssetIngestInput): Promise<AssetIngestResult> {
+    const result = await this.#pipeline.ingest({
+      ...input,
+      idSeed: input.idSeed ?? this.#idSeed,
+    });
+    if (!result.success || result.assetRef === undefined) {
+      throw new DesktopStudioError(
+        "ASSET_INGEST_FAILED",
+        combinedAssetIssueMessages(result.issues),
+      );
+    }
+    this.#session.addAsset(result.assetRef);
+    return result;
   }
 
   #assertSupportedFormat(format: string): asserts format is SupportedImportFormat {
@@ -618,6 +821,9 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     if (err instanceof SectionNotFoundError) {
       throw new DesktopStudioError("SECTION_NOT_FOUND", err.message);
     }
+    if (err instanceof BlockNotFoundError) {
+      throw new DesktopStudioError("BLOCK_NOT_FOUND", err.message);
+    }
     throw err;
   }
 }
@@ -625,6 +831,13 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
 function combinedIssueMessages(issues: readonly ImportIssue[]): string {
   if (issues.length === 0) {
     return "Import failed.";
+  }
+  return issues.map((issue) => issue.message).join("; ");
+}
+
+function combinedAssetIssueMessages(issues: readonly AssetIssue[]): string {
+  if (issues.length === 0) {
+    return "Asset ingestion failed.";
   }
   return issues.map((issue) => issue.message).join("; ");
 }

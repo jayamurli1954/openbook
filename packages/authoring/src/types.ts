@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type {
+  AssetRef,
   Book,
   BookMetadata,
   ContentBlock,
@@ -55,6 +56,9 @@ export interface IBookSession {
   ): ContentBlock;
   updateBlock(sectionId: string, blockId: string, block: ContentBlock): void;
   removeBlock(sectionId: string, blockId: string): void;
+
+  addAsset(asset: AssetRef): AssetRef;
+  removeAsset(assetId: string): void;
 
   markSaved(): void;
   canUndo(): boolean;
