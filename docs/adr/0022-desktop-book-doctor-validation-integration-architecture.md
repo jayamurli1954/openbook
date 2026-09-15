@@ -1,11 +1,11 @@
 # ADR-0022: Desktop Studio Book Doctor Validation Integration Architecture — Gate 8 Slice 4
 
-* **Status:** Proposed
+* **Status:** Accepted
 * **Date:** 2026-09-15
 * **Decision owner:** SanMitra Tech Solutions
 * **Decision scope:** Desktop Studio Book Doctor Validation Integration Architecture — Gate 8 Slice 4
 * **Depends on:** ADR-0006, ADR-0007, ADR-0014, ADR-0016, ADR-0017, ADR-0018, ADR-0019, ADR-0020, ADR-0021
-* **Implementation status:** Gated — Slice 4 is proposed (implementation NOT authorized by this ADR alone)
+* **Implementation status:** Architecture accepted and merged (PR #47, `572c9fb`). Slice 4 implementation remains gated and is NOT authorized by this ADR alone.
 
 ---
 
@@ -273,13 +273,13 @@ This ADR does not authorize those tests or any coordinator changes.
 
 ### Governance Constraints
 * **Acceptance of this ADR does not authorize implementation.**
-* Slice 4 is **eligible for implementation authorization** only after this ADR is Accepted.
+* Slice 4 architecture is accepted and merged; Slice 4 **implementation remains gated** and requires a separate explicit authorization.
 * **Out of scope for Slice 4:** UI components; publishing/export (Gate 8 Slice 5); native/Java subprocess execution; automated repair engines; AI/Ollama; changing `@openbook/book-doctor` (Gate 7 Slice 5 / ADR-0018) into a workflow or publishing package.
 
 ---
 
 ## 8. Implementation Boundary
 
-**This Proposed ADR does NOT authorize implementation.**
+**Acceptance of this ADR does NOT authorize implementation.**
 
-This ADR defines architecture only. Implementation of Gate 8 Slice 4 requires a separate explicit implementation handoff after this ADR is reviewed, accepted, and merged.
+This ADR is the accepted architecture decision for Gate 8 Slice 4. Implementation still requires a separate explicit implementation handoff. Gate 8 Slice 5 (desktop publishing/export) remains out of scope.
