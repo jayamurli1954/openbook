@@ -1,6 +1,6 @@
 # ADR-0026: Code of Conduct Governance
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-15
 - **Decision area:** Governance / Contributor Readiness
 - **Related:** ADR-0003, ADR-0024, ADR-0025
@@ -55,6 +55,14 @@ Detailed reporting contacts, response procedures, enforcement actions, and escal
 ADR-0025 establishes SanMitra Tech Solutions as project steward and defines maintainer authority within existing governance controls. This ADR does not expand that authority beyond conduct governance and does not transfer contributor intellectual property.
 
 Technical decisions remain governed by the ADR process. Contributor copyright remains protected by the project's Apache-2.0 licensing and contributor-protection framework, and DCO 1.1 remains the contribution sign-off mechanism.
+
+## Acceptance record
+
+**Accepted:** 2026-09-15.
+
+Acceptance confirms that OpenBook adopts formal Code of Conduct governance as a Contributor Readiness requirement, using Contributor Covenant 3.0 as the reference framework. The scope of covered participants, conduct expectations, reporting principles, proportionate enforcement principles, and stewardship boundaries described in this ADR are approved.
+
+Acceptance does **not** authorize implementation of `CODE_OF_CONDUCT.md`, reporting infrastructure, enforcement procedures, or any other Contributor Readiness work. Those activities remain separately authorized and must preserve ADR-0025, DCO 1.1, contributor copyright, PR requirements, CI, branch protection, and ADR governance.
 
 ## Acceptance criteria
 
