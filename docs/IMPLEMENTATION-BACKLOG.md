@@ -1,7 +1,7 @@
 # OpenBook Implementation Backlog
 
 - **Status:** Planning backlog only
-- **Date:** 2026-09-15
+- **Date:** 2026-09-16
 - **Reconciled to:** `main` at Gate 8 Slice 5 merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
@@ -91,6 +91,17 @@ Status against the ordered list:
 ## Gate 8 closure status
 
 Gate 8 is **implementation-complete and reconciled on main** as of merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`. Slices 1–5 are implemented. This backlog reconciliation does not authorize any new implementation work.
+
+## Contributor Readiness closure
+
+The Contributor Readiness governance set is now reconciled as follows:
+
+- **ADR-0024 — DCO 1.1 contribution sign-off:** **Accepted**; contribution sign-off enforcement is implemented and remains governed by the existing repository CI/branch-protection controls.
+- **ADR-0025 — Project Stewardship & Maintainer Governance:** **Accepted**; the documented stewardship and maintainer governance policy is recorded in the repository.
+- **ADR-0026 — Code of Conduct Governance:** **Accepted**; the documented Code of Conduct governance policy is recorded in the repository.
+- **ADR-0027 — Security Disclosure and Vulnerability Response Governance:** **Accepted**; operational security policy is implemented on `main` through **PR #64**, including root `SECURITY.md` and documented private reporting, triage, remediation, validation, and coordinated disclosure guidance. Merge commit: `2ac1bf5c87e44007de1c10c3e0ef0fa731e0dcae`.
+
+This reconciliation records the current governance state only. It does **not** declare broader `FOUNDATION-GOVERNANCE-READY` or final project-wide Contributor Readiness status, and it authorizes no new implementation scope.
 
 ## Next architectural decision points
 
