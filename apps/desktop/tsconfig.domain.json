@@ -20,6 +20,8 @@
     "src/domain/desktopStudioCoordinator.test.ts",
     "src/domain/desktopStudioCoordinator.import.test.ts",
     "src/domain/desktopStudioCoordinator.assets.test.ts",
-    "src/domain/desktopStudioCoordinator.validation.test.ts"
+    "src/domain/desktopStudioCoordinator.validation.test.ts",
+    "src/domain/desktopStudioCoordinator.publish.test.ts",
+    "src/domain/publishingNodeHost.ts"
   ]
 }

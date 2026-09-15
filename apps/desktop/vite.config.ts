@@ -10,9 +10,27 @@ import { fileURLToPath } from "node:url";
 const host = process.env.TAURI_DEV_HOST;
 const here = path.dirname(fileURLToPath(import.meta.url));
 
+const publishingNodeHostStub = path.resolve(here, "src/publishingNodeHostBrowserStub.ts");
+
+function stubPublishingNodeHost() {
+  return {
+    name: "stub-publishing-node-host",
+    enforce: "pre",
+    resolveId(id) {
+      if (id.includes("BrowserStub")) {
+        return null;
+      }
+      if (id.includes("publishingNodeHost")) {
+        return publishingNodeHostStub;
+      }
+      return null;
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig(() => ({
-  plugins: [react()],
+  plugins: [stubPublishingNodeHost(), react()],
   resolve: {
     alias: {
       // BookSession / createBook import node:crypto; shim for the Tauri webview.

@@ -235,21 +235,21 @@ test("getSession() is the canonical @openbook/authoring BookSession", () => {
   assert.notEqual(session.getBook().metadata.title, "HACKED");
 });
 
-test("coordinator source stays headless and Slice 4 scoped", () => {
+test("coordinator source stays headless and Slice 5 scoped", () => {
   const source = readFileSync(srcFile, "utf8");
   assert.match(source, /from "@openbook\/authoring"/);
   assert.match(source, /from "@openbook\/workflow"/);
   assert.match(source, /from "@openbook\/importer"/);
   assert.match(source, /from "@openbook\/assets"/);
   assert.match(source, /from "@openbook\/book-doctor"/);
+  assert.match(source, /from "@openbook\/epub"/);
+  assert.match(source, /from "@openbook\/html"/);
+  assert.match(source, /from "@openbook\/pdf"/);
+  assert.match(source, /from "@openbook\/validator"/);
   assert.doesNotMatch(source, /from ["']@tauri-apps\//);
   assert.doesNotMatch(source, /from ["']react["']/);
   assert.doesNotMatch(source, /from ["']react-dom["']/);
   assert.doesNotMatch(source, /from ["']markdown-it["']/);
-  assert.doesNotMatch(source, /from ["']@openbook\/validator["']/);
-  assert.doesNotMatch(source, /from ["']@openbook\/epub["']/);
-  assert.doesNotMatch(source, /from ["']@openbook\/html["']/);
-  assert.doesNotMatch(source, /from ["']@openbook\/pdf["']/);
   assert.doesNotMatch(source, /EditorBookSession/);
 });
 

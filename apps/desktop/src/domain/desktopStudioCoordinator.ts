@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Headless Desktop Studio coordinator (ADR-0019 Gate 8 Slice 1–4).
+ * Headless Desktop Studio coordinator (ADR-0019 Gate 8 Slice 1–5).
  *
  * Pure TypeScript aggregate: no @tauri-apps/*, React, or DOM globals.
  * Slice 1 wires @openbook/workflow + @openbook/authoring BookSession to the
@@ -8,7 +8,7 @@
  * Slice 2 (ADR-0020) adds @openbook/importer ingestion.
  * Slice 3 (ADR-0021) adds @openbook/assets MemoryAssetStore / IAssetStore.
  * Slice 4 (ADR-0022) adds @openbook/book-doctor ValidationCoordinator.
- * Slice 5 (publishing/export) is not implemented.
+ * Slice 5 (ADR-0023) adds EPUB/HTML/PDF export orchestration.
  */
 import {
   BOOK_MODEL_SCHEMA_VERSION,
@@ -44,6 +44,18 @@ import {
   type TypstDiagnosticInput,
 } from "@openbook/book-doctor";
 import {
+  buildEpubArchive,
+  buildEpubPackage,
+  type PublishingDiagnostic as EpubPublishingDiagnostic,
+} from "@openbook/epub";
+import {
+  buildHtml,
+  type HtmlPublicationFile,
+  type PublishingDiagnostic as HtmlPublishingDiagnostic,
+} from "@openbook/html";
+import type { PdfPublication, PublishingDiagnostic as PdfPublishingDiagnostic } from "@openbook/pdf";
+import type { ValidationReport, ValidatorService } from "@openbook/validator";
+import {
   ImportService,
   type ImportIssue,
   type ImportOptions,
@@ -58,6 +70,11 @@ import {
   type WorkflowStage,
 } from "@openbook/workflow";
 import { createProjectId } from "../persistence/dto.js";
+import {
+  defaultPdfPublisher,
+  productionValidatorService,
+  writeTempEpubAndValidate,
+} from "./publishingNodeHost.js";
 import {
   PERSISTENCE_SCHEMA_VERSION,
   type OpenBookProject,
@@ -119,6 +136,58 @@ export interface ValidationRunOptions {
   readonly typstDiagnostics?: TypstDiagnosticInput;
 }
 
+export interface BaseExportOptions {
+  /** Optional cancellation signal for long-running compilation. */
+  readonly signal?: AbortSignal;
+}
+
+export interface EpubExportOptions extends BaseExportOptions {
+  /**
+   * EPUB artifact verification mode.
+   * PREVIEW defaults to "fast"; PUBLISH defaults to "verified" and rejects "fast".
+   */
+  readonly verificationMode?: "fast" | "verified";
+}
+
+export interface HtmlExportOptions extends BaseExportOptions {}
+
+export interface PdfExportOptions extends BaseExportOptions {}
+
+export interface EpubExportResult {
+  readonly format: "epub";
+  readonly bytes: Uint8Array;
+  readonly diagnostics: readonly EpubPublishingDiagnostic[];
+  readonly epubCheckReport?: ValidationReport;
+}
+
+export interface HtmlExportResult {
+  readonly format: "html";
+  readonly html: string;
+  readonly files: readonly HtmlPublicationFile[];
+  readonly diagnostics: readonly HtmlPublishingDiagnostic[];
+}
+
+export interface PdfExportResult {
+  readonly format: "pdf";
+  readonly bytes: Uint8Array;
+  readonly typstSource: string;
+  readonly diagnostics: readonly PdfPublishingDiagnostic[];
+}
+
+/**
+ * Injected PDF publishing port.
+ * Defaults to the production @openbook/pdf compile pipeline.
+ */
+export interface IPdfPublisher {
+  publishPdf(
+    book: Readonly<Book>,
+    options: {
+      assetResolver: AssetResolver;
+      signal?: AbortSignal;
+    },
+  ): Promise<PdfPublication>;
+}
+
 /**
  * Slice 1–4 studio snapshot (ADR-0019 §4.1, ADR-0022 §4.3).
  * `validationReport` is populated after runValidation() and reset on mutation.
@@ -151,7 +220,7 @@ export interface StudioImportResult {
   readonly issues: readonly ImportIssue[];
 }
 
-/** Slice 1–4 coordinator contract (ADR-0019 §4.2, ADR-0020 §4.2, ADR-0021 §4.3, ADR-0022 §4.3). */
+/** Slice 1–5 coordinator contract (ADR-0019–ADR-0023). */
 export interface IDesktopStudioCoordinator {
   getState(): DesktopStudioState;
   getBook(): Book;
@@ -190,6 +259,10 @@ export interface IDesktopStudioCoordinator {
 
   runValidation(options?: ValidationRunOptions): Promise<BookValidationReport>;
   getValidationReport(): BookValidationReport | null;
+
+  exportEpub(options?: EpubExportOptions): Promise<EpubExportResult>;
+  exportHtml(options?: HtmlExportOptions): Promise<HtmlExportResult>;
+  exportPdf(options?: PdfExportOptions): Promise<PdfExportResult>;
 }
 
 export class DesktopStudioError extends Error {
@@ -206,7 +279,13 @@ export class DesktopStudioError extends Error {
     | "ASSET_NOT_FOUND"
     | "BLOCK_NOT_FOUND"
     | "VALIDATION_NOT_PERMITTED"
-    | "VALIDATION_FAILED";
+    | "VALIDATION_FAILED"
+    | "PUBLISH_NOT_PERMITTED"
+    | "PREPUBLISH_VALIDATION_FAILED"
+    | "CONFORMANCE_CHECK_FAILED"
+    | "RENDERER_COMPILER_FAILED"
+    | "PUBLISH_FAILED"
+    | "OPERATION_ABORTED";
 
   constructor(code: DesktopStudioError["code"], message: string) {
     super(message);
@@ -232,6 +311,10 @@ export type DesktopStudioCoordinatorOptions = {
    * Defaults to new ValidationCoordinator() when omitted (ADR-0022).
    */
   validationCoordinator?: IValidationCoordinator;
+  /** Injected EPUBCheck validator service (ADR-0012). Defaults to production bundle. */
+  validatorService?: ValidatorService;
+  /** Injected PDF publisher. Defaults to production Typst v0.15.1 runner. */
+  pdfPublisher?: IPdfPublisher;
 };
 
 /**
@@ -248,6 +331,8 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   #pendingName: string;
   readonly #importer: ImportService;
   readonly #validationCoordinator: IValidationCoordinator;
+  readonly #validatorService: ValidatorService | undefined;
+  readonly #pdfPublisher: IPdfPublisher;
   #assetStore: IAssetStore;
   #assetRegistry!: AssetRegistry;
   #pipeline!: AssetIngestionPipeline;
@@ -263,6 +348,8 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     this.#bindAssetPipeline();
     this.#validationCoordinator =
       options.validationCoordinator ?? new ValidationCoordinator();
+    this.#validatorService = options.validatorService;
+    this.#pdfPublisher = options.pdfPublisher ?? defaultPdfPublisher;
     this.#validationReport = null;
     this.#validatedRevision = null;
     const book = options.book ?? createDesktopDraftBook({ title: "Untitled Project" });
@@ -357,6 +444,97 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         err instanceof Error ? err.message : String(err),
       );
     }
+  }
+
+  async exportEpub(options?: EpubExportOptions): Promise<EpubExportResult> {
+    return this.#runExportJob("epub", options?.signal, async () => {
+      const stage = this.#workflow.getStage();
+      if (stage === "PUBLISH") {
+        if (options?.verificationMode === "fast") {
+          throw new DesktopStudioError(
+            "PUBLISH_FAILED",
+            "verificationMode cannot be 'fast' during PUBLISH stage.",
+          );
+        }
+      }
+      const mode: "fast" | "verified" =
+        stage === "PUBLISH" ? "verified" : (options?.verificationMode ?? "fast");
+
+      const book = this.#session.getBook();
+      const pkg = await buildEpubPackage(book, {
+        assetResolver: this.getAssetResolver(),
+      });
+      const bytes = buildEpubArchive(pkg);
+      const result: EpubExportResult = {
+        format: "epub",
+        bytes,
+        diagnostics: pkg.diagnostics ?? [],
+      };
+
+      if (mode === "verified") {
+        const report = await this.#validateEpubBytes(bytes);
+        if (
+          report.failureKind &&
+          report.failureKind !== "none" &&
+          report.failureKind !== "conformance"
+        ) {
+          throw new DesktopStudioError(
+            "PUBLISH_FAILED",
+            `EPUBCheck runtime error: ${report.failureKind}`,
+          );
+        }
+        if (
+          !report.isValid ||
+          report.summary.totalFatal > 0 ||
+          report.summary.totalErrors > 0
+        ) {
+          throw new DesktopStudioError(
+            "CONFORMANCE_CHECK_FAILED",
+            `EPUBCheck failed with ${report.summary.totalErrors} errors.`,
+          );
+        }
+        return { ...result, epubCheckReport: report };
+      }
+
+      return result;
+    });
+  }
+
+  async exportHtml(options?: HtmlExportOptions): Promise<HtmlExportResult> {
+    return this.#runExportJob("html", options?.signal, async () => {
+      const book = this.#session.getBook();
+      const publication = await buildHtml(book, {
+        assetResolver: this.getAssetResolver(),
+      });
+      if (!publication.html || publication.files.length < 1) {
+        throw new DesktopStudioError(
+          "PUBLISH_FAILED",
+          "HTML generation did not produce a publication.",
+        );
+      }
+      return {
+        format: "html",
+        html: publication.html,
+        files: publication.files,
+        diagnostics: publication.diagnostics,
+      };
+    });
+  }
+
+  async exportPdf(options?: PdfExportOptions): Promise<PdfExportResult> {
+    return this.#runExportJob("pdf", options?.signal, async () => {
+      const book = this.#session.getBook();
+      const publication = await this.#pdfPublisher.publishPdf(book, {
+        assetResolver: this.getAssetResolver(),
+        signal: options?.signal,
+      });
+      return {
+        format: "pdf",
+        bytes: publication.pdf,
+        typstSource: publication.typstSource,
+        diagnostics: publication.diagnostics,
+      };
+    });
   }
 
   async newProject(name: string, language: string = "en"): Promise<void> {
@@ -939,6 +1117,88 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     }
   }
 
+  #assertExportStage(): void {
+    const stage = this.#workflow.getStage();
+    if (stage !== "PREVIEW" && stage !== "PUBLISH") {
+      throw new DesktopStudioError(
+        "PUBLISH_NOT_PERMITTED",
+        `Export is permitted only during PREVIEW or PUBLISH (current stage: ${stage}).`,
+      );
+    }
+  }
+
+  #assertPhase1Clean(): void {
+    this.#syncValidationInvalidation();
+    if (this.#validationReport === null) {
+      throw new DesktopStudioError(
+        "PREPUBLISH_VALIDATION_FAILED",
+        "Cannot export: Book Doctor validation has not been run.",
+      );
+    }
+    if (!this.#validationReport.summary.isClean) {
+      throw new DesktopStudioError(
+        "PREPUBLISH_VALIDATION_FAILED",
+        `Cannot export: Book has ${this.#validationReport.summary.totalFatal} fatal and ${this.#validationReport.summary.totalErrors} errors.`,
+      );
+    }
+  }
+
+  #throwIfAborted(signal?: AbortSignal): void {
+    if (signal?.aborted) {
+      throw new DesktopStudioError(
+        "OPERATION_ABORTED",
+        "Export operation was aborted.",
+      );
+    }
+  }
+
+  async #runExportJob<T>(
+    format: string,
+    signal: AbortSignal | undefined,
+    work: () => Promise<T>,
+  ): Promise<T> {
+    this.#assertExportStage();
+    this.#assertPhase1Clean();
+    const jobId = createProjectId(`export-${format}`);
+    this.#beginStudioJob(
+      jobId,
+      "PUBLISH_FAILED",
+      "A workflow operation is already running.",
+    );
+    try {
+      this.#throwIfAborted(signal);
+      const result = signal
+        ? await Promise.race([work(), abortError(signal)])
+        : await work();
+      this.#throwIfAborted(signal);
+      this.#succeedStudioJob();
+      return result;
+    } catch (err) {
+      this.#failStudioJob();
+      if (err instanceof DesktopStudioError) {
+        throw err;
+      }
+      if (isAbortError(err) || signal?.aborted) {
+        throw new DesktopStudioError(
+          "OPERATION_ABORTED",
+          err instanceof Error ? err.message : "Export operation was aborted.",
+        );
+      }
+      if (isTypstRuntimeError(err)) {
+        throw new DesktopStudioError("RENDERER_COMPILER_FAILED", err.message);
+      }
+      throw new DesktopStudioError(
+        "PUBLISH_FAILED",
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  }
+
+  async #validateEpubBytes(bytes: Uint8Array): Promise<ValidationReport> {
+    const validator = this.#validatorService ?? productionValidatorService;
+    return writeTempEpubAndValidate(bytes, validator);
+  }
+
   #buildProject(book: Book, projectName: string): OpenBookProject {
     const name = projectName.trim();
     if (!name) {
@@ -1056,4 +1316,27 @@ function cloneValidationReport(
     return null;
   }
   return structuredClone(report);
+}
+
+function abortError(signal: AbortSignal): Promise<never> {
+  return new Promise((_, reject) => {
+    const rejectAbort = () => {
+      const err = new Error("The operation was aborted.");
+      err.name = "AbortError";
+      reject(err);
+    };
+    if (signal.aborted) {
+      rejectAbort();
+      return;
+    }
+    signal.addEventListener("abort", rejectAbort, { once: true });
+  });
+}
+
+function isAbortError(err: unknown): boolean {
+  return err instanceof Error && err.name === "AbortError";
+}
+
+function isTypstRuntimeError(err: unknown): err is Error {
+  return err instanceof Error && err.name === "TypstRuntimeError";
 }

@@ -362,14 +362,14 @@ test("runValidation does not write SQLite and does not mutate Book", async () =>
   assert.equal(saved.projectId, [...driver.projects.keys()][0]);
 });
 
-test("coordinator source stays headless and Slice 4 scoped", () => {
+test("coordinator source stays headless and Slice 5 scoped", () => {
   const source = readFileSync(srcFile, "utf8");
   assert.match(source, /from "@openbook\/book-doctor"/);
   assert.match(source, /BookValidationReport/);
-  assert.doesNotMatch(source, /from ["']@openbook\/validator["']/);
-  assert.doesNotMatch(source, /from ["']@openbook\/epub["']/);
-  assert.doesNotMatch(source, /from ["']@openbook\/html["']/);
-  assert.doesNotMatch(source, /from ["']@openbook\/pdf["']/);
+  assert.match(source, /from "@openbook\/epub"/);
+  assert.match(source, /from "@openbook\/html"/);
+  assert.match(source, /from "@openbook\/pdf"/);
+  assert.match(source, /from "@openbook\/validator"/);
   assert.doesNotMatch(source, /from ["']@tauri-apps\//);
   assert.doesNotMatch(source, /from ["']react["']/);
   assert.doesNotMatch(source, /from ["']react-dom["']/);
