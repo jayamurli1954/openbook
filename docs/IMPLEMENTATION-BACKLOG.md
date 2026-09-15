@@ -46,7 +46,7 @@ END-TO-END WORKFLOW & FOUNDATION SLICES (GATE 7)
 ├── Book Doctor coordinator      [DONE on main: `@openbook/book-doctor` (ADR-0018; PR #38; Gate 7 Slice 5)]
 │
 DESKTOP INTEGRATION (GATE 8)
-├── Desktop Studio integration   [GATE 8 Slices 1–2 IN THIS PR: coordinator + BookSession + importer ingestion; Slices 3–5 remain gated]
+├── Desktop Studio integration   [GATE 8 Slices 1–3 IN THIS PR: coordinator + BookSession + importer + MemoryAssetStore; Slices 4–5 remain gated]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -85,7 +85,7 @@ Status against the ordered list:
 20. **Import, authoring, assets, and Book Doctor foundations (Gate 7 Slices 2–5)** — **DONE** (ADR-0015–ADR-0018; PRs #32, #34, #36, #38).
 
 **Current Test Suite State:**
-- **182 / 182 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages:
+- **216 / 216 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages:
   - `@openbook/book-model`: 11 tests passing
   - `@openbook/validator`: 9 tests passing (updated in Gate 5)
   - `@openbook/semantic-document`: 8 tests passing
@@ -94,10 +94,10 @@ Status against the ordered list:
   - `@openbook/pdf`: 12 tests passing (Gate 6)
   - `@openbook/workflow`: 8 tests passing (Gate 7 Slice 1)
   - `@openbook/importer`: 10 tests passing (Gate 7 Slice 2)
-  - `@openbook/authoring`: 13 tests passing (Gate 7 Slice 3)
+  - `@openbook/authoring`: 16 tests passing (Gate 7 Slice 3)
   - `@openbook/assets`: 10 tests passing (Gate 7 Slice 4)
   - `@openbook/book-doctor`: 8 tests passing (Gate 7 Slice 5)
-  - `@openbook/desktop`: 60 tests passing (19 domain + 11 persistence + 6 workflow + 24 coordinator)
+  - `@openbook/desktop`: 67 tests passing (19 domain + 11 persistence + 6 workflow + 31 coordinator)
 
 ## Next architectural decision points
 
@@ -108,10 +108,11 @@ Gates 1 through 7 are now complete on `main`:
 
 The immediate next architectural decision point is:
 
-1. **Gate 8: Desktop Studio Integration (ADR-0019 / ADR-0020)**
+1. **Gate 8: Desktop Studio Integration (ADR-0019 / ADR-0020 / ADR-0021)**
    - Slice 1 (Coordinator & Authoring Integration) is authorized and implemented: `DesktopStudioCoordinator` wires `@openbook/workflow` and `@openbook/authoring` `BookSession` to the existing `EditorAdapter` and `ProjectPersistence`.
    - Slice 2 (Import & Ingestion Surface) is authorized and implemented: `importContent` wires `@openbook/importer` into the `IMPORT` stage with `new-project` and `append-sections` modes.
-   - Slices 3–5 remain gated: assets, Book Doctor, and publishing/export UI require separate explicit authorization.
+   - Slice 3 (Asset Management & Media Boundary) is authorized and implemented: `MemoryAssetStore` is the default injectable `IAssetStore`; `ingestAsset` / atomic `insertImageBlock` run at `ASSETS`; existing-ref image blocks are authorable at `AUTHORING` and `ASSETS`; binaries stay out of SQLite.
+   - Slices 4–5 remain gated: Book Doctor and publishing/export UI require separate explicit authorization.
 
 Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama.
 
@@ -126,4 +127,4 @@ Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ol
 - Letting Tiptap/ProseMirror JSON become a parallel canonical document model
 - Persisting Tiptap JSON into SQLite instead of the canonical Book Model
 - Adding autosave, cloud sync, or publishing engines under a Save/Open UX PR
-- Implementing Gate 8 Slices 3–5 (assets, Book Doctor, publishing/export) before those slices are explicitly authorized
+- Implementing Gate 8 Slices 4–5 (Book Doctor, publishing/export) before those slices are explicitly authorized

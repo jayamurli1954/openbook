@@ -18,6 +18,7 @@
   "exclude": [
     "src/domain/desktopStudioCoordinator.ts",
     "src/domain/desktopStudioCoordinator.test.ts",
-    "src/domain/desktopStudioCoordinator.import.test.ts"
+    "src/domain/desktopStudioCoordinator.import.test.ts",
+    "src/domain/desktopStudioCoordinator.assets.test.ts"
   ]
 }

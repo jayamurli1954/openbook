@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type {
+  AssetRef,
   Book,
   BookMetadata,
   ContentBlock,
@@ -417,6 +418,42 @@ export class BookSession implements IBookSession {
       const list = [...candidate[key]];
       list[located.index] = { ...located.section, blocks };
       candidate[key] = list;
+    });
+  }
+
+  addAsset(asset: AssetRef): AssetRef {
+    return this.#mutate((candidate) => {
+      if (typeof asset.id !== "string" || asset.id.trim() === "") {
+        throw new InvalidStructureOperationError("Asset id is required.");
+      }
+      if (candidate.assets.some((existing) => existing.id === asset.id)) {
+        throw new InvalidStructureOperationError(
+          `Asset "${asset.id}" is already registered on this Book.`,
+        );
+      }
+      // Metadata only — never copy extra enumerable fields such as bytes.
+      const copy: AssetRef = {
+        id: asset.id,
+        kind: asset.kind,
+        fileName: asset.fileName,
+        mediaType: asset.mediaType,
+        altText: asset.altText,
+        licence: asset.licence,
+      };
+      candidate.assets = [...candidate.assets, copy];
+      return structuredClone(copy);
+    });
+  }
+
+  removeAsset(assetId: string): void {
+    this.#mutate((candidate) => {
+      const index = candidate.assets.findIndex((existing) => existing.id === assetId);
+      if (index < 0) {
+        throw new InvalidStructureOperationError(
+          `Asset "${assetId}" was not found on this Book.`,
+        );
+      }
+      candidate.assets = candidate.assets.filter((existing) => existing.id !== assetId);
     });
   }
 
