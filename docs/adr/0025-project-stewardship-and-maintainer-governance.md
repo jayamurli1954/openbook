@@ -1,6 +1,6 @@
 # ADR-0025: Project Stewardship & Maintainer Governance
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-15
 - **Decision area:** Governance / Contributor Readiness
 - **Supersedes:** None
@@ -151,9 +151,9 @@ Before this ADR is accepted, the project must confirm:
 
 ## Acceptance record
 
-To be completed after formal review and explicit project-owner acceptance.
+Accepted on 2026-09-15 following formal project-owner acceptance and review. The accepted decision confirms SanMitra Tech Solutions as project steward, defines maintainer authority within existing governance controls, preserves contributor copyright and DCO 1.1, and recognizes continuity and succession as governance requirements.
 
-Acceptance of this ADR will authorize the governance decision only. It will not authorize implementation of a Code of Conduct, SECURITY.md, SBOM process, trademark policy, or other Contributor Readiness work unless separately authorized.
+This acceptance authorizes the governance decision only. It does not authorize implementation of a Code of Conduct, SECURITY.md, SBOM process, trademark policy, detailed maintainer appointment/removal procedures, release-signing policy, or any other Contributor Readiness work unless separately authorized.
 
 ## References
 
