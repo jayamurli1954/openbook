@@ -1,8 +1,8 @@
 # OpenBook Implementation Backlog
 
 - **Status:** Planning backlog only
-- **Date:** 2026-09-11
-- **Reconciled to:** `main` after PR #40 (`33c4b54`)
+- **Date:** 2026-09-15
+- **Reconciled to:** `main` at Gate 8 Slice 5 merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`.
@@ -46,7 +46,7 @@ END-TO-END WORKFLOW & FOUNDATION SLICES (GATE 7)
 ├── Book Doctor coordinator      [DONE on main: `@openbook/book-doctor` foundation (ADR-0018; PR #38; Gate 7 Slice 5)]
 │
 DESKTOP INTEGRATION (GATE 8)
-├── Desktop Studio integration   [GATE 8 Slices 1–5 implemented (ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022 / ADR-0023)]
+├── Desktop Studio integration   [DONE — Gate 8 Slices 1–5 implemented on main under ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022 / ADR-0023]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -83,39 +83,20 @@ Status against the ordered list:
 18. **PDF publishing engine & Typst 0.15.1 renderer selection (Gate 6)** — **DONE** (ADR-0013; PR #28).
 19. **Workflow coordinator foundation (Gate 7 Slice 1)** — **DONE** (ADR-0014; PR #30).
 20. **Import, authoring, assets, and Book Doctor foundations (Gate 7 Slices 2–5)** — **DONE** (ADR-0015–ADR-0018; PRs #32, #34, #36, #38).
+21. **Gate 8 Desktop Studio Integration (Slices 1–5)** — **DONE** (ADR-0019–ADR-0023; PRs through #51; final merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`).
 
 **Current Test Suite State:**
-- **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages:
-  - `@openbook/book-model`: 11 tests passing
-  - `@openbook/validator`: 9 tests passing (updated in Gate 5)
-  - `@openbook/semantic-document`: 8 tests passing
-  - `@openbook/epub`: 42 tests passing (Gates 1–3)
-  - `@openbook/html`: 15 tests passing (Gate 4)
-  - `@openbook/pdf`: 12 tests passing (Gate 6)
-  - `@openbook/workflow`: 8 tests passing (Gate 7 Slice 1)
-  - `@openbook/importer`: 10 tests passing (Gate 7 Slice 2)
-  - `@openbook/authoring`: 16 tests passing (Gate 7 Slice 3)
-  - `@openbook/assets`: 10 tests passing (Gate 7 Slice 4)
-  - `@openbook/book-doctor`: 8 tests passing (Gate 7 Slice 5)
-  - `@openbook/desktop`: 93 tests passing (19 domain + 11 persistence + 6 workflow + 57 coordinator)
+- **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages at the Gate 8 Slice 5 merge checkpoint.
+
+## Gate 8 closure status
+
+Gate 8 is **implementation-complete and reconciled on main** as of merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`. Slices 1–5 are implemented. This backlog reconciliation does not authorize any new implementation work.
 
 ## Next architectural decision points
 
-Gates 1 through 7 are now complete on `main`:
-- Publishing engines (EPUB 3.3, HTML, and Typst PDF) are complete and passing validation.
-- Production EPUBCheck runtime packaging is isolated and operational.
-- End-to-end workflow foundation slices (Workflow, Importer, Authoring, Assets, Book Doctor) are implemented as format-neutral, format-firewalled packages around the canonical Book Model.
+Gates 1 through 8 are now complete on `main` at the foundation/desktop integration level. The next work must be selected through a new architecture decision and explicit implementation authorization.
 
-The immediate next architectural decision point is:
-
-1. **Gate 8: Desktop Studio Integration (ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022 / ADR-0023)**
-   - Slice 1 (Coordinator & Authoring Integration) is authorized and implemented: `DesktopStudioCoordinator` wires `@openbook/workflow` and `@openbook/authoring` `BookSession` to the existing `EditorAdapter` and `ProjectPersistence`.
-   - Slice 2 (Import & Ingestion Surface) is authorized and implemented: `importContent` wires `@openbook/importer` into the `IMPORT` stage with `new-project` and `append-sections` modes.
-   - Slice 3 (Asset Management & Media Boundary) is authorized and implemented: `MemoryAssetStore` is the default injectable `IAssetStore`; `ingestAsset` / atomic `insertImageBlock` run at `ASSETS`; existing-ref image blocks are authorable at `AUTHORING` and `ASSETS`; binaries stay out of SQLite.
-   - Slice 4 (Desktop Studio Book Doctor integration, ADR-0022) is authorized and implemented: `runValidation` / `getValidationReport` wire `@openbook/book-doctor` into the `VALIDATION` stage with ephemeral `BookValidationReport` caching, hard invalidation on mutation, and `PREVIEW` gating. This is not Gate 7 Slice 5 (ADR-0018 foundation, already on `main`).
-   - Slice 5 (desktop publishing/export, ADR-0023) is authorized and implemented: `exportEpub` / `exportHtml` / `exportPdf` generate in-memory artifacts during `PREVIEW` and `PUBLISH` with Phase 1 Book Doctor gating, mandatory EPUBCheck in `PUBLISH`, and no SQLite writes. Host-layer file dialogs and export UI remain out of scope.
-
-Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama; export UI.
+Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama; export UI; DTP/page-layout work.
 
 ## Explicitly out of order
 
