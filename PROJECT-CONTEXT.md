@@ -101,11 +101,18 @@ AI coding agents should read this file and the relevant ADRs before making mater
 
 ## Current known pending decisions
 
+Required next product capabilities (must not be dropped; separately gated — see `docs/IMPLEMENTATION-BACKLOG.md`):
+
+- Export UI and native Save As (Gate 9; engines already exist)
+- Filesystem project package (ADR-0029 Slices 2–6)
+- Autosave and crash recovery (after atomic package Save/Open)
+
+Other pending items:
+
 - Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012)
 - Bundled-font redistribution evidence (architecture policy exists in ADR-0028 Slice 3; font-by-font clearance remains evidence-dependent)
 - Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared (**not** declared)
-- ADR-0029 project-package implementation slices after the accepted architecture
-- Export UI / native file dialogs, autosave, AI/Ollama, and DTP/page layout (all separately gated)
+- AI/Ollama and DTP/page layout (future; must not displace the required three above)
 
 ## Important existing documents
 
