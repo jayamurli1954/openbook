@@ -2,10 +2,10 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-09-16
-- **Reconciled to:** `main` after ADR-0028 Slice 5 merge `8de6969068768cdb55029e720aebad53a50a04a1`
+- **Reconciled to:** `main` at `13f5b86` after ADR-0029 acceptance (#80) and Slice 1 contract proposal (#81)
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
-Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`.
+Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`, `docs/adr/0029-project-package-filesystem-persistence-architecture.md`.
 
 ```text
 FOUNDATION
@@ -56,6 +56,14 @@ RELEASE / COMPLIANCE (ADR-0028)
 ├── Reproducibility/compliance verification [DONE — ADR-0028 Slice 5 / PR #77]
 ├── ADR-0028 implementation closure         [DONE — reconciliation record; no production compliance certification]
 │
+PROJECT PACKAGE (ADR-0029)
+├── Project-package architecture           [DONE — ADR-0029 Accepted (#80); implementation separately gated]
+├── Slice 1 package contract & manifest    [PROPOSED on main (#81); implementation PR #82 open, not merged]
+├── Canonical Book persistence mapping     [NOT STARTED]
+├── Asset/package relationship             [NOT STARTED]
+├── Atomic Save/Open integration           [NOT STARTED]
+├── Integrity / migration / recovery       [NOT STARTED]
+│
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
 ├── typography                   [HarfBuzz/Pango/fonts PENDING; NOT STARTED]
@@ -93,6 +101,7 @@ Status against the ordered list:
 20. **Import, authoring, assets, and Book Doctor foundations (Gate 7 Slices 2–5)** — **DONE** (ADR-0015–ADR-0018; PRs #32, #34, #36, #38).
 21. **Gate 8 Desktop Studio Integration (Slices 1–5)** — **DONE** (ADR-0019–ADR-0023; PRs through #51; final merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`).
 22. **ADR-0028 Release & Compliance implementation (Slices 1–5)** — **DONE** (PRs #73–#77; final Slice 5 merge `8de6969068768cdb55029e720aebad53a50a04a1`).
+23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slice 1 contract proposed (#81). Implementation remains separately gated; do not treat the accepted ADR as a filesystem package.
 
 **Current Test Suite State:**
 - **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages at the Gate 8 Slice 5 merge checkpoint. ADR-0028 is documentation/schema-only and introduced no application test changes.
@@ -127,9 +136,9 @@ This reconciliation records the current governance state only. It does **not** d
 
 ## Next architectural decision points
 
-Gates 1 through 8 and ADR-0028's five implementation slices are now complete on `main` at the foundation/desktop/release-evidence level. The next work must be selected through a new architecture decision and explicit implementation authorization.
+Gates 1 through 8 and ADR-0028's five implementation slices are complete on `main`. ADR-0029 is Accepted architecture; its implementation slices remain separately gated.
 
-Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama; export UI; DTP/page-layout work.
+Remaining out of scope until separately authorized: autosave; cloud sync; project-package filesystem implementation (ADR-0029 slices after the accepted architecture); AI/Ollama; export UI / host file dialogs; DTP/page-layout work.
 
 ## Explicitly out of order
 
