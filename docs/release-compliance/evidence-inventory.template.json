@@ -1,0 +1,7 @@
+{
+  "$schema": "./evidence-inventory.schema.json",
+  "schemaVersion": "1.0",
+  "inventoryKind": "release-evidence-inventory",
+  "release": {},
+  "entries": []
+}
