@@ -1,0 +1,9 @@
+{
+  "$schema": "./reproducibility-verification.schema.json",
+  "schemaVersion": "1.0",
+  "verificationKind": "reproducibility-compliance-verification",
+  "sourceCommit": "",
+  "status": "unresolved",
+  "checks": [],
+  "environmentalLimitations": []
+}
