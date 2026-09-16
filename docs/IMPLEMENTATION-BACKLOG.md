@@ -2,7 +2,7 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-09-16
-- **Reconciled to:** `main` at `13f5b86` after ADR-0029 acceptance (#80) and Slice 1 contract proposal (#81)
+- **Reconciled to:** `main` at `fd4d0e8` after ADR-0029 Slice 1 merge (#82) and front-door docs (#83)
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`, `docs/adr/0029-project-package-filesystem-persistence-architecture.md`.
@@ -57,12 +57,17 @@ RELEASE / COMPLIANCE (ADR-0028)
 ├── ADR-0028 implementation closure         [DONE — reconciliation record; no production compliance certification]
 │
 PROJECT PACKAGE (ADR-0029)
-├── Project-package architecture           [DONE — ADR-0029 Accepted (#80); implementation separately gated]
-├── Slice 1 package contract & manifest    [PROPOSED on main (#81); implementation PR #82 open, not merged]
-├── Canonical Book persistence mapping     [NOT STARTED]
-├── Asset/package relationship             [NOT STARTED]
-├── Atomic Save/Open integration           [NOT STARTED]
-├── Integrity / migration / recovery       [NOT STARTED]
+├── Project-package architecture           [DONE — ADR-0029 Accepted (#80)]
+├── Slice 1 package contract & manifest    [DONE — PR #82; types/validation only, no on-disk package]
+├── Canonical Book persistence mapping     [REQUIRED; NOT STARTED — Slice 2]
+├── Asset/package relationship             [REQUIRED; NOT STARTED — Slice 3]
+├── Atomic Save/Open integration           [REQUIRED; NOT STARTED — Slice 4]
+├── Integrity / migration / recovery       [REQUIRED; NOT STARTED — Slices 5–6]
+│
+REQUIRED NEXT PRODUCT CAPABILITIES (must not be dropped; not authorized by this list)
+├── Export UI & native Save As             [REQUIRED — engines exist; host UI is Gate 9]
+├── Filesystem project package             [REQUIRED — ADR-0029 Slices 2–6]
+├── Autosave & crash recovery              [REQUIRED — after atomic package Save/Open]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -101,7 +106,8 @@ Status against the ordered list:
 20. **Import, authoring, assets, and Book Doctor foundations (Gate 7 Slices 2–5)** — **DONE** (ADR-0015–ADR-0018; PRs #32, #34, #36, #38).
 21. **Gate 8 Desktop Studio Integration (Slices 1–5)** — **DONE** (ADR-0019–ADR-0023; PRs through #51; final merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`).
 22. **ADR-0028 Release & Compliance implementation (Slices 1–5)** — **DONE** (PRs #73–#77; final Slice 5 merge `8de6969068768cdb55029e720aebad53a50a04a1`).
-23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slice 1 contract proposed (#81). Implementation remains separately gated; do not treat the accepted ADR as a filesystem package.
+23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slice 1 manifest contract **DONE** (#82). Slices 2–6 (real on-disk package, atomic Save/Open, integrity/recovery) remain required and separately gated.
+24. **Required next product capabilities** — export UI / native Save As; filesystem project package (ADR-0029 Slices 2–6); autosave & crash recovery. These are **not optional stretch goals**. They are gated, not forgotten. See below.
 
 **Current Test Suite State:**
 - **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages at the Gate 8 Slice 5 merge checkpoint. ADR-0028 is documentation/schema-only and introduced no application test changes.
@@ -134,11 +140,25 @@ The Contributor Readiness governance set is now reconciled as follows:
 
 This reconciliation records the current governance state only. It does **not** declare broader `FOUNDATION-GOVERNANCE-READY` or final project-wide Contributor Readiness status, and it authorizes no new implementation scope.
 
+## Required next product capabilities (must not be dropped)
+
+Maintainer direction 2026-09-16: these three are necessary for a usable OpenBook. Gating them is about *how* they are built, not *whether* they remain on the plan. Do not bury them under DTP, AI, or compliance follow-ons.
+
+| Capability | Why it is required | Current state | Next authorized unit |
+|---|---|---|---|
+| **Export UI & native Save As** | A person must get EPUB/HTML/PDF onto disk. Engines without a host path are not a product. | `DesktopStudioCoordinator.exportEpub/Html/Pdf` return in-memory bytes (ADR-0023). No Export menu, no Tauri dialog, no disk write. | Gate 9 ADR, then implementation. Includes Book Doctor surfacing and PREVIEW/PUBLISH gating already in the coordinator. |
+| **Filesystem project package** | Save/Open must be a versioned on-disk project, not an opaque SQLite-only session. | ADR-0029 Accepted. Slice 1 is types + fail-closed classification only. | Authorize ADR-0029 Slices 2–4 (Book mapping, assets, atomic Save/Open), then 5–6 (integrity/migration). |
+| **Autosave & crash recovery** | Losing work after the app is actually used is unacceptable. | Explicit Save only. | After atomic package Save/Open exists. Must use `ProjectPersistence` / the package boundary — no parallel save path, no persisted Tiptap JSON. |
+
+These items still require their own ADR/slice authorization before code. Recording them here is not that authorization.
+
+Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the three required capabilities above.
+
 ## Next architectural decision points
 
-Gates 1 through 8 and ADR-0028's five implementation slices are complete on `main`. ADR-0029 is Accepted architecture; its implementation slices remain separately gated.
+Gates 1 through 8 and ADR-0028's five implementation slices are complete on `main`. ADR-0029 Slice 1 is complete. The next *product* decisions are Gate 9 (export UI) and ADR-0029 Slices 2–4 (on-disk package), then autosave on that package.
 
-Remaining out of scope until separately authorized: autosave; cloud sync; project-package filesystem implementation (ADR-0029 slices after the accepted architecture); AI/Ollama; export UI / host file dialogs; DTP/page-layout work.
+Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 
 ## Explicitly out of order
 
@@ -150,5 +170,6 @@ Remaining out of scope until separately authorized: autosave; cloud sync; projec
 - Treating the PR #9 SQLite smoke DB as a production persistence schema
 - Letting Tiptap/ProseMirror JSON become a parallel canonical document model
 - Persisting Tiptap JSON into SQLite instead of the canonical Book Model
-- Adding autosave, cloud sync, or publishing engines under a Save/Open UX PR
-- Implementing Gate 8 export UI, host file dialogs, autosave, or cloud sync before those items are explicitly authorized
+- Adding autosave as a second save path, or persisting Tiptap JSON, instead of using the ADR-0029 package boundary
+- Implementing export UI, host file dialogs, the filesystem package, or autosave without their own explicit authorization
+- Treating DTP, AI/Ollama, or compliance evidence follow-ons as higher priority than the required three product capabilities

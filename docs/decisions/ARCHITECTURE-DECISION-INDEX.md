@@ -82,6 +82,8 @@ See also `docs/FOUNDATION-READINESS-REPORT.md`, `docs/FOUNDATION-READINESS-CLOSU
 - ~~Code of Conduct governance~~ — resolved by ADR-0026: **Accepted**; documented governance policy recorded
 - ~~Security disclosure and vulnerability response governance~~ — resolved by ADR-0027: **Accepted** and operational security policy implemented on `main` through PR #64
 - Whether `FOUNDATION-GOVERNANCE-READY` / `ROADMAP.md` `FOUNDATION-READY` can be declared (audit: **not passed**)
+- **Required next product capabilities (must not be dropped; not authorized by this index):** export UI / native Save As (Gate 9); filesystem project package (ADR-0029 Slices 2–6); autosave & crash recovery (after atomic package Save/Open). See `docs/IMPLEMENTATION-BACKLOG.md`.
+- AI/Ollama and DTP/page layout remain future work and must not displace the required three above
 - ~~Exact Tiptap/ProseMirror (editor) package versions~~ — resolved by ADR-0008 (OSS pins Frozen; implementation still gated)
 - ~~Frontend bundler (e.g. Vite) exact version~~ — Vite **8.2.2** recorded with the desktop shell (`apps/desktop`)
 - ~~Final Tauri / React / TypeScript / SQLite desktop baseline versions~~ — resolved by ADR-0007
