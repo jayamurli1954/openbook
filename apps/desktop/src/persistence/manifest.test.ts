@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: Apache-2.0
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { BOOK_MODEL_SCHEMA_VERSION } from "@openbook/book-model";
+import { OPENBOOK_APPLICATION_NAME, OPENBOOK_APPLICATION_VERSION, PROJECT_PACKAGE_VERSION, parseProjectPackageManifest, serializeProjectPackageManifest, validateProjectPackageManifest } from "./manifest.js";
+
+type TestManifest = { packageVersion: number; bookModelVersion: number; application: { name: string; version: string }; project: { id: string; name?: string } };
+const validManifest = (): TestManifest => ({ packageVersion: PROJECT_PACKAGE_VERSION, bookModelVersion: BOOK_MODEL_SCHEMA_VERSION, application: { name: OPENBOOK_APPLICATION_NAME, version: OPENBOOK_APPLICATION_VERSION }, project: { id: "project-001", name: "Example project" } });
+
+test("accepts a valid current manifest", () => { const result = validateProjectPackageManifest(validManifest()); assert.equal(result.compatibility, "compatible"); assert.equal(result.errors.length, 0); });
+test("serializes and parses deterministically", () => { const manifest = validManifest(); const serialized = serializeProjectPackageManifest(manifest); assert.equal(serialized, JSON.stringify(manifest)); assert.deepEqual(parseProjectPackageManifest(serialized), { compatibility: "compatible", errors: [], manifest }); });
+test("fails closed when required version metadata is missing", () => { const manifest = validManifest() as unknown as Record<string, unknown>; delete manifest.packageVersion; const result = validateProjectPackageManifest(manifest); assert.equal(result.compatibility, "malformed"); assert.equal(result.errors.some((error) => error.code === "INVALID_PACKAGE_VERSION"), true); });
+test("classifies malformed JSON as malformed", () => { const result = parseProjectPackageManifest("{not-json"); assert.equal(result.compatibility, "malformed"); assert.equal(result.errors[0]?.code, "MALFORMED_MANIFEST"); });
+test("classifies a future package version explicitly", () => { const manifest = validManifest(); manifest.packageVersion = PROJECT_PACKAGE_VERSION + 1; const result = validateProjectPackageManifest(manifest); assert.equal(result.compatibility, "unsupported-future-version"); assert.equal(result.errors[0]?.code, "UNSUPPORTED_FUTURE_VERSION"); });
+test("classifies an older recognized package version as migration-required", () => { const manifest = validManifest(); manifest.packageVersion = 0; const result = validateProjectPackageManifest(manifest); assert.equal(result.compatibility, "migration-required"); assert.equal(result.errors[0]?.code, "MIGRATION_REQUIRED"); });
+test("rejects an invalid project identity", () => { const manifest = validManifest(); manifest.project.id = "../unsafe"; const result = validateProjectPackageManifest(manifest); assert.equal(result.compatibility, "malformed"); assert.equal(result.errors[0]?.code, "INVALID_PROJECT_ID"); });
+test("rejects publishing-specific or renderer-specific fields", () => { const manifest = { ...validManifest(), epub: { spine: [] } } as unknown as Record<string, unknown>; const result = validateProjectPackageManifest(manifest); assert.equal(result.compatibility, "malformed"); assert.equal(result.errors[0]?.code, "MALFORMED_MANIFEST"); });
+test("contains no Tiptap/ProseMirror persistence field in the manifest contract", () => { const manifest = validManifest(); assert.equal("content" in manifest, false); assert.equal("editorState" in manifest, false); assert.equal("prosemirror" in manifest, false); assert.equal("tiptap" in manifest, false); });
+test("provides stable compatibility and error classifications", () => { const result = validateProjectPackageManifest({}); assert.equal(result.compatibility, "malformed"); assert.deepEqual(result.errors.map((error) => error.code), ["INVALID_PACKAGE_VERSION", "INVALID_BOOK_MODEL_VERSION", "INVALID_APPLICATION", "INVALID_PROJECT_ID"]); });
