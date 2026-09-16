@@ -1,6 +1,6 @@
 # ADR-0029: Project Package & Filesystem Persistence Architecture
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-09-16
 - **Decision owner:** SanMitra Tech Solutions
 - **Area:** Project persistence / Filesystem / Desktop architecture
@@ -151,7 +151,7 @@ This architecture intentionally provides stable boundaries for later decisions:
 
 ## 3. Explicit non-authorizations
 
-This ADR, while Proposed, does **not** authorize:
+This Accepted ADR does **not** authorize:
 
 - implementing the project-package format;
 - changing `ProjectPersistence` implementation;
@@ -180,9 +180,9 @@ This ADR, while Proposed, does **not** authorize:
 | Filesystem folder with arbitrary files and no manifest/version contract | Rejected; insufficient for deterministic compatibility and migration handling. |
 | Cloud-first project storage | Rejected for the local-first foundation; cloud sync requires a later dedicated architecture decision. |
 
-## 5. Acceptance criteria for a future Accepted version
+## 5. Acceptance criteria
 
-Before this ADR can become Accepted, review must confirm that it:
+Architecture acceptance confirms that this ADR:
 
 1. preserves ADR-0006 canonical Book Model authority;
 2. preserves ADR-0007 SQLite-as-persistence-infrastructure boundary;
@@ -197,7 +197,7 @@ Before this ADR can become Accepted, review must confirm that it:
 
 ## 6. Implementation sequencing after acceptance
 
-If accepted, implementation should be separately authorized and sliced rather than introduced as a monolithic persistence rewrite:
+Following acceptance, any implementation must be separately authorized and sliced rather than introduced as a monolithic persistence rewrite:
 
 1. project-package contract and manifest;
 2. canonical Book persistence mapping;
@@ -206,8 +206,8 @@ If accepted, implementation should be separately authorized and sliced rather th
 5. integrity and compatibility verification;
 6. migration/recovery tests.
 
-No item above is authorized by this Proposed ADR.
+No item above is authorized by this ADR.
 
 ## 7. Governance statement
 
-This ADR is a proposed architecture document only. Its presence does not authorize implementation. Any implementation must follow the repository's normal branch → PR → DCO/CI → review → explicit authorization sequence.
+This ADR records the accepted architecture only. Its acceptance does not authorize implementation. Any implementation must follow the repository's normal branch → PR → DCO/CI → review → explicit authorization sequence.
