@@ -2,10 +2,10 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-09-16
-- **Reconciled to:** `main` at Gate 8 Slice 5 merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`
+- **Reconciled to:** `main` after ADR-0028 Slice 5 merge `8de6969068768cdb55029e720aebad53a50a04a1`
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
-Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`.
+Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`.
 
 ```text
 FOUNDATION
@@ -48,6 +48,14 @@ END-TO-END WORKFLOW & FOUNDATION SLICES (GATE 7)
 DESKTOP INTEGRATION (GATE 8)
 ├── Desktop Studio integration   [DONE — Gate 8 Slices 1–5 implemented on main under ADR-0019 / ADR-0020 / ADR-0021 / ADR-0022 / ADR-0023]
 │
+RELEASE / COMPLIANCE (ADR-0028)
+├── Release evidence inventory model       [DONE — ADR-0028 Slice 1 / PR #73]
+├── Third-party notice maintenance         [DONE — ADR-0028 Slice 2 / PR #74]
+├── Font provenance & redistribution policy [DONE — ADR-0028 Slice 3 / PR #75; font-by-font clearance remains evidence-dependent]
+├── Release artifact manifest/evidence      [DONE — ADR-0028 Slice 4 / PR #76]
+├── Reproducibility/compliance verification [DONE — ADR-0028 Slice 5 / PR #77]
+├── ADR-0028 implementation closure         [DONE — reconciliation record; no production compliance certification]
+│
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
 ├── typography                   [HarfBuzz/Pango/fonts PENDING; NOT STARTED]
@@ -84,13 +92,27 @@ Status against the ordered list:
 19. **Workflow coordinator foundation (Gate 7 Slice 1)** — **DONE** (ADR-0014; PR #30).
 20. **Import, authoring, assets, and Book Doctor foundations (Gate 7 Slices 2–5)** — **DONE** (ADR-0015–ADR-0018; PRs #32, #34, #36, #38).
 21. **Gate 8 Desktop Studio Integration (Slices 1–5)** — **DONE** (ADR-0019–ADR-0023; PRs through #51; final merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`).
+22. **ADR-0028 Release & Compliance implementation (Slices 1–5)** — **DONE** (PRs #73–#77; final Slice 5 merge `8de6969068768cdb55029e720aebad53a50a04a1`).
 
 **Current Test Suite State:**
-- **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages at the Gate 8 Slice 5 merge checkpoint.
+- **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages at the Gate 8 Slice 5 merge checkpoint. ADR-0028 is documentation/schema-only and introduced no application test changes.
 
 ## Gate 8 closure status
 
 Gate 8 is **implementation-complete and reconciled on main** as of merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`. Slices 1–5 are implemented. This backlog reconciliation does not authorize any new implementation work.
+
+## ADR-0028 closure status
+
+ADR-0028 is **implementation-complete and reconciled on main** through PRs #73–#77. The five release/compliance evidence mechanisms are present, but production evidence population remains deliberately unresolved where authoritative evidence has not been established. See `docs/release-compliance/ADR-0028-CLOSURE-RECONCILIATION.md`.
+
+Open evidence limitations carried forward:
+
+- complete production dependency/third-party provenance inventory not asserted;
+- bundled-font redistribution remains evidence-dependent;
+- complete branch-protection configuration remains not independently re-verified because of the previously recorded GitHub API 403 limitation;
+- byte-for-byte release reproducibility is not claimed where environmental evidence is insufficient.
+
+This reconciliation does not declare `FOUNDATION-READY`, `FOUNDATION-GOVERNANCE-READY`, or project-wide release/compliance certification.
 
 ## Contributor Readiness closure
 
@@ -105,7 +127,7 @@ This reconciliation records the current governance state only. It does **not** d
 
 ## Next architectural decision points
 
-Gates 1 through 8 are now complete on `main` at the foundation/desktop integration level. The next work must be selected through a new architecture decision and explicit implementation authorization.
+Gates 1 through 8 and ADR-0028's five implementation slices are now complete on `main` at the foundation/desktop/release-evidence level. The next work must be selected through a new architecture decision and explicit implementation authorization.
 
 Remaining out of scope: autosave; cloud sync; filesystem project packages; AI/Ollama; export UI; DTP/page-layout work.
 
