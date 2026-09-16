@@ -1,6 +1,6 @@
 # ADR-0028: Release & Compliance Architecture
 
-- **Status:** Proposed
+- **Status:** Ready for Review
 - **Date:** 2026-09-16
 - **Decision owners:** Project Steward / Maintainer governance
 - **Related readiness record:** `docs/FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md`
@@ -186,4 +186,4 @@ This ADR does **not** authorize:
 
 ## Status
 
-**PROPOSED.** No implementation follows from this ADR until it is accepted and a separate explicit implementation authorization is provided.
+**READY FOR REVIEW.** No implementation follows from this ADR until it is accepted and a separate explicit implementation authorization is provided.
