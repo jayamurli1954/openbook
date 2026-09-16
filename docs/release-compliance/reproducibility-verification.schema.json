@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jayamurli1954/openbook/blob/main/docs/release-compliance/reproducibility-verification.schema.json",
+  "title": "OpenBook Reproducibility and Compliance Verification",
+  "description": "Schema for release-oriented reproducibility and compliance verification evidence. This contract is not an application or publishing source of truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "verificationKind", "status", "checks"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0" },
+    "verificationKind": { "type": "string", "const": "reproducibility-compliance-verification" },
+    "releaseId": { "type": "string", "minLength": 1 },
+    "sourceCommit": { "type": "string", "minLength": 1 },
+    "status": { "$ref": "#/$defs/status" },
+    "checks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/check" }
+    },
+    "environmentalLimitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "notes": { "type": "string" }
+  },
+  "$defs": {
+    "status": {
+      "type": "string",
+      "enum": ["verified", "verified-with-limitations", "unresolved", "failed"]
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "evidenceReferences": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}
