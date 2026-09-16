@@ -1,0 +1,10 @@
+{
+  "$schema": "./release-artifact-manifest.schema.json",
+  "schemaVersion": "1.0",
+  "manifestKind": "release-artifact-manifest",
+  "release": {
+    "sourceCommit": "",
+    "status": "unresolved"
+  },
+  "artifacts": []
+}
