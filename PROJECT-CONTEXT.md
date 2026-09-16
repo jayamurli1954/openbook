@@ -42,15 +42,15 @@ It must remain independent of EPUB OPF/manifest/spine structures and independent
 - Desktop shell: Tauri **2.11.5** (Frozen baseline, ADR-0007); `@tauri-apps/api` **2.11.1**, CLI **2.11.4**
 - Primary product language: TypeScript **5.9.3** (Frozen baseline, ADR-0007)
 - UI: React **19.2.8** / `react-dom` **19.2.8** (Frozen baseline, ADR-0007)
-- Semantic editor: Tiptap/ProseMirror direction (not Frozen)
+- Semantic editor: Tiptap/ProseMirror **3.31.3** OSS pins Frozen (ADR-0008)
 - Local database: SQLite via `tauri-plugin-sql` **2.4.1** (`sqlite`) — persistence infrastructure only; **not** the Book Model (ADR-0007)
 - Native/system layer: Rust selectively (within Tauri)
-- Local AI: Ollama (intent only; not authorized by ADR-0007)
+- Local AI: Ollama (intent only; not an MVP dependency; not authorized)
 - Cloud AI: optional
-- EPUB generation: OpenBook TypeScript engine
-- HTML generation: OpenBook semantic HTML/CSS engine
-- PDF: renderer adapter; final renderer **UNDECIDED** (bake-off pending)
-- EPUB validation: official EPUBCheck; bundled/private Java runtime strategy preferred (ADR-0005; unchanged by ADR-0007)
+- EPUB generation: OpenBook TypeScript engine (`@openbook/epub`, ADR-0009/0010)
+- HTML generation: OpenBook semantic HTML/CSS engine (`@openbook/html`, ADR-0011)
+- PDF: Typst **v0.15.1** production renderer (`@openbook/pdf`, ADR-0013)
+- EPUB validation: official EPUBCheck 5.3.0 with bundled Temurin 21 / `jlink` runtime (ADR-0005, ADR-0012)
 
 ## Publishing architecture
 
@@ -80,11 +80,12 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 
 ## Current architectural decisions
 
-- Apache-2.0 adopted for OpenBook core.
-- Contributor protection/attribution policy recorded.
-- Book Model remains canonical.
-- Publishing engine architecture is accepted direction; final PDF renderer remains pending bake-off.
-- Official EPUBCheck remains authoritative.
+- Apache-2.0 adopted for OpenBook core (ADR-0003).
+- DCO 1.1 is the contribution sign-off mechanism (ADR-0024). Code of Conduct: ADR-0026. Security disclosure: ADR-0027 / `SECURITY.md`.
+- Book Model remains canonical (ADR-0006). Tiptap JSON is never persisted.
+- Publishing engines for EPUB, HTML, and Typst PDF are implemented (Gates 1–6). Desktop Studio coordinator export APIs exist (ADR-0023); host export UI and file dialogs do not.
+- ADR-0028 established the release/compliance evidence layer; production inventory population and font-by-font clearance remain evidence-pending.
+- ADR-0029 accepted a versioned project-package boundary. Implementation is separately gated (Slice 1 contract is not a filesystem Save/Open).
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -100,23 +101,18 @@ AI coding agents should read this file and the relevant ADRs before making mater
 
 ## Current known pending decisions
 
-- Final PDF renderer (**UNDECIDED**)
-- Exact Temurin/runtime version, platforms, and `jlink` adoption (bundling *strategy* is Accepted in ADR-0005)
-- Bundled-font policy
-- Contributor agreement mechanism
-- Exact Tiptap/editor and frontend-bundler versions (desktop shell versions Frozen in ADR-0007)
-- Foundation governance readiness gate (see `docs/FOUNDATION-READINESS-REPORT.md` — not passed)
+- Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012)
+- Bundled-font redistribution evidence (architecture policy exists in ADR-0028 Slice 3; font-by-font clearance remains evidence-dependent)
+- Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared (**not** declared)
+- ADR-0029 project-package implementation slices after the accepted architecture
+- Export UI / native file dialogs, autosave, AI/Ollama, and DTP/page layout (all separately gated)
 
 ## Important existing documents
 
-- `docs/adr/0002-third-party-reference-and-licensing-boundary.md`
-- `docs/adr/0003-apache-2-license-and-contributor-protection.md`
-- `docs/adr/0004-publishing-engine-technology-architecture.md`
-- `docs/adr/0005-epubcheck-bundling-java-runtime-isolation.md`
-- `docs/adr/0006-book-model-executable-specification.md`
-- `docs/adr/0007-desktop-foundation-technology-baseline-and-freeze-lift.md`
-- `docs/governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md`
-- `docs/conversations/README.md`
-- `docs/conversations/2026-09-03-epubcheck-java-tauri.md`
 - `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`
-- `docs/FOUNDATION-READINESS-REPORT.md`
+- `docs/IMPLEMENTATION-BACKLOG.md`
+- `docs/FOUNDATION-READINESS-REPORT.md` (historical audit; not the current snapshot)
+- `docs/FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md`
+- `docs/governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md`
+- `SECURITY.md`
+- `CODE_OF_CONDUCT.md`

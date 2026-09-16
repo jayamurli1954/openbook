@@ -1,8 +1,8 @@
-# OpenBook Desktop Shell
+# OpenBook Desktop Studio
 
-Foundation scaffold for OpenBook Studio (`apps/desktop`).
+Desktop application for OpenBook Studio (`apps/desktop`).
 
-Authorized by **ADR-0007** freeze-lift only.
+Gate 8 domain integration is on `main` (ADR-0019–ADR-0023). Frozen desktop pins remain ADR-0007.
 
 ## Stack (Frozen pins)
 
@@ -38,10 +38,12 @@ Authorized by **ADR-0007** freeze-lift only.
   SQLite → ProjectPersistence → Book → BookSession → EditorAdapter → Tiptap
   ```
 
-  Tiptap JSON is **never** written to SQLite. Autosave, cloud sync, and
-  filesystem project packages remain out of scope.
-- Gate 8 Slices 2–5 (importer, assets, Book Doctor, EPUB/HTML/PDF
-  publishing UI) are not implemented in this slice.
+  Tiptap JSON is **never** written to SQLite. Autosave and cloud sync
+  remain out of scope. A versioned project-package boundary is Accepted
+  (ADR-0029) but not implemented as a filesystem Save/Open yet.
+- Gate 8 Slices 2–5 domain integration is implemented (import, assets,
+  Book Doctor, in-memory EPUB/HTML/PDF export). Host export UI, native
+  file dialogs, and Book Doctor panels are not implemented.
 - `@openbook/authoring` hashes IDs with `node:crypto`. The desktop Vite
   bundle aliases that module to `src/nodeCryptoShim.ts` so BookSession can
   run in the Tauri webview without changing Gate 7 packages.
