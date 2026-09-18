@@ -282,3 +282,7 @@ dd {
 .tiptap-surface a {
   color: #0b57d0;
 }
+
+.export-panel .project-actions {
+  margin-top: 0.15rem;
+}
