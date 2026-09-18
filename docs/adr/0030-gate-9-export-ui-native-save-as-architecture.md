@@ -1,6 +1,6 @@
 # ADR-0030: Gate 9 — Export UI & Native Save As Architecture
 
-- **Status:** Accepted
+- **Status:** Accepted; Gate 9 implementation Slices 1–5 complete
 - **Date:** 2026-09-18
 - **Gate:** Gate 9
 - **Area:** Desktop / Export / Native Filesystem Boundary
