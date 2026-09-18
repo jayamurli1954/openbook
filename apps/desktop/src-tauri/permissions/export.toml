@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-export-path-exists"
+description = "Allows checking whether a Gate 9 export destination path exists."
+commands.allow = ["export_path_exists"]
+
+[[permission]]
+identifier = "allow-export-write-atomically"
+description = "Allows atomic Gate 9 export artifact writes to dialog-selected destinations."
+commands.allow = ["export_write_atomically"]

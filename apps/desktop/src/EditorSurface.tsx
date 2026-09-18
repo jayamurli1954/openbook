@@ -23,6 +23,9 @@ import {
 } from "./domain/desktopStudioCoordinator";
 import { SqliteProjectPersistence } from "./persistence/sqlitePersistence";
 import type { ProjectSummary } from "./persistence/types";
+import { DesktopExportController } from "./host/desktopExportController";
+import { createTauriExportSaveHost } from "./host/createTauriExportSaveHost";
+import ExportPanel from "./ui/ExportPanel";
 import englishFixture from "./fixtures/english-tiptap.json";
 
 type ProjectionStatus = "idle" | "ok" | "error";
@@ -50,6 +53,14 @@ function createUiCoordinator(): DesktopStudioCoordinator {
 
 export default function EditorSurface() {
   const [coordinator] = useState(() => createUiCoordinator());
+  const [exportController] = useState(
+    () =>
+      new DesktopExportController({
+        exportSaveHost: createTauriExportSaveHost(coordinator),
+        getSuggestedTitle: () => coordinator.getBook().metadata.title || "Untitled Book",
+        getStage: () => coordinator.getState().stage,
+      }),
+  );
   const [studio, setStudio] = useState(() => coordinator.getState());
   const refresh = () => setStudio(coordinator.getState());
 
@@ -333,6 +344,14 @@ export default function EditorSurface() {
     }
   };
 
+  const onRunValidation = async () => {
+    if (!flushEditorIntoSession()) {
+      throw new Error("Cannot validate: editor content could not be applied.");
+    }
+    await coordinator.runValidation();
+    refresh();
+  };
+
   const onPickImportFile = (file: File | undefined) => {
     if (!file) return;
     const reader = new FileReader();
@@ -374,6 +393,7 @@ export default function EditorSurface() {
     }
   };
 
+  const validationReport = coordinator.getValidationReport();
   const binding = studio.binding;
 
   return (
@@ -474,6 +494,16 @@ export default function EditorSurface() {
           {importNote}
         </p>
       </div>
+
+      <ExportPanel
+        controller={exportController}
+        stage={studio.stage}
+        jobStatus={studio.jobStatus}
+        validationClean={
+          validationReport ? validationReport.summary.isClean : null
+        }
+        onRunValidation={onRunValidation}
+      />
 
       <div className="project-bar" aria-label="Project">
         <span className="project-binding" data-testid="project-binding">
