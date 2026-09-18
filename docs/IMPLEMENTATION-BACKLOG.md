@@ -65,7 +65,7 @@ PROJECT PACKAGE (ADR-0029)
 ├── Integrity / migration / recovery       [REQUIRED; NOT STARTED — Slices 5–6]
 │
 REQUIRED NEXT PRODUCT CAPABILITIES (must not be dropped; not authorized by this list)
-├── Export UI & native Save As             [REQUIRED — engines exist; host UI is Gate 9]
+├── Export UI & native Save As             [DONE on main — Gate 9 / ADR-0030 Slices 1–5]
 ├── Filesystem project package             [REQUIRED — ADR-0029 Slices 2–6]
 ├── Autosave & crash recovery              [REQUIRED — after atomic package Save/Open]
 │
@@ -107,7 +107,7 @@ Status against the ordered list:
 21. **Gate 8 Desktop Studio Integration (Slices 1–5)** — **DONE** (ADR-0019–ADR-0023; PRs through #51; final merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`).
 22. **ADR-0028 Release & Compliance implementation (Slices 1–5)** — **DONE** (PRs #73–#77; final Slice 5 merge `8de6969068768cdb55029e720aebad53a50a04a1`).
 23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slice 1 manifest contract **DONE** (#82). Slices 2–6 (real on-disk package, atomic Save/Open, integrity/recovery) remain required and separately gated.
-24. **Required next product capabilities** — export UI / native Save As; filesystem project package (ADR-0029 Slices 2–6); autosave & crash recovery. These are **not optional stretch goals**. They are gated, not forgotten. See below.
+24. **Required next product capabilities** — filesystem project package (ADR-0029 Slices 2–6); autosave & crash recovery. Gate 9 export UI / native Save As is **done** on `main`. These remaining items are **not optional stretch goals**. They are gated, not forgotten. See below.
 
 **Current Test Suite State:**
 - **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages at the Gate 8 Slice 5 merge checkpoint. ADR-0028 is documentation/schema-only and introduced no application test changes.
@@ -146,7 +146,7 @@ Maintainer direction 2026-09-16: these three are necessary for a usable OpenBook
 
 | Capability | Why it is required | Current state | Next authorized unit |
 |---|---|---|---|
-| **Export UI & native Save As** | A person must get EPUB/HTML/PDF onto disk. Engines without a host path are not a product. | `DesktopStudioCoordinator.exportEpub/Html/Pdf` return in-memory bytes (ADR-0023). No Export menu, no Tauri dialog, no disk write. | Gate 9 ADR, then implementation. Includes Book Doctor surfacing and PREVIEW/PUBLISH gating already in the coordinator. |
+| **Export UI & native Save As** | A person must get EPUB/HTML/PDF onto disk. Engines without a host path are not a product. | **Done on `main`:** Gate 9 Slices 1–5 under ADR-0030 (export host, Save-As host, wiring, React UI + Tauri dialog/atomic writes, E2E verification). | Closed. Follow-ups only via new authorization (e.g. packaging Gate 10). |
 | **Filesystem project package** | Save/Open must be a versioned on-disk project, not an opaque SQLite-only session. | ADR-0029 Accepted. Slice 1 is types + fail-closed classification only. | Authorize ADR-0029 Slices 2–4 (Book mapping, assets, atomic Save/Open), then 5–6 (integrity/migration). |
 | **Autosave & crash recovery** | Losing work after the app is actually used is unacceptable. | Explicit Save only. | After atomic package Save/Open exists. Must use `ProjectPersistence` / the package boundary — no parallel save path, no persisted Tiptap JSON. |
 
@@ -156,7 +156,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the th
 
 ## Next architectural decision points
 
-Gates 1 through 8 and ADR-0028's five implementation slices are complete on `main`. ADR-0029 Slice 1 is complete. The next *product* decisions are Gate 9 (export UI) and ADR-0029 Slices 2–4 (on-disk package), then autosave on that package.
+Gates 1 through 9 and ADR-0028's five implementation slices are complete on `main`. ADR-0029 Slice 1 is complete. The next *product* decisions are ADR-0029 Slices 2–4 (on-disk package), then autosave on that package. Gate 10 packaging/release readiness remains separately gated.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 
@@ -171,5 +171,6 @@ Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-
 - Letting Tiptap/ProseMirror JSON become a parallel canonical document model
 - Persisting Tiptap JSON into SQLite instead of the canonical Book Model
 - Adding autosave as a second save path, or persisting Tiptap JSON, instead of using the ADR-0029 package boundary
-- Implementing export UI, host file dialogs, the filesystem package, or autosave without their own explicit authorization
+- Implementing the filesystem package or autosave without their own explicit authorization
+- Reopening Gate 9 export work without a new ADR/authorization after Gate 9 closure
 - Treating DTP, AI/Ollama, or compliance evidence follow-ons as higher priority than the required three product capabilities
