@@ -5,5 +5,6 @@
 export * from "./types.js";
 export * from "./dto.js";
 export * from "./manifest.js";
+export * from "./bookPackageMapping.js";
 export * from "./sqliteDriver.js";
 export * from "./sqlitePersistence.js";
