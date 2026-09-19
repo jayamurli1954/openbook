@@ -10,6 +10,7 @@
  * Slice 4 (ADR-0022) adds @openbook/book-doctor ValidationCoordinator.
  * Slice 5 (ADR-0023) adds EPUB/HTML/PDF export orchestration.
  * ADR-0031 Slice 3 binds package-root autosave (dirty hooks) without dual-write.
+ * ADR-0031 Slice 5 unifies explicit Save: package-first when bound, then SQLite index.
  */
 import {
   BOOK_MODEL_SCHEMA_VERSION,
@@ -83,6 +84,7 @@ import {
 } from "../persistence/packageAutosavePort.js";
 import {
   openProjectPackage,
+  saveProjectPackage,
   type ProjectPackageOpenOptions,
   type ProjectPackageSaveInput,
 } from "../persistence/projectPackageFs.js";
@@ -353,7 +355,9 @@ export class DesktopStudioError extends Error {
     | "PACKAGE_RECOVERY_REQUIRED"
     | "PACKAGE_RECOVERY_FAILED"
     | "PACKAGE_RECOVERY_AMBIGUOUS"
-    | "PACKAGE_RECOVERY_UNAVAILABLE";
+    | "PACKAGE_RECOVERY_UNAVAILABLE"
+    | "PACKAGE_SAVE_FAILED"
+    | "PACKAGE_INDEX_SYNC_FAILED";
 
   constructor(code: DesktopStudioError["code"], message: string) {
     super(message);
@@ -421,6 +425,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   #validatedRevision: number | null;
   #packageRoot: string | null;
   readonly #autosave: AutosaveController;
+  readonly #packageSave: PackageAutosaveSaveFn;
   #packageProjectId: string;
 
   constructor(options: DesktopStudioCoordinatorOptions) {
@@ -438,6 +443,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     this.#validatedRevision = null;
     this.#packageRoot = null;
     this.#packageProjectId = createProjectId("pkg");
+    this.#packageSave = options.packageSave ?? saveProjectPackage;
     this.#autosave = new AutosaveController({
       debounceMs: options.autosaveDebounceMs ?? 2000,
       clock: options.autosaveClock,
@@ -445,7 +451,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         binding: {
           resolveSaveInput: () => this.#resolvePackageSaveInput(),
         },
-        save: options.packageSave,
+        save: this.#packageSave,
       }),
     });
     const book = options.book ?? createDesktopDraftBook({ title: "Untitled Project" });
@@ -719,10 +725,29 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       }
     }
 
+    // Prefer the Save name for any package commit that follows.
+    this.#pendingName = name;
+
     const book = this.#session.getBook();
     const project = this.#buildProject(book, name);
+
+    // ADR-0031 Slice 5: when a package root is bound, the filesystem package is
+    // authoritative. Commit it first; only then sync the SQLite session index.
+    // Unbound sessions remain SQLite-only (no invented package path).
+    if (this.#packageRoot !== null) {
+      await this.#commitBoundPackage();
+    }
+
     const saved = await this.#persistence.saveProject(project);
     if (!saved.ok) {
+      if (this.#packageRoot !== null) {
+        // Package already committed — report index sync failure without rolling
+        // back durable package bytes (atomic package Save already completed).
+        throw new DesktopStudioError(
+          "PACKAGE_INDEX_SYNC_FAILED",
+          `Project package was saved, but the SQLite session index failed: ${saved.error.message}`,
+        );
+      }
       throw new DesktopStudioError(saved.error.code, saved.error.message);
     }
 
@@ -733,6 +758,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     };
     this.#pendingName = project.metadata.name;
     this.#session.markSaved();
+    this.#autosave.markClean();
     return saved.value;
   }
 
@@ -1444,8 +1470,8 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     }
     const projectId = this.#binding?.projectId ?? this.#packageProjectId;
     const name =
-      this.#binding?.projectName?.trim() ||
       this.#pendingName.trim() ||
+      this.#binding?.projectName?.trim() ||
       book.metadata.title.trim() ||
       "Untitled Project";
     return {
@@ -1455,6 +1481,33 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       assetBindings,
       assetStore: this.#assetStore,
     };
+  }
+
+  /**
+   * Commit the bound ADR-0029 package. Always writes (unlike autosave flush,
+   * which no-ops when clean). Fail-closed: does not touch SQLite.
+   */
+  async #commitBoundPackage(): Promise<void> {
+    const input = this.#resolvePackageSaveInput();
+    if (input === null) {
+      throw new DesktopStudioError(
+        "PACKAGE_ROOT_INVALID",
+        "Cannot commit package Save without a bound project package root.",
+      );
+    }
+    let result;
+    try {
+      result = await this.#packageSave(input);
+    } catch (err: unknown) {
+      throw new DesktopStudioError(
+        "PACKAGE_SAVE_FAILED",
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+    if (!result.ok) {
+      throw new DesktopStudioError("PACKAGE_SAVE_FAILED", result.error.message);
+    }
+    this.#autosave.markClean();
   }
 
   #clearValidationReport(): void {

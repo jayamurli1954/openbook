@@ -24,6 +24,7 @@
     "src/domain/desktopStudioCoordinator.publish.test.ts",
     "src/domain/desktopStudioCoordinator.autosave.test.ts",
     "src/domain/desktopStudioCoordinator.recovery.test.ts",
+    "src/domain/desktopStudioCoordinator.save-unify.test.ts",
     "src/domain/publishingNodeHost.ts"
   ]
 }
