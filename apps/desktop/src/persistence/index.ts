@@ -12,5 +12,6 @@ export * from "./projectPackageFs.js";
 export * from "./projectPackageMigration.js";
 export * from "./projectPackageRecovery.js";
 export * from "./autosaveController.js";
+export * from "./packageAutosavePort.js";
 export * from "./sqliteDriver.js";
 export * from "./sqlitePersistence.js";
