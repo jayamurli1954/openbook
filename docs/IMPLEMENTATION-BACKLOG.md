@@ -59,8 +59,8 @@ RELEASE / COMPLIANCE (ADR-0028)
 PROJECT PACKAGE (ADR-0029)
 ├── Project-package architecture           [DONE — ADR-0029 Accepted (#80)]
 ├── Slice 1 package contract & manifest    [DONE — PR #82; types/validation only, no on-disk package]
-├── Canonical Book persistence mapping     [IN PROGRESS — Slice 2; Book ↔ package payload mapping only]
-├── Asset/package relationship             [REQUIRED; NOT STARTED — Slice 3]
+├── Canonical Book persistence mapping     [DONE — Slice 2 / PR #93; Book ↔ package payload only]
+├── Asset/package relationship             [IN PROGRESS — Slice 3; id↔SHA-256 index only]
 ├── Atomic Save/Open integration           [REQUIRED; NOT STARTED — Slice 4]
 ├── Integrity / migration / recovery       [REQUIRED; NOT STARTED — Slices 5–6]
 │
@@ -106,7 +106,7 @@ Status against the ordered list:
 20. **Import, authoring, assets, and Book Doctor foundations (Gate 7 Slices 2–5)** — **DONE** (ADR-0015–ADR-0018; PRs #32, #34, #36, #38).
 21. **Gate 8 Desktop Studio Integration (Slices 1–5)** — **DONE** (ADR-0019–ADR-0023; PRs through #51; final merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`).
 22. **ADR-0028 Release & Compliance implementation (Slices 1–5)** — **DONE** (PRs #73–#77; final Slice 5 merge `8de6969068768cdb55029e720aebad53a50a04a1`).
-23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slice 1 manifest contract **DONE** (#82). Slice 2 canonical Book persistence mapping **in progress**. Slices 3–6 (assets, atomic Save/Open, integrity/recovery) remain required and separately gated.
+23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slice 1 manifest contract **DONE** (#82). Slice 2 canonical Book persistence mapping **DONE** (#93). Slice 3 asset/package relationship **in progress**. Slices 4–6 (atomic Save/Open, integrity/recovery) remain required and separately gated.
 24. **Required next product capabilities** — filesystem project package (ADR-0029 Slices 2–6); autosave & crash recovery. Gate 9 export UI / native Save As is **done** on `main`. These remaining items are **not optional stretch goals**. They are gated, not forgotten. See below.
 
 **Current Test Suite State:**
@@ -147,7 +147,7 @@ Maintainer direction 2026-09-16: these three are necessary for a usable OpenBook
 | Capability | Why it is required | Current state | Next authorized unit |
 |---|---|---|---|
 | **Export UI & native Save As** | A person must get EPUB/HTML/PDF onto disk. Engines without a host path are not a product. | **Done on `main`:** Gate 9 Slices 1–5 under ADR-0030 (export host, Save-As host, wiring, React UI + Tauri dialog/atomic writes, E2E verification). | Closed. Follow-ups only via new authorization (e.g. packaging Gate 10). |
-| **Filesystem project package** | Save/Open must be a versioned on-disk project, not an opaque SQLite-only session. | ADR-0029 Accepted. Slice 1 done (#82). Slice 2 Book↔package mapping in progress. | Complete Slice 2, then Slices 3–4 (assets, atomic Save/Open), then 5–6 (integrity/migration). |
+| **Filesystem project package** | Save/Open must be a versioned on-disk project, not an opaque SQLite-only session. | ADR-0029 Accepted. Slices 1–2 done (#82, #93). Slice 3 asset index in progress. | Complete Slice 3, then Slice 4 (atomic Save/Open), then 5–6 (integrity/migration). |
 | **Autosave & crash recovery** | Losing work after the app is actually used is unacceptable. | Explicit Save only. | After atomic package Save/Open exists. Must use `ProjectPersistence` / the package boundary — no parallel save path, no persisted Tiptap JSON. |
 
 These items still require their own ADR/slice authorization before code. Recording them here is not that authorization.
@@ -156,7 +156,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the th
 
 ## Next architectural decision points
 
-Gates 1 through 9 and ADR-0028's five implementation slices are complete on `main`. ADR-0029 Slice 1 is complete. The next *product* decisions are ADR-0029 Slices 2–4 (on-disk package), then autosave on that package. Gate 10 packaging/release readiness remains separately gated.
+Gates 1 through 9 and ADR-0028's five implementation slices are complete on `main`. ADR-0029 Slices 1–2 are complete. Slice 3 (asset/package relationship) is in progress. Next: Slice 4 atomic Save/Open, then autosave on that package. Gate 10 packaging/release readiness remains separately gated.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 
