@@ -81,7 +81,16 @@ import {
   PackageAutosavePort,
   type PackageAutosaveSaveFn,
 } from "../persistence/packageAutosavePort.js";
-import type { ProjectPackageSaveInput } from "../persistence/projectPackageFs.js";
+import {
+  openProjectPackage,
+  type ProjectPackageOpenOptions,
+  type ProjectPackageSaveInput,
+} from "../persistence/projectPackageFs.js";
+import {
+  discoverProjectPackageRecovery,
+  recoverProjectPackage,
+  type ProjectPackageRecoveryDiscovery,
+} from "../persistence/projectPackageRecovery.js";
 import {
   defaultPdfPublisher,
   productionValidatorService,
@@ -287,6 +296,35 @@ export interface IDesktopStudioCoordinator {
   getPackageRoot(): string | null;
   getAutosaveStatus(): AutosaveStatus;
   flushAutosave(): Promise<AutosaveSaveResult>;
+
+  /** ADR-0031 Slice 4: discover backup/recover options (read-only). */
+  discoverPackageRecovery(projectRoot: string): Promise<ProjectPackageRecoveryDiscovery>;
+  /**
+   * Open a filesystem project package into the studio session.
+   * Recovery is never silent — pass an explicit `recover` policy when needed.
+   */
+  openFromProjectPackage(
+    projectRoot: string,
+    options?: OpenFromProjectPackageOptions,
+  ): Promise<OpenFromProjectPackageResult>;
+}
+
+/** Explicit recover policy for open-with-recover (ADR-0031 Slice 4). */
+export type PackageRecoverPolicy =
+  | { mode: "none" }
+  | { mode: "restore-if-live-missing"; backupRoot?: string }
+  | { mode: "force-replace"; backupRoot?: string };
+
+export interface OpenFromProjectPackageOptions {
+  allowMigration?: boolean;
+  /** Defaults to `{ mode: "none" }` — never recovers without caller intent. */
+  recover?: PackageRecoverPolicy;
+}
+
+export interface OpenFromProjectPackageResult {
+  projectRoot: string;
+  recovered: boolean;
+  restoredFrom?: string;
 }
 
 export class DesktopStudioError extends Error {
@@ -310,7 +348,12 @@ export class DesktopStudioError extends Error {
     | "RENDERER_COMPILER_FAILED"
     | "PUBLISH_FAILED"
     | "OPERATION_ABORTED"
-    | "PACKAGE_ROOT_INVALID";
+    | "PACKAGE_ROOT_INVALID"
+    | "PACKAGE_OPEN_FAILED"
+    | "PACKAGE_RECOVERY_REQUIRED"
+    | "PACKAGE_RECOVERY_FAILED"
+    | "PACKAGE_RECOVERY_AMBIGUOUS"
+    | "PACKAGE_RECOVERY_UNAVAILABLE";
 
   constructor(code: DesktopStudioError["code"], message: string) {
     super(message);
@@ -354,7 +397,13 @@ export type DesktopStudioCoordinatorOptions = {
 export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   readonly #persistence: ProjectPersistence;
   readonly #now: () => string;
-  readonly #assetStoreInjected: boolean;
+  /** True when the constructor supplied an external asset store. */
+  readonly #constructorAssetStore: boolean;
+  /**
+   * True when the live asset store must not be replaced by a fresh MemoryAssetStore
+   * (constructor-injected or bound from a package open).
+   */
+  #assetStorePinned: boolean;
   #idSeed: string;
   #session: BookSession;
   #workflow: WorkflowCoordinator;
@@ -377,7 +426,8 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   constructor(options: DesktopStudioCoordinatorOptions) {
     this.#persistence = options.persistence;
     this.#now = options.now ?? (() => new Date().toISOString());
-    this.#assetStoreInjected = options.assetStore !== undefined;
+    this.#constructorAssetStore = options.assetStore !== undefined;
+    this.#assetStorePinned = this.#constructorAssetStore;
     this.#assetStore = options.assetStore ?? new MemoryAssetStore();
     this.#bindAssetPipeline();
     this.#validationCoordinator =
@@ -598,6 +648,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       createDesktopDraftBook({ title, language }),
       title,
     );
+    this.#assetStorePinned = this.#constructorAssetStore;
     this.#resetAssetRuntime();
     this.#binding = null;
     this.#pendingName = title;
@@ -630,6 +681,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       }
       throw err;
     }
+    this.#assetStorePinned = this.#constructorAssetStore;
     this.#resetAssetRuntime();
 
     this.#binding = {
@@ -814,6 +866,190 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
 
   async flushAutosave(): Promise<AutosaveSaveResult> {
     return this.#autosave.flush();
+  }
+
+  async discoverPackageRecovery(
+    projectRoot: string,
+  ): Promise<ProjectPackageRecoveryDiscovery> {
+    const root = projectRoot.trim();
+    if (!root) {
+      throw new DesktopStudioError(
+        "PACKAGE_ROOT_INVALID",
+        "Package root path is required for recovery discovery.",
+      );
+    }
+    const discovered = await discoverProjectPackageRecovery(root);
+    if (!discovered.ok) {
+      throw new DesktopStudioError("PACKAGE_OPEN_FAILED", discovered.error.message);
+    }
+    return discovered.value;
+  }
+
+  async openFromProjectPackage(
+    projectRoot: string,
+    options: OpenFromProjectPackageOptions = {},
+  ): Promise<OpenFromProjectPackageResult> {
+    const root = projectRoot.trim();
+    if (!root) {
+      throw new DesktopStudioError(
+        "PACKAGE_ROOT_INVALID",
+        "Package root path is required to open a project package.",
+      );
+    }
+
+    const recoverPolicy: PackageRecoverPolicy = options.recover ?? { mode: "none" };
+    let recovered = false;
+    let restoredFrom: string | undefined;
+
+    if (recoverPolicy.mode !== "none") {
+      const discovery = await this.discoverPackageRecovery(root);
+
+      if (recoverPolicy.mode === "restore-if-live-missing") {
+        if (discovery.status === "live-ready") {
+          // Live package present — open as-is; do not replace without force.
+        } else if (discovery.status === "recoverable") {
+          const backupRoot = recoverPolicy.backupRoot ?? discovery.backupRoot;
+          const recoveredResult = await recoverProjectPackage({
+            projectRoot: root,
+            backupRoot,
+          });
+          if (!recoveredResult.ok) {
+            throw new DesktopStudioError(
+              "PACKAGE_RECOVERY_FAILED",
+              recoveredResult.error.message,
+            );
+          }
+          recovered = true;
+          restoredFrom = recoveredResult.value.restoredFrom;
+        } else if (discovery.status === "ambiguous") {
+          if (!recoverPolicy.backupRoot) {
+            throw new DesktopStudioError(
+              "PACKAGE_RECOVERY_AMBIGUOUS",
+              "Multiple backups found; pass recover.backupRoot explicitly.",
+            );
+          }
+          const recoveredResult = await recoverProjectPackage({
+            projectRoot: root,
+            backupRoot: recoverPolicy.backupRoot,
+          });
+          if (!recoveredResult.ok) {
+            throw new DesktopStudioError(
+              "PACKAGE_RECOVERY_FAILED",
+              recoveredResult.error.message,
+            );
+          }
+          recovered = true;
+          restoredFrom = recoveredResult.value.restoredFrom;
+        } else {
+          throw new DesktopStudioError(
+            "PACKAGE_RECOVERY_UNAVAILABLE",
+            discovery.message,
+          );
+        }
+      } else if (recoverPolicy.mode === "force-replace") {
+        const backupRoot =
+          recoverPolicy.backupRoot ??
+          (discovery.status === "recoverable"
+            ? discovery.backupRoot
+            : discovery.status === "live-ready" || discovery.status === "ambiguous"
+              ? discovery.backups[0]
+              : undefined);
+        if (!backupRoot) {
+          throw new DesktopStudioError(
+            "PACKAGE_RECOVERY_UNAVAILABLE",
+            "No backup is available to force-replace the live package.",
+          );
+        }
+        if (
+          (discovery.status === "ambiguous" || discovery.status === "live-ready") &&
+          discovery.backups.length > 1 &&
+          !recoverPolicy.backupRoot
+        ) {
+          throw new DesktopStudioError(
+            "PACKAGE_RECOVERY_AMBIGUOUS",
+            "Multiple backups found; pass recover.backupRoot explicitly.",
+          );
+        }
+        const recoveredResult = await recoverProjectPackage({
+          projectRoot: root,
+          backupRoot,
+          forceReplaceCorruptLive: true,
+        });
+        if (!recoveredResult.ok) {
+          throw new DesktopStudioError(
+            "PACKAGE_RECOVERY_FAILED",
+            recoveredResult.error.message,
+          );
+        }
+        recovered = true;
+        restoredFrom = recoveredResult.value.restoredFrom;
+      }
+    } else {
+      // Explicit none: if live is missing but a backup exists, refuse silent recover.
+      const discovery = await this.discoverPackageRecovery(root);
+      if (discovery.status === "recoverable" || discovery.status === "ambiguous") {
+        throw new DesktopStudioError(
+          "PACKAGE_RECOVERY_REQUIRED",
+          "Live project package is missing; pass an explicit recover policy to restore from backup.",
+        );
+      }
+      if (discovery.status === "unavailable") {
+        throw new DesktopStudioError("PACKAGE_OPEN_FAILED", discovery.message);
+      }
+    }
+
+    const openOptions: ProjectPackageOpenOptions = {};
+    if (options.allowMigration) {
+      openOptions.allowMigration = true;
+    }
+    const opened = await openProjectPackage(root, openOptions);
+    if (!opened.ok) {
+      throw new DesktopStudioError("PACKAGE_OPEN_FAILED", opened.error.message);
+    }
+
+    const { book, manifest, assetBindings, assetStore } = opened.value;
+    const projectName =
+      manifest.project.name?.trim() || book.metadata.title.trim() || "Untitled Project";
+
+    try {
+      this.#replaceSession(book, projectName);
+    } catch (err) {
+      if (
+        err instanceof InvalidStructureOperationError ||
+        err instanceof DomainValidationError
+      ) {
+        throw new DesktopStudioError("SESSION_REBUILD_FAILED", err.message);
+      }
+      throw err;
+    }
+
+    this.#assetStore = assetStore;
+    this.#assetStorePinned = true;
+    this.#bindAssetPipeline();
+    for (const [assetId, sha256] of assetBindings) {
+      this.#assetRegistry.register(assetId, sha256);
+    }
+
+    this.#binding = {
+      projectId: manifest.project.id,
+      projectName,
+      createdAt: this.#now(),
+    };
+    this.#pendingName = projectName;
+    this.#packageProjectId = manifest.project.id;
+    this.#workflow = new WorkflowCoordinator();
+    this.#session.markSaved();
+    this.bindPackageRoot(opened.value.projectRoot);
+    this.#autosave.markClean();
+
+    const result: OpenFromProjectPackageResult = {
+      projectRoot: opened.value.projectRoot,
+      recovered,
+    };
+    if (restoredFrom !== undefined) {
+      result.restoredFrom = restoredFrom;
+    }
+    return result;
   }
 
   async importContent(
@@ -1107,7 +1343,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   }
 
   #resetAssetRuntime(): void {
-    if (!this.#assetStoreInjected) {
+    if (!this.#assetStorePinned) {
       this.#assetStore = new MemoryAssetStore();
     }
     this.#bindAssetPipeline();

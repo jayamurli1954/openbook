@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * ADR-0029 Slice 6: project-package recovery from last known-good backup.
+ * ADR-0029 Slice 6 + ADR-0031 Slice 4: project-package recovery from last
+ * known-good backup, plus discovery for explicit open-with-recover policy.
  *
  * Restores an existing `.openbook-backup-*` sibling tree. Never invents Book
  * content or rewrites digests to match corrupted files.
@@ -33,6 +34,39 @@ export interface ProjectPackageRecoverSummary {
   restoredFrom: string;
 }
 
+/**
+ * ADR-0031 Slice 4: discovery snapshot for recover / discard UI and coordinator
+ * open-with-recover. Never mutates the filesystem.
+ */
+export type ProjectPackageRecoveryDiscovery =
+  | {
+      status: "live-ready";
+      projectRoot: string;
+      liveExists: true;
+      backups: string[];
+    }
+  | {
+      status: "recoverable";
+      projectRoot: string;
+      liveExists: boolean;
+      backupRoot: string;
+      backups: string[];
+    }
+  | {
+      status: "ambiguous";
+      projectRoot: string;
+      liveExists: boolean;
+      backups: string[];
+    }
+  | {
+      status: "unavailable";
+      projectRoot: string;
+      liveExists: boolean;
+      backups: [];
+      reason: "no-backup";
+      message: string;
+    };
+
 function fail(
   code: ProjectPackageRecoveryErrorCode,
   message: string,
@@ -50,9 +84,14 @@ async function pathExists(target: string): Promise<boolean> {
   }
 }
 
-async function discoverBackup(
-  projectRoot: string,
-): Promise<ProjectPackageFsResult<string>> {
+/**
+ * List sibling `.openbook-backup-*` directories for a project package root.
+ * Sorted for stable presentation; does not recover or open.
+ */
+export async function listProjectPackageBackups(
+  projectRootInput: string,
+): Promise<ProjectPackageFsResult<string[]>> {
+  const projectRoot = path.resolve(projectRootInput);
   const parent = path.dirname(projectRoot);
   const base = path.basename(projectRoot);
   const prefix = `${base}.openbook-backup-`;
@@ -76,7 +115,16 @@ async function discoverBackup(
       // ignore unreadable entries
     }
   }
+  matches.sort();
+  return { ok: true, value: matches };
+}
 
+async function discoverBackup(
+  projectRoot: string,
+): Promise<ProjectPackageFsResult<string>> {
+  const listed = await listProjectPackageBackups(projectRoot);
+  if (!listed.ok) return listed;
+  const matches = listed.value;
   if (matches.length === 0) {
     return fail(
       "RECOVERY_BACKUP_MISSING",
@@ -84,7 +132,6 @@ async function discoverBackup(
     );
   }
   if (matches.length > 1) {
-    matches.sort();
     return fail(
       "RECOVERY_AMBIGUOUS_BACKUP",
       "Multiple sibling backups found; pass backupRoot explicitly.",
@@ -92,6 +139,69 @@ async function discoverBackup(
     );
   }
   return { ok: true, value: matches[0]! };
+}
+
+/**
+ * Discover whether a project package can be opened or needs an explicit recover
+ * choice. Read-only — does not rename or delete anything.
+ */
+export async function discoverProjectPackageRecovery(
+  projectRootInput: string,
+): Promise<ProjectPackageFsResult<ProjectPackageRecoveryDiscovery>> {
+  const projectRoot = path.resolve(projectRootInput);
+  const liveExists = await pathExists(projectRoot);
+  const listed = await listProjectPackageBackups(projectRoot);
+  if (!listed.ok) return listed;
+  const backups = listed.value;
+
+  if (liveExists) {
+    return {
+      ok: true,
+      value: {
+        status: "live-ready",
+        projectRoot,
+        liveExists: true,
+        backups,
+      },
+    };
+  }
+
+  if (backups.length === 1) {
+    return {
+      ok: true,
+      value: {
+        status: "recoverable",
+        projectRoot,
+        liveExists: false,
+        backupRoot: backups[0]!,
+        backups,
+      },
+    };
+  }
+
+  if (backups.length > 1) {
+    return {
+      ok: true,
+      value: {
+        status: "ambiguous",
+        projectRoot,
+        liveExists: false,
+        backups,
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      status: "unavailable",
+      projectRoot,
+      liveExists: false,
+      backups: [],
+      reason: "no-backup",
+      message: "Live project package is missing and no sibling backup is available.",
+    },
+  };
 }
 
 /**
