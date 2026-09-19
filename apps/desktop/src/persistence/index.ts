@@ -7,5 +7,6 @@ export * from "./dto.js";
 export * from "./manifest.js";
 export * from "./bookPackageMapping.js";
 export * from "./packageAssetMapping.js";
+export * from "./projectPackageFs.js";
 export * from "./sqliteDriver.js";
 export * from "./sqlitePersistence.js";
