@@ -7,6 +7,11 @@ import path from "node:path";
 import { test } from "node:test";
 import { MemoryAssetStore, sha256Hex } from "@openbook/assets";
 import { BOOK_MODEL_SCHEMA_VERSION, createBook, type Book } from "@openbook/book-model";
+import { PACKAGE_INTEGRITY_FILE } from "./packageIntegrity.js";
+import {
+  buildPackageIntegrityEvidence,
+  serializePackageIntegrityEvidence,
+} from "./packageIntegrity.js";
 import {
   PACKAGE_ASSETS_DIR,
   PACKAGE_ASSETS_INDEX_FILE,
@@ -17,6 +22,20 @@ import {
   packageAssetsDirectory,
   saveProjectPackage,
 } from "./projectPackageFs.js";
+
+async function rewriteIntegrity(
+  projectRoot: string,
+  parts: {
+    "manifest.json": string;
+    "book.json": string;
+    "assets.json": string;
+  },
+): Promise<void> {
+  await writeFile(
+    path.join(projectRoot, PACKAGE_INTEGRITY_FILE),
+    serializePackageIntegrityEvidence(buildPackageIntegrityEvidence(parts)),
+  );
+}
 
 async function withTempRoot(
   run: (parent: string) => Promise<void>,
@@ -160,7 +179,13 @@ test("Open fails closed on unsupported future package version", async () => {
     const manifestPath = path.join(projectRoot, PACKAGE_MANIFEST_FILE);
     const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as Record<string, unknown>;
     manifest.packageVersion = 99;
-    await writeFile(manifestPath, JSON.stringify(manifest));
+    const manifestText = JSON.stringify(manifest);
+    await writeFile(manifestPath, manifestText);
+    await rewriteIntegrity(projectRoot, {
+      "manifest.json": manifestText,
+      "book.json": await readFile(path.join(projectRoot, PACKAGE_BOOK_FILE), "utf8"),
+      "assets.json": await readFile(path.join(projectRoot, PACKAGE_ASSETS_INDEX_FILE), "utf8"),
+    });
 
     const opened = await openProjectPackage(projectRoot);
     assert.equal(opened.ok, false);
@@ -185,7 +210,13 @@ test("Open fails closed on migration-required older package version", async () =
     const manifestPath = path.join(projectRoot, PACKAGE_MANIFEST_FILE);
     const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as Record<string, unknown>;
     manifest.packageVersion = 0;
-    await writeFile(manifestPath, JSON.stringify(manifest));
+    const manifestText = JSON.stringify(manifest);
+    await writeFile(manifestPath, manifestText);
+    await rewriteIntegrity(projectRoot, {
+      "manifest.json": manifestText,
+      "book.json": await readFile(path.join(projectRoot, PACKAGE_BOOK_FILE), "utf8"),
+      "assets.json": await readFile(path.join(projectRoot, PACKAGE_ASSETS_INDEX_FILE), "utf8"),
+    });
 
     const opened = await openProjectPackage(projectRoot);
     assert.equal(opened.ok, false);
@@ -354,10 +385,87 @@ test("package layout uses expected filenames", async () => {
     assert.ok(names.includes(PACKAGE_MANIFEST_FILE));
     assert.ok(names.includes(PACKAGE_BOOK_FILE));
     assert.ok(names.includes(PACKAGE_ASSETS_INDEX_FILE));
+    assert.ok(names.includes(PACKAGE_INTEGRITY_FILE));
     assert.ok(names.includes(PACKAGE_ASSETS_DIR));
     assert.equal(BOOK_MODEL_SCHEMA_VERSION, 1);
     // sanity: sha helper matches node crypto for fixture stability
     const probe = new TextEncoder().encode("x");
     assert.equal(sha256Hex(probe), createHash("sha256").update(probe).digest("hex"));
+  });
+});
+
+test("Open fails closed when integrity.json is missing", async () => {
+  await withTempRoot(async (parent) => {
+    const projectRoot = path.join(parent, "no-integrity.obproj");
+    assert.equal(
+      (
+        await saveProjectPackage({
+          projectRoot,
+          book: sampleBook(),
+          project: { id: "project-no-integrity" },
+          assetBindings: [],
+          assetStore: new MemoryAssetStore(),
+        })
+      ).ok,
+      true,
+    );
+    await rm(path.join(projectRoot, PACKAGE_INTEGRITY_FILE), { force: true });
+    const opened = await openProjectPackage(projectRoot);
+    assert.equal(opened.ok, false);
+    if (opened.ok) return;
+    assert.equal(opened.error.code, "INTEGRITY_EVIDENCE_MISSING");
+  });
+});
+
+test("Open fails closed when book.json is tampered after Save", async () => {
+  await withTempRoot(async (parent) => {
+    const projectRoot = path.join(parent, "tampered-book.obproj");
+    assert.equal(
+      (
+        await saveProjectPackage({
+          projectRoot,
+          book: sampleBook(),
+          project: { id: "project-tampered" },
+          assetBindings: [],
+          assetStore: new MemoryAssetStore(),
+        })
+      ).ok,
+      true,
+    );
+    const bookPath = path.join(projectRoot, PACKAGE_BOOK_FILE);
+    const original = await readFile(bookPath, "utf8");
+    await writeFile(bookPath, `${original} `);
+    const opened = await openProjectPackage(projectRoot);
+    assert.equal(opened.ok, false);
+    if (opened.ok) return;
+    assert.equal(opened.error.code, "INTEGRITY_MISMATCH");
+  });
+});
+
+test("Open fails closed when integrity.json digests are corrupted", async () => {
+  await withTempRoot(async (parent) => {
+    const projectRoot = path.join(parent, "bad-integrity.obproj");
+    assert.equal(
+      (
+        await saveProjectPackage({
+          projectRoot,
+          book: sampleBook(),
+          project: { id: "project-bad-integrity" },
+          assetBindings: [],
+          assetStore: new MemoryAssetStore(),
+        })
+      ).ok,
+      true,
+    );
+    const integrityPath = path.join(projectRoot, PACKAGE_INTEGRITY_FILE);
+    const evidence = JSON.parse(await readFile(integrityPath, "utf8")) as {
+      digests: Record<string, string>;
+    };
+    evidence.digests["manifest.json"] = "0".repeat(64);
+    await writeFile(integrityPath, `${JSON.stringify(evidence, null, 2)}\n`);
+    const opened = await openProjectPackage(projectRoot);
+    assert.equal(opened.ok, false);
+    if (opened.ok) return;
+    assert.equal(opened.error.code, "INTEGRITY_MISMATCH");
   });
 });

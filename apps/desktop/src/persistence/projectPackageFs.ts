@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * ADR-0029 Slice 4: atomic project-package Save/Open + CAS layout wiring.
+ * ADR-0029 Slice 4–5: atomic project-package Save/Open + CAS layout + integrity evidence.
  *
  * Composes Slices 1–3 into a filesystem package under a project root.
  * Does not change SQLite schema, coordinator UI, autosave, or migrations.
@@ -36,6 +36,13 @@ import {
   validatePackageAssetsAgainstBook,
   type PackageAssetBinding,
 } from "./packageAssetMapping.js";
+import {
+  PACKAGE_INTEGRITY_FILE,
+  buildPackageIntegrityEvidence,
+  parsePackageIntegrityEvidence,
+  serializePackageIntegrityEvidence,
+  verifyComponentDigests,
+} from "./packageIntegrity.js";
 
 export const PACKAGE_MANIFEST_FILE = "manifest.json";
 export const PACKAGE_BOOK_FILE = "book.json";
@@ -50,7 +57,10 @@ export type ProjectPackageFsErrorCode =
   | "INVALID_ASSET_BYTES"
   | "MISSING_PACKAGE_ASSET"
   | "PACKAGE_IO_ERROR"
-  | "ATOMIC_COMMIT_FAILED";
+  | "ATOMIC_COMMIT_FAILED"
+  | "INTEGRITY_EVIDENCE_MISSING"
+  | "MALFORMED_INTEGRITY"
+  | "INTEGRITY_MISMATCH";
 
 export interface ProjectPackageFsError {
   code: ProjectPackageFsErrorCode;
@@ -236,18 +246,21 @@ export async function saveProjectPackage(
 
   try {
     await mkdir(path.join(stagingRoot, PACKAGE_ASSETS_DIR), { recursive: true });
-    await writeTextAtomic(
-      path.join(stagingRoot, PACKAGE_MANIFEST_FILE),
-      serializeProjectPackageManifest(manifestResult.manifest),
+    const manifestText = serializeProjectPackageManifest(manifestResult.manifest);
+    const bookText = serializePackageBookDocument(bookResult.document);
+    const assetsText = serializePackageAssetManifest(assetsResult.manifest);
+    const integrityText = serializePackageIntegrityEvidence(
+      buildPackageIntegrityEvidence({
+        "manifest.json": manifestText,
+        "book.json": bookText,
+        "assets.json": assetsText,
+      }),
     );
-    await writeTextAtomic(
-      path.join(stagingRoot, PACKAGE_BOOK_FILE),
-      serializePackageBookDocument(bookResult.document),
-    );
-    await writeTextAtomic(
-      path.join(stagingRoot, PACKAGE_ASSETS_INDEX_FILE),
-      serializePackageAssetManifest(assetsResult.manifest),
-    );
+
+    await writeTextAtomic(path.join(stagingRoot, PACKAGE_MANIFEST_FILE), manifestText);
+    await writeTextAtomic(path.join(stagingRoot, PACKAGE_BOOK_FILE), bookText);
+    await writeTextAtomic(path.join(stagingRoot, PACKAGE_ASSETS_INDEX_FILE), assetsText);
+    await writeTextAtomic(path.join(stagingRoot, PACKAGE_INTEGRITY_FILE), integrityText);
 
     const stagingStore = new DirectoryAssetStore(path.join(stagingRoot, PACKAGE_ASSETS_DIR));
     for (const [sha256, bytes] of stagedBytes) {
@@ -331,6 +344,51 @@ export async function openProjectPackage(
 
   const manifestText = await readUtf8(path.join(projectRoot, PACKAGE_MANIFEST_FILE));
   if (!manifestText.ok) return manifestText;
+  const bookText = await readUtf8(path.join(projectRoot, PACKAGE_BOOK_FILE));
+  if (!bookText.ok) return bookText;
+  const assetsText = await readUtf8(path.join(projectRoot, PACKAGE_ASSETS_INDEX_FILE));
+  if (!assetsText.ok) return assetsText;
+
+  const integrityPath = path.join(projectRoot, PACKAGE_INTEGRITY_FILE);
+  if (!(await pathExists(integrityPath))) {
+    return fail(
+      "INTEGRITY_EVIDENCE_MISSING",
+      "Required package integrity evidence file is missing (integrity.json).",
+    );
+  }
+  const integrityText = await readUtf8(integrityPath);
+  if (!integrityText.ok) return integrityText;
+
+  const integrityParse = parsePackageIntegrityEvidence(integrityText.value);
+  if (integrityParse.compatibility !== "compatible" || !integrityParse.evidence) {
+    if (integrityParse.compatibility === "unsupported-future-version") {
+      return fail(
+        "UNSUPPORTED_FUTURE_VERSION",
+        "Integrity evidence declares an unsupported future version.",
+        { errors: integrityParse.errors },
+      );
+    }
+    if (integrityParse.compatibility === "migration-required") {
+      return fail("MIGRATION_REQUIRED", "Integrity evidence requires migration before open.", {
+        errors: integrityParse.errors,
+      });
+    }
+    return fail("MALFORMED_INTEGRITY", "Package integrity evidence is malformed.", {
+      errors: integrityParse.errors,
+    });
+  }
+
+  const digestCheck = verifyComponentDigests(integrityParse.evidence, {
+    "manifest.json": manifestText.value,
+    "book.json": bookText.value,
+    "assets.json": assetsText.value,
+  });
+  if (digestCheck.compatibility !== "compatible") {
+    return fail("INTEGRITY_MISMATCH", "Package component digests do not match integrity evidence.", {
+      errors: digestCheck.errors,
+    });
+  }
+
   const manifestResult = parseProjectPackageManifest(manifestText.value);
   if (manifestResult.compatibility !== "compatible" || !manifestResult.manifest) {
     return mapCompatibilityFailure(
@@ -340,8 +398,6 @@ export async function openProjectPackage(
     );
   }
 
-  const bookText = await readUtf8(path.join(projectRoot, PACKAGE_BOOK_FILE));
-  if (!bookText.ok) return bookText;
   const bookResult = parsePackageBookDocument(bookText.value);
   if (bookResult.compatibility !== "compatible" || !bookResult.document) {
     return mapCompatibilityFailure(
@@ -366,8 +422,6 @@ export async function openProjectPackage(
     );
   }
 
-  const assetsText = await readUtf8(path.join(projectRoot, PACKAGE_ASSETS_INDEX_FILE));
-  if (!assetsText.ok) return assetsText;
   const assetsParse = parsePackageAssetManifest(assetsText.value);
   if (assetsParse.compatibility !== "compatible" || !assetsParse.manifest) {
     return mapCompatibilityFailure(
