@@ -9,6 +9,7 @@
  * Slice 3 (ADR-0021) adds @openbook/assets MemoryAssetStore / IAssetStore.
  * Slice 4 (ADR-0022) adds @openbook/book-doctor ValidationCoordinator.
  * Slice 5 (ADR-0023) adds EPUB/HTML/PDF export orchestration.
+ * ADR-0031 Slice 3 binds package-root autosave (dirty hooks) without dual-write.
  */
 import {
   BOOK_MODEL_SCHEMA_VERSION,
@@ -69,7 +70,18 @@ import {
   type JobStatus,
   type WorkflowStage,
 } from "@openbook/workflow";
+import {
+  AutosaveController,
+  type AutosaveClock,
+  type AutosaveSaveResult,
+  type AutosaveStatus,
+} from "../persistence/autosaveController.js";
 import { createProjectId } from "../persistence/dto.js";
+import {
+  PackageAutosavePort,
+  type PackageAutosaveSaveFn,
+} from "../persistence/packageAutosavePort.js";
+import type { ProjectPackageSaveInput } from "../persistence/projectPackageFs.js";
 import {
   defaultPdfPublisher,
   productionValidatorService,
@@ -189,7 +201,8 @@ export interface IPdfPublisher {
 }
 
 /**
- * Slice 1–4 studio snapshot (ADR-0019 §4.1, ADR-0022 §4.3).
+ * Slice 1–4 studio snapshot (ADR-0019 §4.1, ADR-0022 §4.3) plus ADR-0031 Slice 3
+ * package-root autosave fields.
  * `validationReport` is populated after runValidation() and reset on mutation.
  */
 export interface DesktopStudioState {
@@ -197,10 +210,14 @@ export interface DesktopStudioState {
   jobStatus: JobStatus;
   activeJobId?: string;
   binding: ActiveProjectBinding | null;
+  /** Bound ADR-0029 package root for autosave, or null when unbound. */
+  packageRoot: string | null;
   isDirty: boolean;
   revision: number;
   selectedSectionId: string | null;
   validationReport: BookValidationReport | null;
+  /** Package autosave scheduler status (independent of SQLite session dirty). */
+  autosave: AutosaveStatus;
 }
 
 export type StudioImportMode = "new-project" | "append-sections";
@@ -263,6 +280,13 @@ export interface IDesktopStudioCoordinator {
   exportEpub(options?: EpubExportOptions): Promise<EpubExportResult>;
   exportHtml(options?: HtmlExportOptions): Promise<HtmlExportResult>;
   exportPdf(options?: PdfExportOptions): Promise<PdfExportResult>;
+
+  /** ADR-0031 Slice 3: bind/unbind filesystem package root for autosave. */
+  bindPackageRoot(projectRoot: string): void;
+  unbindPackageRoot(): void;
+  getPackageRoot(): string | null;
+  getAutosaveStatus(): AutosaveStatus;
+  flushAutosave(): Promise<AutosaveSaveResult>;
 }
 
 export class DesktopStudioError extends Error {
@@ -285,7 +309,8 @@ export class DesktopStudioError extends Error {
     | "CONFORMANCE_CHECK_FAILED"
     | "RENDERER_COMPILER_FAILED"
     | "PUBLISH_FAILED"
-    | "OPERATION_ABORTED";
+    | "OPERATION_ABORTED"
+    | "PACKAGE_ROOT_INVALID";
 
   constructor(code: DesktopStudioError["code"], message: string) {
     super(message);
@@ -315,6 +340,12 @@ export type DesktopStudioCoordinatorOptions = {
   validatorService?: ValidatorService;
   /** Injected PDF publisher. Defaults to production Typst v0.15.1 runner. */
   pdfPublisher?: IPdfPublisher;
+  /** Autosave debounce quiet period in ms (ADR-0031 default 2000). */
+  autosaveDebounceMs?: number;
+  /** Injectable clock for autosave tests. */
+  autosaveClock?: AutosaveClock;
+  /** Injectable package Save function (defaults to saveProjectPackage). */
+  packageSave?: PackageAutosaveSaveFn;
 };
 
 /**
@@ -339,6 +370,9 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   #resolver!: StoreBackedAssetResolver;
   #validationReport: BookValidationReport | null;
   #validatedRevision: number | null;
+  #packageRoot: string | null;
+  readonly #autosave: AutosaveController;
+  #packageProjectId: string;
 
   constructor(options: DesktopStudioCoordinatorOptions) {
     this.#persistence = options.persistence;
@@ -352,6 +386,18 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     this.#pdfPublisher = options.pdfPublisher ?? defaultPdfPublisher;
     this.#validationReport = null;
     this.#validatedRevision = null;
+    this.#packageRoot = null;
+    this.#packageProjectId = createProjectId("pkg");
+    this.#autosave = new AutosaveController({
+      debounceMs: options.autosaveDebounceMs ?? 2000,
+      clock: options.autosaveClock,
+      save: new PackageAutosavePort({
+        binding: {
+          resolveSaveInput: () => this.#resolvePackageSaveInput(),
+        },
+        save: options.packageSave,
+      }),
+    });
     const book = options.book ?? createDesktopDraftBook({ title: "Untitled Project" });
     this.#idSeed = options.idSeed ?? (book.metadata.title || "desktop-studio");
     this.#session = wrapSessionForInvalidation(
@@ -360,7 +406,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         idSeed: this.#idSeed,
         initialSelectedSectionId: options.initialSelectedSectionId,
       }),
-      () => this.#clearValidationReport(),
+      () => this.#onSessionMutated(),
     );
     this.#workflow = new WorkflowCoordinator();
     this.#binding = null;
@@ -377,10 +423,12 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       stage: workflow.stage,
       jobStatus: workflow.jobStatus,
       binding: this.#binding ? { ...this.#binding } : null,
+      packageRoot: this.#packageRoot,
       isDirty: session.isDirty,
       revision: session.revision,
       selectedSectionId: session.selectedSectionId,
       validationReport: cloneValidationReport(this.#validationReport),
+      autosave: this.#autosave.getStatus(),
     };
     if (workflow.jobId !== undefined) {
       state.activeJobId = workflow.jobId;
@@ -554,6 +602,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     this.#binding = null;
     this.#pendingName = title;
     this.#workflow = new WorkflowCoordinator();
+    this.unbindPackageRoot();
   }
 
   async openProject(projectId: string, preferredSectionId?: string): Promise<void> {
@@ -591,6 +640,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     this.#pendingName = loaded.value.metadata.name;
     this.#workflow = new WorkflowCoordinator();
     this.#session.markSaved();
+    this.unbindPackageRoot();
   }
 
   async saveProject(projectName?: string): Promise<SaveSummary> {
@@ -729,7 +779,41 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   }
 
   async close(): Promise<void> {
+    this.#autosave.dispose();
     await this.#persistence.close();
+  }
+
+  bindPackageRoot(projectRoot: string): void {
+    const root = projectRoot.trim();
+    if (!root) {
+      throw new DesktopStudioError(
+        "PACKAGE_ROOT_INVALID",
+        "Package root path is required for autosave binding.",
+      );
+    }
+    this.#packageRoot = root;
+    if (this.#session.getState().isDirty) {
+      this.#autosave.markDirty();
+    } else {
+      this.#autosave.markClean();
+    }
+  }
+
+  unbindPackageRoot(): void {
+    this.#packageRoot = null;
+    this.#autosave.markClean();
+  }
+
+  getPackageRoot(): string | null {
+    return this.#packageRoot;
+  }
+
+  getAutosaveStatus(): AutosaveStatus {
+    return this.#autosave.getStatus();
+  }
+
+  async flushAutosave(): Promise<AutosaveSaveResult> {
+    return this.#autosave.flush();
   }
 
   async importContent(
@@ -1098,9 +1182,43 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         idSeed,
         initialSelectedSectionId: preferredOk ? preferredSectionId : undefined,
       }),
-      () => this.#clearValidationReport(),
+      () => this.#onSessionMutated(),
     );
     this.#clearValidationReport();
+  }
+
+  #onSessionMutated(): void {
+    this.#clearValidationReport();
+    if (this.#packageRoot !== null) {
+      this.#autosave.markDirty();
+    }
+  }
+
+  #resolvePackageSaveInput(): ProjectPackageSaveInput | null {
+    if (this.#packageRoot === null) {
+      return null;
+    }
+    const book = this.#session.getBook();
+    const assetBindings: Array<{ assetId: string; sha256: string }> = [];
+    for (const asset of book.assets) {
+      const sha256 = this.#assetRegistry.getSha256(asset.id);
+      if (sha256) {
+        assetBindings.push({ assetId: asset.id, sha256 });
+      }
+    }
+    const projectId = this.#binding?.projectId ?? this.#packageProjectId;
+    const name =
+      this.#binding?.projectName?.trim() ||
+      this.#pendingName.trim() ||
+      book.metadata.title.trim() ||
+      "Untitled Project";
+    return {
+      projectRoot: this.#packageRoot,
+      book,
+      project: { id: projectId, name },
+      assetBindings,
+      assetStore: this.#assetStore,
+    };
   }
 
   #clearValidationReport(): void {
