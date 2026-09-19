@@ -60,7 +60,9 @@ export type ProjectPackageFsErrorCode =
   | "ATOMIC_COMMIT_FAILED"
   | "INTEGRITY_EVIDENCE_MISSING"
   | "MALFORMED_INTEGRITY"
-  | "INTEGRITY_MISMATCH";
+  | "INTEGRITY_MISMATCH"
+  | "RECOVERY_BACKUP_MISSING"
+  | "RECOVERY_AMBIGUOUS_BACKUP";
 
 export interface ProjectPackageFsError {
   code: ProjectPackageFsErrorCode;
@@ -322,11 +324,38 @@ export async function saveProjectPackage(
   }
 }
 
+export interface ProjectPackageOpenOptions {
+  /**
+   * When true, attempt Slice 6 M1 migration (add integrity.json) if evidence is missing,
+   * then open. Default Open remains fail-closed.
+   */
+  allowMigration?: boolean;
+}
+
 /**
  * Open and validate a project package. Fail-closed for migration/future versions.
  * Does not mutate the package or invent empty Book/asset state on failure.
  */
 export async function openProjectPackage(
+  projectRootInput: string,
+  options: ProjectPackageOpenOptions = {},
+): Promise<ProjectPackageFsResult<ProjectPackageOpenResult>> {
+  const opened = await openProjectPackageStrict(projectRootInput);
+  if (
+    opened.ok ||
+    !options.allowMigration ||
+    opened.error.code !== "INTEGRITY_EVIDENCE_MISSING"
+  ) {
+    return opened;
+  }
+
+  const { migrateProjectPackage } = await import("./projectPackageMigration.js");
+  const migrated = await migrateProjectPackage(projectRootInput);
+  if (!migrated.ok) return migrated;
+  return openProjectPackageStrict(projectRootInput);
+}
+
+async function openProjectPackageStrict(
   projectRootInput: string,
 ): Promise<ProjectPackageFsResult<ProjectPackageOpenResult>> {
   const projectRoot = path.resolve(projectRootInput);
