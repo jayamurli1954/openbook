@@ -9,5 +9,7 @@ export * from "./bookPackageMapping.js";
 export * from "./packageAssetMapping.js";
 export * from "./packageIntegrity.js";
 export * from "./projectPackageFs.js";
+export * from "./projectPackageMigration.js";
+export * from "./projectPackageRecovery.js";
 export * from "./sqliteDriver.js";
 export * from "./sqlitePersistence.js";
