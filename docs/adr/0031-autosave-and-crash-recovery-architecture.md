@@ -1,6 +1,6 @@
 # ADR-0031: Autosave & Crash Recovery Architecture
 
-- **Status:** Proposed (implementation Slice 1 authorized with this track)
+- **Status:** Accepted (Slices 1–5 implemented)
 - **Date:** 2026-09-19
 - **Area:** Desktop / Project persistence / Session durability
 - **Depends on:** ADR-0006, ADR-0019, ADR-0029 (Slices 1–6 complete)
@@ -8,7 +8,7 @@
 
 ## 1. Context
 
-OpenBook now has a durable filesystem project package (ADR-0029): atomic Save/Open, CAS assets, integrity evidence, and explicit migration/recovery from `.openbook-backup-*`. Explicit Save still goes through SQLite `ProjectPersistence` in the Desktop Studio coordinator; package Save/Open APIs exist but are not yet the sole product Save path.
+OpenBook now has a durable filesystem project package (ADR-0029): atomic Save/Open, CAS assets, integrity evidence, and explicit migration/recovery from `.openbook-backup-*`. When a package root is bound, explicit Save commits the package first and syncs SQLite as a session index; unbound sessions remain SQLite-only.
 
 Authors must not lose work on crash or idle exit. Autosave and crash recovery are required product capabilities (see `docs/IMPLEMENTATION-BACKLOG.md`). They must not create a second document source of truth or persist Tiptap/ProseMirror JSON.
 
@@ -59,11 +59,11 @@ ADR-0019 remains authoritative for the coordinator. Autosave wiring into `Deskto
 
 ### 2.5 Implementation sequencing
 
-1. Autosave controller (dirty/debounce/coalesce) + injectable Save port — **Slice 1**
-2. Package Save port adapter (`saveProjectPackage` + bindings/store) — Slice 2
-3. Coordinator dirty hooks + bound project root — Slice 3
-4. Crash-recovery discovery UX / open-with-recover path — Slice 4
-5. Optional unification of SQLite session Save with package Save — Slice 5 (separately gated)
+1. Autosave controller (dirty/debounce/coalesce) + injectable Save port — **Slice 1** (done)
+2. Package Save port adapter (`saveProjectPackage` + bindings/store) — **Slice 2** (done)
+3. Coordinator dirty hooks + bound project root — **Slice 3** (done)
+4. Crash-recovery discovery / open-with-recover path — **Slice 4** (done)
+5. Unification of SQLite session Save with package Save — **Slice 5** (done)
 
 ## 3. Explicit non-authorizations
 
