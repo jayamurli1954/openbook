@@ -13,6 +13,7 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [Foundation readiness report](FOUNDATION-READINESS-REPORT.md) | Historical gate assessment; not the current snapshot |
 | [Foundation closure (2026-09-16)](FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md) | Gate 8 evidence closure and ADR-0028 selection record |
 | [Foundation closure (post–Gate 10)](FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md) | Current readiness determination after Gates 9–10; FOUNDATION-READY not declared |
+| [Foundation evidence ops selection](FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md) | Selected next path: ADR-0028 evidence population (fonts unresolved) |
 | [Implementation backlog](IMPLEMENTATION-BACKLOG.md) | Future work; not an authorization to code |
 | [Project persistence architecture](PROJECT_PERSISTENCE_ARCHITECTURE.md) | SQLite project persistence contracts and boundary (PR #16) |
 | [Release/compliance](release-compliance/) | ADR-0028 evidence mechanisms (inventory not populated) |

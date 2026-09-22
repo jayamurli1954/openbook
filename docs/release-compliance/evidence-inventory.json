@@ -1,0 +1,184 @@
+{
+  "$schema": "./evidence-inventory.schema.json",
+  "schemaVersion": "1.0",
+  "inventoryKind": "release-evidence-inventory",
+  "release": {
+    "sourceCommit": "359b0467e0c3f5b79c0c7c40f2ec741aa8500fe6",
+    "dependencyLock": "package-lock.json",
+    "environment": "windows-x64-first Gate 10 packaging baseline; evidence ops Slice 1"
+  },
+  "entries": [
+    {
+      "component": "OpenBook Studio core",
+      "version": "0.0.0",
+      "classification": "source",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://github.com/jayamurli1954/openbook",
+        "sourceReference": "Apache-2.0 LICENSE"
+      },
+      "licensing": {
+        "license": "Apache-2.0",
+        "basis": "ADR-0003 / repository LICENSE",
+        "noticeRequired": false,
+        "redistribution": "permitted"
+      },
+      "artifacts": ["LICENSE"],
+      "notes": "Application source license; not a third-party runtime."
+    },
+    {
+      "component": "EPUBCheck",
+      "version": "5.3.0",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://github.com/w3c/epubcheck/releases/download/v5.3.0/epubcheck-5.3.0.zip",
+        "sourceReference": "packages/validator/packaging/inventory.json",
+        "integrity": "sha256:6c07e68584b2e2ce2f89fe06e1246dfead3eb36b46b340e7d93524f29dcff6c5"
+      },
+      "licensing": {
+        "license": "BSD-3-Clause",
+        "basis": "packages/validator/packaging/inventory.json + THIRD-PARTY-NOTICES.md",
+        "noticeRequired": true,
+        "redistribution": "conditional"
+      },
+      "artifacts": [
+        "packages/validator/packaging/inventory.json",
+        "packages/validator/packaging/THIRD-PARTY-NOTICES.md"
+      ],
+      "notes": "Gate 5 / ADR-0012 pin. Upstream LICENSE.txt / THIRD-PARTY.txt must ship with the packaged JAR. Transitive components remain per upstream notices."
+    },
+    {
+      "component": "Eclipse Temurin 21 (OpenJDK) — windows-x64 pin",
+      "version": "jdk-21.0.12.1+1",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jdk_x64_windows_hotspot_21.0.12.1_1.zip",
+        "sourceReference": "packages/validator/packaging/inventory.json#temurin.platforms.windows-x64",
+        "integrity": "sha256:f9d6e191ab098c0d416e7d588a24420a8621cd2f4720dab2459b8b7b2d2d8b4e"
+      },
+      "licensing": {
+        "license": "GPLv2 with Classpath Exception",
+        "basis": "packages/validator/packaging/inventory.json + THIRD-PARTY-NOTICES.md",
+        "noticeRequired": true,
+        "redistribution": "conditional"
+      },
+      "artifacts": [
+        "packages/validator/packaging/inventory.json",
+        "packages/validator/packaging/THIRD-PARTY-NOTICES.md"
+      ],
+      "notes": "Gate 5 / ADR-0012 windows-x64 download pin used to build the private jlink image for Gate 10 Windows packaging. Temurin LICENSE / ASSEMBLY_EXCEPTION / legal/ must be preserved on the shipped runtime image. Other OS/arch pins exist in inventory but are not Gate 10 production packaging targets yet."
+    },
+    {
+      "component": "Typst CLI",
+      "version": "0.15.1",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-pc-windows-msvc.zip",
+        "sourceReference": "packages/pdf/packaging/inventory.json#typst.platforms.windows-x64",
+        "integrity": "sha256:19ce3551153c2fe7ee9fa2f95208310c8f4d3209fedb699e0333faf8913f6736"
+      },
+      "licensing": {
+        "license": "Apache-2.0",
+        "basis": "packages/pdf/packaging/inventory.json + THIRD-PARTY-NOTICES.md; ADR-0013",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "packages/pdf/packaging/inventory.json",
+        "packages/pdf/packaging/THIRD-PARTY-NOTICES.md"
+      ],
+      "notes": "Gate 6 / ADR-0013 windows-x64 pin for Gate 10 Windows packaging. Upstream LICENSE/NOTICE apply."
+    },
+    {
+      "component": "Noto Serif Kannada",
+      "version": "google/fonts ofl/notoserifkannada (jsDelivr pin of main)",
+      "classification": "shipped-asset",
+      "status": "unresolved",
+      "provenance": {
+        "source": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notoserifkannada/NotoSerifKannada%5Bwght%5D.ttf",
+        "sourceReference": "packages/pdf/packaging/inventory.json#fonts.files",
+        "integrity": "sha256:3d97c98dd59251a85fcc6e95edf9be02b60147e92486927390247f1cd4d5eb37"
+      },
+      "licensing": {
+        "license": "OFL-1.1",
+        "basis": "Gate 6 packaging inventory records OFL-1.1; release-clearance disposition still open per ADR-0028 font policy",
+        "noticeRequired": true,
+        "redistribution": "unresolved"
+      },
+      "artifacts": [
+        "packages/pdf/packaging/inventory.json",
+        "docs/release-compliance/FONT-PROVENANCE-POLICY.md"
+      ],
+      "notes": "Integrity and packaging pin recorded. Font-by-font release clearance remains unresolved; do not treat as FOUNDATION-READY font evidence."
+    },
+    {
+      "component": "Noto Sans Kannada",
+      "version": "google/fonts ofl/notosanskannada (jsDelivr pin of main)",
+      "classification": "shipped-asset",
+      "status": "unresolved",
+      "provenance": {
+        "source": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosanskannada/NotoSansKannada%5Bwdth%2Cwght%5D.ttf",
+        "sourceReference": "packages/pdf/packaging/inventory.json#fonts.files",
+        "integrity": "sha256:cca4f3b3a8cb12fb261f1b43baf5d2f7f59d90fe123d41f0065ed3a183997ec9"
+      },
+      "licensing": {
+        "license": "OFL-1.1",
+        "basis": "Gate 6 packaging inventory records OFL-1.1; release-clearance disposition still open per ADR-0028 font policy",
+        "noticeRequired": true,
+        "redistribution": "unresolved"
+      },
+      "artifacts": [
+        "packages/pdf/packaging/inventory.json",
+        "docs/release-compliance/FONT-PROVENANCE-POLICY.md"
+      ],
+      "notes": "Integrity and packaging pin recorded. Font-by-font release clearance remains unresolved."
+    },
+    {
+      "component": "Noto Serif",
+      "version": "google/fonts ofl/notoserif (jsDelivr pin of main)",
+      "classification": "shipped-asset",
+      "status": "unresolved",
+      "provenance": {
+        "source": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notoserif/NotoSerif%5Bwdth%2Cwght%5D.ttf",
+        "sourceReference": "packages/pdf/packaging/inventory.json#fonts.files",
+        "integrity": "sha256:4d8e6761424656867019081a1a01336f3cb086982682698714054fc33f782713"
+      },
+      "licensing": {
+        "license": "OFL-1.1",
+        "basis": "Gate 6 packaging inventory records OFL-1.1; release-clearance disposition still open per ADR-0028 font policy",
+        "noticeRequired": true,
+        "redistribution": "unresolved"
+      },
+      "artifacts": [
+        "packages/pdf/packaging/inventory.json",
+        "docs/release-compliance/FONT-PROVENANCE-POLICY.md"
+      ],
+      "notes": "Integrity and packaging pin recorded. Font-by-font release clearance remains unresolved."
+    },
+    {
+      "component": "Noto Sans",
+      "version": "google/fonts ofl/notosans (jsDelivr pin of main)",
+      "classification": "shipped-asset",
+      "status": "unresolved",
+      "provenance": {
+        "source": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf",
+        "sourceReference": "packages/pdf/packaging/inventory.json#fonts.files",
+        "integrity": "sha256:bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d"
+      },
+      "licensing": {
+        "license": "OFL-1.1",
+        "basis": "Gate 6 packaging inventory records OFL-1.1; release-clearance disposition still open per ADR-0028 font policy",
+        "noticeRequired": true,
+        "redistribution": "unresolved"
+      },
+      "artifacts": [
+        "packages/pdf/packaging/inventory.json",
+        "docs/release-compliance/FONT-PROVENANCE-POLICY.md"
+      ],
+      "notes": "Integrity and packaging pin recorded. Font-by-font release clearance remains unresolved."
+    }
+  ]
+}

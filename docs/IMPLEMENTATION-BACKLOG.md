@@ -87,7 +87,8 @@ REQUIRED NEXT PRODUCT CAPABILITIES (must not be dropped; not authorized by this 
 ├── Packaging / release readiness          [DONE on main — Gate 10 / ADR-0032 Slices 1–5]
 │
 FOUNDATION READINESS DECLARATION
-├── Post–Gate 10 closure record            [IN PROGRESS — docs only; FOUNDATION-READY not declared]
+├── Post–Gate 10 closure record            [DONE — PR #109; FOUNDATION-READY not declared]
+├── Evidence ops selection + Slice 1       [IN PROGRESS — Gate 5/6 inventory population; fonts unresolved]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -178,7 +179,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the re
 
 ## Next architectural decision points
 
-Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). `FOUNDATION-READY` is **not** declared; see `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`. No next engineering slice is authorized by the backlog alone.
+Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). `FOUNDATION-READY` is **not** declared; see `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`. The selected next path is **foundation readiness evidence ops** (`docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md`); Slice 1 populates Gate 5/6 inventory/notices without clearing fonts or declaring FOUNDATION-READY.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 

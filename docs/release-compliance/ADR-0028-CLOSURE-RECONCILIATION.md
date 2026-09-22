@@ -32,7 +32,7 @@ The five slices preserve the accepted architecture boundary: evidence records an
 
 ### Slice 1 — inventory contract
 
-The machine-readable evidence inventory provides classifications for source, development, build, test, shipped-runtime, and shipped-asset evidence, with explicit `confirmed`, `unresolved`, and `not-applicable` states. The production inventory template remains intentionally empty; therefore no unsupported dependency or licensing claims are introduced.
+The machine-readable evidence inventory provides classifications for source, development, build, test, shipped-runtime, and shipped-asset evidence, with explicit `confirmed`, `unresolved`, and `not-applicable` states. The production inventory template remains intentionally empty as a blank form. A separately maintained production inventory at `docs/release-compliance/evidence-inventory.json` began population under foundation readiness evidence ops Slice 1 (Gate 5/6 pins); font entries remain unresolved and FOUNDATION-READY is not declared.
 
 ### Slice 2 — third-party notices
 
