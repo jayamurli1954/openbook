@@ -51,7 +51,10 @@ Gate 8 domain integration is on `main` (ADR-0019–ADR-0023). Frozen desktop pin
   (`validator-runtime`, `pdf-runtime`) after packaging-time inventory
   checksum verification. Assemble with
   `npm run packaging:assemble-windows-resources -w @openbook/desktop`
-  (requires prior Gate 5/6 `packaging:build`). Host wiring is Slice 3.
+  (requires prior Gate 5/6 `packaging:build`). Gate 10 Slice 3 wires the
+  Node publishing host through `locatePackagedRuntimes` (packaged tree first;
+  developer `.cache/` only when no packaged root is in effect). Installer
+  identity is Slice 4.
 
 ## Commands
 
