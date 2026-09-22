@@ -269,7 +269,7 @@ export function readRuntimePinsFromAssemblyEvidence(
   };
 }
 
-function requireNonEmpty(label: string, value: string): string | undefined {
+function requireNonEmpty(value: string): string | undefined {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
@@ -321,13 +321,10 @@ export function recordWindowsDistributableIdentity(
     );
   }
 
-  const applicationName = requireNonEmpty("applicationName", input.applicationName);
-  const applicationVersion = requireNonEmpty("applicationVersion", input.applicationVersion);
-  const applicationIdentifier = requireNonEmpty(
-    "applicationIdentifier",
-    input.applicationIdentifier,
-  );
-  const sourceCommit = requireNonEmpty("sourceCommit", input.sourceCommit);
+  const applicationName = requireNonEmpty(input.applicationName);
+  const applicationVersion = requireNonEmpty(input.applicationVersion);
+  const applicationIdentifier = requireNonEmpty(input.applicationIdentifier);
+  const sourceCommit = requireNonEmpty(input.sourceCommit);
   if (!applicationName || !applicationVersion || !applicationIdentifier || !sourceCommit) {
     return fail(
       "MISSING_METADATA",
