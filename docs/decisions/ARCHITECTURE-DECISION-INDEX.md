@@ -84,8 +84,8 @@ See also `docs/FOUNDATION-READINESS-REPORT.md`, `docs/FOUNDATION-READINESS-CLOSU
 - ~~Stewardship and maintainer governance~~ — resolved by ADR-0025: **Accepted**; documented governance policy recorded
 - ~~Code of Conduct governance~~ — resolved by ADR-0026: **Accepted**; documented governance policy recorded
 - ~~Security disclosure and vulnerability response governance~~ — resolved by ADR-0027: **Accepted** and operational security policy implemented on `main` through PR #64
-- Whether `FOUNDATION-GOVERNANCE-READY` / `ROADMAP.md` `FOUNDATION-READY` can be declared (audit: **not passed** / post–Gate 10 closure: **not declared**)
-- **Required next product capabilities:** filesystem project package (ADR-0029 complete); autosave & crash recovery (ADR-0031 complete); Gate 9 export UI / native Save As (ADR-0030 complete); Gate 10 packaging (ADR-0032 Slices 1–5 complete). See `docs/IMPLEMENTATION-BACKLOG.md` and `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`.
+- Whether `FOUNDATION-GOVERNANCE-READY` / `ROADMAP.md` `FOUNDATION-READY` can be declared (audit: **not passed** / post–Gate 10 closure: **not declared**; evidence ops Slice 1 does not declare)
+- **Required next product capabilities:** complete through Gate 10. **Selected next path:** foundation readiness evidence ops — see `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md` and `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`.
 - AI/Ollama and DTP/page layout remain future work and must not displace the required product capabilities above
 - ~~Exact Tiptap/ProseMirror (editor) package versions~~ — resolved by ADR-0008 (OSS pins Frozen; implementation still gated)
 - ~~Frontend bundler (e.g. Vite) exact version~~ — Vite **8.2.2** recorded with the desktop shell (`apps/desktop`)

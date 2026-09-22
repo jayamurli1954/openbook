@@ -155,6 +155,8 @@ Open items to carry forward (evidence/ops or separately authorized architecture)
 
 This record **does not select** a next implementation domain. Selection requires a maintainer decision after this closure is merged (or a follow-up selection record).
 
+**Update (2026-09-22):** Maintainer directed the agent to choose. Selected domain: **foundation readiness evidence ops** — see `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md`. Candidates below remain historical context for that choice.
+
 Candidates (descriptive, not ranked as authorized work):
 
 | Candidate | Why it might be next |

@@ -108,7 +108,8 @@ Required next product capabilities (must not be dropped — see `docs/IMPLEMENTA
 - Filesystem project package — **done** (ADR-0029 Slices 1–6)
 - Autosave and crash recovery — **done** sequencing (ADR-0031 Slices 1–5)
 - Packaging / release readiness — **Done** (Gate 10 / ADR-0032 Slices 1–5)
-- Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared — **not declared** (post–Gate 10 closure record)
+- Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared — **not declared** (post–Gate 10 closure; evidence ops Slice 1 in progress)
+- Foundation readiness evidence ops — **selected**; Slice 1 populates Gate 5/6 inventory/notices; fonts remain unresolved
 
 Other pending items:
 
@@ -123,6 +124,8 @@ Other pending items:
 - `docs/FOUNDATION-READINESS-REPORT.md` (historical audit; not the current snapshot)
 - `docs/FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md` (2026-09-16 ADR-0028 selection)
 - `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (current post–Gate 10 determination)
+- `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md` (selected next evidence path)
+- `docs/release-compliance/evidence-inventory.json` (Slice 1 population)
 - `docs/governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md`
 - `SECURITY.md`
 - `CODE_OF_CONDUCT.md`
