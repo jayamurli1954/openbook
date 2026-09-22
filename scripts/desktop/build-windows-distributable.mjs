@@ -124,6 +124,7 @@ function main() {
   console.log("Gate 10 Slice 4 Windows distributable build + identity complete.");
   console.log("Outputs under apps/desktop/packaging-out/ (gitignored).");
   console.log("Unresolved ADR-0028 evidence remains unresolved; no FOUNDATION-READY.");
+  console.log("Optional next: npm run packaging:verify-release-readiness -w @openbook/desktop");
 }
 
 try {

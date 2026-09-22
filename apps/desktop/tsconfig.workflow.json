@@ -27,6 +27,8 @@
     "src/host/packagedPublishingHost.ts",
     "src/host/packagedPublishingHost.test.ts",
     "src/host/windowsDistributableIdentity.ts",
-    "src/host/windowsDistributableIdentity.test.ts"
+    "src/host/windowsDistributableIdentity.test.ts",
+    "src/host/releaseReadinessVerification.ts",
+    "src/host/releaseReadinessVerification.test.ts"
   ]
 }

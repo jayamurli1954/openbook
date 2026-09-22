@@ -57,7 +57,8 @@ Gate 8 domain integration is on `main` (ADR-0019–ADR-0023). Frozen desktop pin
   Slice 4 pins the Windows **NSIS** bundle target and records installer
   identity + ADR-0028 manifest linkage (`packaging:build-windows-distributable`
   / `packaging:record-windows-distributable-identity`); unresolved evidence
-  stays unresolved.
+  stays unresolved. Gate 10 Slice 5 verifies release-readiness checks
+  (`packaging:verify-release-readiness`) without declaring FOUNDATION-READY.
 
 ## Commands
 
