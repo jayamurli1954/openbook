@@ -1,9 +1,10 @@
 # OpenBook Third-Party Notices
 
-- **Status:** Maintenance mechanism established; **Slice 1 population** records Gate 5/6 shipped-runtime notices from packaging inventories. Bundled-font release clearance remains **unresolved**.
+- **Status:** Maintenance mechanism established; **Slice 1** records Gate 5/6 shipped-runtime notices; **Slice 2** records Gate 6 bundled-font OFL clearance (confirmed / conditional). Full npm production dependency population remains deferred.
 - **Scope:** Release-oriented attribution and provenance evidence.
 - **Authority:** `docs/adr/0028-release-compliance-architecture.md`
 - **Inventory:** `docs/release-compliance/evidence-inventory.json` (machine-readable companion)
+- **Font dispositions:** `docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md`
 - **Selection:** `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md`
 
 ## Purpose
@@ -22,15 +23,15 @@ It is not a replacement for package manifests, `package-lock.json`, runtime prov
 6. Update this record when a shipped third-party component, runtime, asset, or relevant dependency changes.
 7. Review the corresponding release evidence inventory so the human-readable notice and machine-readable evidence do not contradict one another.
 
-## Current evidence status (Slice 1)
+## Current evidence status (Slice 2)
 
 | Category | Status |
 |---|---|
 | Gate 5 EPUBCheck 5.3.0 | Recorded below from packaging inventory/notices |
 | Gate 5 Temurin 21 windows-x64 pin / jlink image obligations | Recorded below |
 | Gate 6 Typst 0.15.1 windows-x64 | Recorded below |
-| Gate 6 bundled fonts | Listed as **unresolved** for release clearance |
-| Full npm production dependency tree | Not populated in Slice 1 |
+| Gate 6 bundled fonts (4 Noto families) | **Confirmed** / redistribution **conditional** (OFL 1.1) — see dispositions |
+| Full npm production dependency tree | Not populated |
 | `FOUNDATION-READY` | **Not declared** |
 
 ## Shipped runtimes (Gate 5 / Gate 6 — Windows-first)
@@ -61,22 +62,33 @@ It is not a replacement for package manifests, `package-lock.json`, runtime prov
 - **License:** Apache-2.0
 - **Evidence:** `packages/pdf/packaging/inventory.json`, `packages/pdf/packaging/THIRD-PARTY-NOTICES.md`
 
-## Bundled fonts (release clearance unresolved)
+## Bundled fonts (Gate 6 — OFL clearance confirmed)
 
-Gate 6 packaging pins the following OFL-1.1 fonts with SHA-256 digests in `packages/pdf/packaging/inventory.json`:
+Gate 6 packaging pins the following OFL-1.1 fonts with SHA-256 digests in `packages/pdf/packaging/inventory.json`. Evidence ops Slice 2 records font-by-font release clearance in `FONT-CLEARANCE-DISPOSITIONS.md` from upstream `google/fonts` `OFL.txt` files.
 
-| Font | Role | Inventory status for release clearance |
-|---|---|---|
-| Noto Serif Kannada | Body (Kannada) | **Unresolved** |
-| Noto Sans Kannada | Headings (Kannada) | **Unresolved** |
-| Noto Serif | Body (Latin fallback) | **Unresolved** |
-| Noto Sans | Headings (Latin fallback) | **Unresolved** |
+| Font | Role | Release clearance | Redistribution |
+|---|---|---|---|
+| Noto Serif Kannada | Body (Kannada) | **Confirmed** | **Conditional** (OFL 1.1) |
+| Noto Sans Kannada | Headings (Kannada) | **Confirmed** | **Conditional** (OFL 1.1) |
+| Noto Serif | Body (Latin fallback) | **Confirmed** | **Conditional** (OFL 1.1) |
+| Noto Sans | Headings (Latin fallback) | **Confirmed** | **Conditional** (OFL 1.1) |
 
-Packaging pins and OFL claims from Gate 6 are recorded in the evidence inventory as `status: unresolved` with `redistribution: unresolved`. Per `FONT-PROVENANCE-POLICY.md`, technical usability and packaging success do **not** equal release clearance. A later evidence-ops slice must complete font-by-font disposition (or an explicit waiver) before these can be treated as confirmed for `FOUNDATION-READY`.
+**Shipping conditions (must remain true):**
+
+1. Include the applicable copyright notice and SIL OFL 1.1 text with each shipped copy (Gate 6 packaging extracts `OFL.txt` beside fonts when available).
+2. Do not sell the fonts as a standalone product.
+3. Exact file bytes must match the inventory SHA-256 pins (or update inventory and disposition together).
+
+Upstream OFL references:
+
+- https://raw.githubusercontent.com/google/fonts/main/ofl/notoserifkannada/OFL.txt
+- https://raw.githubusercontent.com/google/fonts/main/ofl/notosanskannada/OFL.txt
+- https://raw.githubusercontent.com/google/fonts/main/ofl/notoserif/OFL.txt
+- https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/OFL.txt
 
 ## Relationship to the evidence inventory
 
-`evidence-inventory.json` is the structured companion for this notice file. Slice 1 populates Gate 5/6 runtime entries as `confirmed` and font entries as `unresolved`. Broader npm dependency population is deferred.
+`evidence-inventory.json` is the structured companion for this notice file. Slice 1 populates Gate 5/6 runtime entries as `confirmed`. Slice 2 updates the four Gate 6 font entries to `confirmed` with `redistribution: conditional`. Broader npm dependency population is deferred. This notice update does **not** declare `FOUNDATION-READY`.
 
 ## Non-actions
 

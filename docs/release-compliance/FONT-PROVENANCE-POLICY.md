@@ -1,6 +1,6 @@
 # OpenBook Font Provenance & Redistribution Policy
 
-**Status:** Policy mechanism established; font-by-font production disposition requires authoritative evidence.
+**Status:** Policy mechanism established. Gate 6 bundled-font dispositions are recorded in `FONT-CLEARANCE-DISPOSITIONS.md` (evidence ops Slice 2); any additional fonts still require the same evidence process.
 
 **Authority:** ADR-0028 — Release & Compliance Architecture
 
@@ -111,4 +111,4 @@ This policy slice does **not** authorize:
 - release signing or release automation changes;
 - declaration that any currently unresolved font is legally cleared for redistribution.
 
-Actual font-by-font disposition remains dependent on authoritative evidence collected during a later release/compliance verification step.
+Actual font-by-font disposition remains dependent on authoritative evidence. For the four Gate 6 Noto fonts currently pinned for PDF packaging, dispositions are recorded in `docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md` and mirrored in the release evidence inventory / third-party notices. That disposition record does not declare `FOUNDATION-READY`.

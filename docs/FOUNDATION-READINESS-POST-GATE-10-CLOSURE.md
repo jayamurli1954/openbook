@@ -76,9 +76,9 @@ DCO continues to be enforced via the DCO workflow on pull requests (observed gre
 | Item | State |
 |---|---|
 | ADR-0028 inventory / notices / font **policy** / manifest / verification **schemas** | Established on main |
-| Production evidence inventory population | **Unresolved** (templates intentionally empty / evidence-dependent) |
-| Third-party notice production population | **Unresolved** where authoritative review pending |
-| Font-by-font redistribution clearance | **Unresolved** (policy exists; clearance evidence pending) |
+| Production evidence inventory population | **Partial** — Gate 5/6 runtimes + Gate 6 fonts populated (evidence ops Slices 1–2); broader npm tree unresolved |
+| Third-party notice production population | **Partial** — Gate 5/6 runtimes + Gate 6 fonts recorded; broader npm tree unresolved |
+| Font-by-font redistribution clearance | **Partial** — Gate 6 four Noto fonts **confirmed / conditional** (OFL 1.1); additional fonts still evidence-dependent |
 | Gate 10 Windows identity + ADR-0028 manifest linkage | Mechanism done; release status remains `unresolved` |
 
 ### 3.4 Packaging / platform evidence
@@ -115,7 +115,7 @@ Front-door docs (`PROJECT-CONTEXT.md`, ADR index, implementation backlog) must b
 
 **Not formally declared by this record.**
 
-Contributor governance (ADR-0024–0027) remains established. Repository controls are now partially re-verified (§3.2). Release/provenance production evidence and font clearance remain open.
+Contributor governance (ADR-0024–0027) remains established. Repository controls are now partially re-verified (§3.2). Broader release/provenance production evidence (npm inventory, signing/multi-OS) remains open; Gate 6 font OFL clearance is recorded under evidence ops Slice 2.
 
 ### `FOUNDATION-READY`
 
@@ -125,10 +125,11 @@ Engineering Gates 1–10 and the four required product capabilities are complete
 
 Carried-forward blockers / limitations that prevent this record from declaring `FOUNDATION-READY`:
 
-1. Production ADR-0028 inventory / notice population remains unresolved.
-2. Bundled-font redistribution evidence remains font-by-font unresolved.
-3. Contributor “reproducible release” is not established as a signed, multi-platform, production-certified package.
-4. No maintainer explicit declaration is made here.
+1. Broader production ADR-0028 inventory / notice population (beyond Gate 5/6 runtimes and Gate 6 fonts) remains unresolved.
+2. Contributor “reproducible release” is not established as a signed, multi-platform, production-certified package.
+3. No maintainer explicit declaration is made here.
+
+**Update (2026-09-22, evidence ops Slice 2):** Gate 6 four Noto fonts are dispositioned as confirmed / conditional OFL — see `FONT-CLEARANCE-DISPOSITIONS.md`. That does **not** by itself declare `FOUNDATION-READY`.
 
 This distinction is intentional and consistent with ADR-0032 and Gate 10 Slice 5 (`foundationReady: false`).
 
@@ -144,12 +145,12 @@ This distinction is intentional and consistent with ADR-0032 and Gate 10 Slice 5
 
 Open items to carry forward (evidence/ops or separately authorized architecture):
 
-1. Populate or explicitly waive production ADR-0028 inventory/notice evidence.
-2. Font-by-font clearance evidence (or explicit not-applicable dispositions).
-3. Optional: stronger contributor packaging/signing story (Windows first; other OS later).
-4. Optional: Gate 11+ security / determinism ADRs when selected.
-5. Optional: React recover/discard chrome (ADR-0031 residual).
-6. Future product domains: DTP, AI/Ollama, cloud sync (must not silently displace evidence closure).
+1. Populate or explicitly waive broader production ADR-0028 inventory/notice evidence (npm tree and other non–Gate 5/6 components).
+2. Optional: stronger contributor packaging/signing story (Windows first; other OS later).
+3. Optional: Gate 11+ security / determinism ADRs when selected.
+4. Optional: React recover/discard chrome (ADR-0031 residual).
+5. Future product domains: DTP, AI/Ollama, cloud sync (must not silently displace evidence closure).
+6. Explicit `FOUNDATION-READY` determination when remaining evidence warrants.
 
 ## 7. Next architecture domain — candidates (not selected)
 
