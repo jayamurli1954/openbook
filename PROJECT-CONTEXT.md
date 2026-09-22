@@ -83,9 +83,10 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - Apache-2.0 adopted for OpenBook core (ADR-0003).
 - DCO 1.1 is the contribution sign-off mechanism (ADR-0024). Code of Conduct: ADR-0026. Security disclosure: ADR-0027 / `SECURITY.md`.
 - Book Model remains canonical (ADR-0006). Tiptap JSON is never persisted.
-- Publishing engines for EPUB, HTML, and Typst PDF are implemented (Gates 1–6). Desktop Studio coordinator export APIs exist (ADR-0023); host export UI and file dialogs do not.
+- Publishing engines for EPUB, HTML, and Typst PDF are implemented (Gates 1–6). Gate 9 export UI and native Save As are implemented (ADR-0030).
 - ADR-0028 established the release/compliance evidence layer; production inventory population and font-by-font clearance remain evidence-pending.
-- ADR-0029 accepted a versioned project-package boundary. Implementation is separately gated (Slice 1 contract is not a filesystem Save/Open).
+- ADR-0029 Slices 1–6 are implemented (filesystem project package). ADR-0031 Slices 1–5 are implemented (autosave / crash recovery over the package Save boundary).
+- ADR-0032 proposes Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). It is **Proposed** and authorizes no implementation.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -101,18 +102,19 @@ AI coding agents should read this file and the relevant ADRs before making mater
 
 ## Current known pending decisions
 
-Required next product capabilities (must not be dropped; separately gated — see `docs/IMPLEMENTATION-BACKLOG.md`):
+Required next product capabilities (must not be dropped — see `docs/IMPLEMENTATION-BACKLOG.md`):
 
-- Export UI and native Save As (Gate 9; engines already exist)
-- Filesystem project package (ADR-0029 Slices 2–6)
-- Autosave and crash recovery (after atomic package Save/Open)
+- Export UI and native Save As — **done** (Gate 9 / ADR-0030)
+- Filesystem project package — **done** (ADR-0029 Slices 1–6)
+- Autosave and crash recovery — **done** sequencing (ADR-0031 Slices 1–5)
+- Packaging / release readiness — **Proposed** (Gate 10 / ADR-0032; implementation gated)
 
 Other pending items:
 
-- Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012)
+- Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012; inventory pins exist; packaged desktop discovery is Gate 10 / ADR-0032)
 - Bundled-font redistribution evidence (architecture policy exists in ADR-0028 Slice 3; font-by-font clearance remains evidence-dependent)
 - Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared (**not** declared)
-- AI/Ollama and DTP/page layout (future; must not displace the required three above)
+- AI/Ollama and DTP/page layout (future; must not displace the required product capabilities above)
 
 ## Important existing documents
 
