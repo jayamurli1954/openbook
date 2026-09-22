@@ -73,8 +73,8 @@ AUTOSAVE & CRASH RECOVERY (ADR-0031)
 ├── Slice 5 SQLite/package Save unification [DONE — PR #102; package-first explicit Save when bound]
 │
 PACKAGING / RELEASE READINESS (GATE 10 / ADR-0032)
-├── Desktop packaging architecture         [PROPOSED — ADR-0032; no implementation]
-├── Slice 1 packaged resource locator      [NOT AUTHORIZED]
+├── Desktop packaging architecture         [DONE — ADR-0032 Accepted]
+├── Slice 1 packaged resource locator      [IN PROGRESS — injectable resource root; no installer]
 ├── Slice 2 Windows resource layout        [NOT AUTHORIZED]
 ├── Slice 3 desktop host wiring            [NOT AUTHORIZED]
 ├── Slice 4 Windows distributable + identity [NOT AUTHORIZED]
@@ -84,7 +84,7 @@ REQUIRED NEXT PRODUCT CAPABILITIES (must not be dropped; not authorized by this 
 ├── Export UI & native Save As             [DONE on main — Gate 9 / ADR-0030 Slices 1–5]
 ├── Filesystem project package             [DONE on main — ADR-0029 Slices 1–6]
 ├── Autosave & crash recovery              [DONE on main — ADR-0031 Slices 1–5]
-├── Packaging / release readiness          [PROPOSED — Gate 10 / ADR-0032; implementation gated]
+├── Packaging / release readiness          [ADR-0032 Accepted; Slice 1 in progress]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -125,7 +125,7 @@ Status against the ordered list:
 22. **ADR-0028 Release & Compliance implementation (Slices 1–5)** — **DONE** (PRs #73–#77; final Slice 5 merge `8de6969068768cdb55029e720aebad53a50a04a1`).
 23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slices 1–6 **DONE** (#82, #93, #94, #95, #96, #97).
 24. **ADR-0031 Autosave & Crash Recovery** — **Accepted**. Slices 1–5 **DONE** (#98–#102; Slice 5 merge `d51121d`). Sequencing closed. React recover chrome remains separately gated.
-25. **Gate 10 packaging / release readiness** — ADR-0032 **Proposed**. Architecture only; no implementation slice is authorized.
+25. **Gate 10 packaging / release readiness** — ADR-0032 **Accepted**. Slice 1 (packaged resource locator) is the current authorized unit.
 
 **Current Test Suite State:**
 - **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages at the Gate 8 Slice 5 merge checkpoint. ADR-0028 is documentation/schema-only and introduced no application test changes.
@@ -167,7 +167,7 @@ Maintainer direction 2026-09-16: these three are necessary for a usable OpenBook
 | **Export UI & native Save As** | A person must get EPUB/HTML/PDF onto disk. Engines without a host path are not a product. | **Done on `main`:** Gate 9 Slices 1–5 under ADR-0030 (export host, Save-As host, wiring, React UI + Tauri dialog/atomic writes, E2E verification). | Closed. Follow-ups only via new authorization (e.g. packaging Gate 10). |
 | **Filesystem project package** | Save/Open must be a versioned on-disk project, not an opaque SQLite-only session. | ADR-0029 Accepted. Slices 1–6 done (#82, #93, #94, #95, #96, #97). | Closed under ADR-0029. Bound Save unification is done under ADR-0031 Slice 5. |
 | **Autosave & crash recovery** | Losing work after the app is actually used is unacceptable. | **Done on `main`:** ADR-0031 Slices 1–5 (#98–#102). | Closed under ADR-0031 sequencing. React recover/discard chrome remains separately gated. |
-| **Packaging / release readiness** | A developer `.cache/` runtime is not a shippable desktop product. | ADR-0032 **Proposed**. | Accept ADR-0032, then authorize Slice 1 (packaged resource locator) only. |
+| **Packaging / release readiness** | A developer `.cache/` runtime is not a shippable desktop product. | ADR-0032 **Accepted**. Slice 1 in progress. | Complete Slice 1. Slices 2–5 remain separately gated. |
 
 These items still require their own ADR/slice authorization before code. Recording them here is not that authorization.
 
@@ -175,7 +175,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the re
 
 ## Next architectural decision points
 
-Gates 1 through 9, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 packaging/release readiness is the current gated unit: ADR-0032 is **Proposed** and authorizes no implementation.
+Gates 1 through 9, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 is **Accepted**. Slice 1 (packaged resource locator) is the current authorized unit.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 

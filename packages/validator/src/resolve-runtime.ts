@@ -7,15 +7,24 @@ import type { ResolvedValidatorRuntime } from "./types.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function nonemptyPath(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
+}
+
 /**
  * Resolves the Gate 5 production runtime layout produced by
  * `scripts/validator/build-runtime.mjs`.
  *
  * Lookup order:
- * 1. OPENBOOK_VALIDATOR_RUNTIME_ROOT
- * 2. <repo>/.cache/validator-runtime
+ * 1. options.runtimeRoot
+ * 2. OPENBOOK_VALIDATOR_RUNTIME_ROOT
+ * 3. <repo>/.cache/validator-runtime
  *
- * Never downloads artifacts. Never uses a system JRE by default.
+ * An explicit runtime root must not walk the filesystem for a git/monorepo root
+ * (Gate 10 packaged desktop has no repository). Never downloads artifacts.
+ * Never uses a system JRE by default.
  */
 export function resolveHostPlatformKey(
   platform: NodeJS.Platform = process.platform,
@@ -45,11 +54,15 @@ function findRepoRoot(startDir: string): string {
 export function resolveProductionRuntime(
   options: { runtimeRoot?: string; repoRoot?: string } = {},
 ): ResolvedValidatorRuntime | null {
-  const repoRoot = options.repoRoot ?? findRepoRoot(path.resolve(__dirname, "../../.."));
+  const explicitRoot =
+    nonemptyPath(options.runtimeRoot) ?? nonemptyPath(process.env.OPENBOOK_VALIDATOR_RUNTIME_ROOT);
   const cacheRoot =
-    options.runtimeRoot ??
-    process.env.OPENBOOK_VALIDATOR_RUNTIME_ROOT ??
-    path.join(repoRoot, ".cache", "validator-runtime");
+    explicitRoot ??
+    path.join(
+      options.repoRoot ?? findRepoRoot(path.resolve(__dirname, "../../..")),
+      ".cache",
+      "validator-runtime",
+    );
 
   const javaExecutablePath =
     process.platform === "win32"

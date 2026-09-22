@@ -3,6 +3,7 @@ import test from "node:test";
 import * as assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -280,3 +281,30 @@ test(
     assert.match(pub.typstSource, /image\("assets\/dot\.png"\)/);
   },
 );
+
+test("injected runtimeRoot is used without walking a repository root", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pdf-runtime-locator-"));
+  try {
+    const typstName = process.platform === "win32" ? "typst.exe" : "typst";
+    fs.mkdirSync(path.join(tmp, "typst"), { recursive: true });
+    fs.mkdirSync(path.join(tmp, "fonts"), { recursive: true });
+    fs.writeFileSync(path.join(tmp, "typst", typstName), "");
+    const resolved = resolveProductionTypstRuntime({ runtimeRoot: tmp });
+    assert.ok(resolved);
+    assert.equal(resolved?.cacheRoot, tmp);
+    assert.ok(resolved?.typstExecutablePath.startsWith(tmp));
+    assert.ok(resolved?.fontsDirectory.startsWith(tmp));
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("incomplete injected runtimeRoot returns null instead of a system Typst", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pdf-runtime-locator-"));
+  try {
+    const resolved = resolveProductionTypstRuntime({ runtimeRoot: tmp });
+    assert.equal(resolved, null);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
