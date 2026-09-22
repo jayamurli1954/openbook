@@ -63,7 +63,7 @@ This reconciliation records the current governance state only. It does **not** d
 
 ADR-0028 Release & Compliance Architecture is **implementation-complete and reconciled** on `main` through PRs #73–#77. The five slices establish the evidence inventory contract, third-party notice maintenance mechanism, font provenance policy, release artifact manifest/evidence mechanism, and reproducibility/compliance verification mechanism.
 
-Production evidence population is intentionally not represented as complete. Bundled-font clearance remains evidence-dependent, and full branch-protection configuration remains not independently re-verified because of the previously recorded GitHub API 403 limitation. These limitations do not reopen ADR-0028 or authorize additional work; future operational evidence collection must follow the normal authorization sequence.
+Production evidence population is intentionally not represented as complete. Gate 6 bundled-font OFL clearance for the four pinned Noto fonts is recorded under evidence ops Slice 2 (`FONT-CLEARANCE-DISPOSITIONS.md`); broader npm production inventory remains open. Full branch-protection configuration remains not independently re-verified beyond the post–Gate 10 closure API check. These limitations do not reopen ADR-0028 or authorize additional work; future operational evidence collection must follow the normal authorization sequence.
 
 See `docs/release-compliance/ADR-0028-CLOSURE-RECONCILIATION.md` for the detailed closure record.
 
@@ -79,12 +79,12 @@ See also `docs/FOUNDATION-READINESS-REPORT.md`, `docs/FOUNDATION-READINESS-CLOSU
 
 - ~~Final PDF renderer after Typst/pdf-lib/Chromium bake-off~~ — resolved by ADR-0013: Typst **v0.15.1** selected as production PDF publishing renderer; implementation requires separate explicit authorization
 - Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default **Accepted** in ADR-0012; Gate 5 inventory pins exist; packaged desktop discovery is Gate 10 / ADR-0032)
-- Bundled-font policy — **architecture policy established by ADR-0028 Slice 3; font-by-font redistribution evidence remains pending**
+- Bundled-font policy — **architecture policy established by ADR-0028 Slice 3; Gate 6 four Noto fonts cleared (confirmed/conditional OFL) under evidence ops Slice 2; additional fonts remain evidence-dependent**
 - ~~Contributor agreement mechanism (CLA/DCO)~~ — resolved by ADR-0024: DCO 1.1 **Accepted** and enforcement implemented
 - ~~Stewardship and maintainer governance~~ — resolved by ADR-0025: **Accepted**; documented governance policy recorded
 - ~~Code of Conduct governance~~ — resolved by ADR-0026: **Accepted**; documented governance policy recorded
 - ~~Security disclosure and vulnerability response governance~~ — resolved by ADR-0027: **Accepted** and operational security policy implemented on `main` through PR #64
-- Whether `FOUNDATION-GOVERNANCE-READY` / `ROADMAP.md` `FOUNDATION-READY` can be declared (audit: **not passed** / post–Gate 10 closure: **not declared**; evidence ops Slice 1 does not declare)
+- Whether `FOUNDATION-GOVERNANCE-READY` / `ROADMAP.md` `FOUNDATION-READY` can be declared (audit: **not passed** / post–Gate 10 closure: **not declared**; evidence ops Slice 2 does not declare)
 - **Required next product capabilities:** complete through Gate 10. **Selected next path:** foundation readiness evidence ops — see `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md` and `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`.
 - AI/Ollama and DTP/page layout remain future work and must not displace the required product capabilities above
 - ~~Exact Tiptap/ProseMirror (editor) package versions~~ — resolved by ADR-0008 (OSS pins Frozen; implementation still gated)

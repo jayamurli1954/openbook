@@ -5,7 +5,7 @@
   "release": {
     "sourceCommit": "359b0467e0c3f5b79c0c7c40f2ec741aa8500fe6",
     "dependencyLock": "package-lock.json",
-    "environment": "windows-x64-first Gate 10 packaging baseline; evidence ops Slice 1"
+    "environment": "windows-x64-first Gate 10 packaging baseline; evidence ops Slice 2 font clearance"
   },
   "entries": [
     {
@@ -96,89 +96,93 @@
       "component": "Noto Serif Kannada",
       "version": "google/fonts ofl/notoserifkannada (jsDelivr pin of main)",
       "classification": "shipped-asset",
-      "status": "unresolved",
+      "status": "confirmed",
       "provenance": {
         "source": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notoserifkannada/NotoSerifKannada%5Bwght%5D.ttf",
-        "sourceReference": "packages/pdf/packaging/inventory.json#fonts.files",
+        "sourceReference": "https://raw.githubusercontent.com/google/fonts/main/ofl/notoserifkannada/OFL.txt",
         "integrity": "sha256:3d97c98dd59251a85fcc6e95edf9be02b60147e92486927390247f1cd4d5eb37"
       },
       "licensing": {
         "license": "OFL-1.1",
-        "basis": "Gate 6 packaging inventory records OFL-1.1; release-clearance disposition still open per ADR-0028 font policy",
+        "basis": "Upstream google/fonts ofl/notoserifkannada/OFL.txt (Noto Project Authors); Gate 6 inventory pin; FONT-CLEARANCE-DISPOSITIONS.md",
         "noticeRequired": true,
-        "redistribution": "unresolved"
+        "redistribution": "conditional"
       },
       "artifacts": [
         "packages/pdf/packaging/inventory.json",
+        "docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md",
         "docs/release-compliance/FONT-PROVENANCE-POLICY.md"
       ],
-      "notes": "Integrity and packaging pin recorded. Font-by-font release clearance remains unresolved; do not treat as FOUNDATION-READY font evidence."
+      "notes": "Confirmed for bundling with OpenBook under OFL 1.1 conditions (include OFL/copyright; do not sell fonts alone). Exact bytes must match inventory SHA-256."
     },
     {
       "component": "Noto Sans Kannada",
       "version": "google/fonts ofl/notosanskannada (jsDelivr pin of main)",
       "classification": "shipped-asset",
-      "status": "unresolved",
+      "status": "confirmed",
       "provenance": {
         "source": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosanskannada/NotoSansKannada%5Bwdth%2Cwght%5D.ttf",
-        "sourceReference": "packages/pdf/packaging/inventory.json#fonts.files",
+        "sourceReference": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosanskannada/OFL.txt",
         "integrity": "sha256:cca4f3b3a8cb12fb261f1b43baf5d2f7f59d90fe123d41f0065ed3a183997ec9"
       },
       "licensing": {
         "license": "OFL-1.1",
-        "basis": "Gate 6 packaging inventory records OFL-1.1; release-clearance disposition still open per ADR-0028 font policy",
+        "basis": "Upstream google/fonts ofl/notosanskannada/OFL.txt (Noto Project Authors); Gate 6 inventory pin; FONT-CLEARANCE-DISPOSITIONS.md",
         "noticeRequired": true,
-        "redistribution": "unresolved"
+        "redistribution": "conditional"
       },
       "artifacts": [
         "packages/pdf/packaging/inventory.json",
+        "docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md",
         "docs/release-compliance/FONT-PROVENANCE-POLICY.md"
       ],
-      "notes": "Integrity and packaging pin recorded. Font-by-font release clearance remains unresolved."
+      "notes": "Confirmed for bundling with OpenBook under OFL 1.1 conditions. Exact bytes must match inventory SHA-256."
     },
     {
       "component": "Noto Serif",
       "version": "google/fonts ofl/notoserif (jsDelivr pin of main)",
       "classification": "shipped-asset",
-      "status": "unresolved",
+      "status": "confirmed",
       "provenance": {
         "source": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notoserif/NotoSerif%5Bwdth%2Cwght%5D.ttf",
-        "sourceReference": "packages/pdf/packaging/inventory.json#fonts.files",
+        "sourceReference": "https://raw.githubusercontent.com/google/fonts/main/ofl/notoserif/OFL.txt",
         "integrity": "sha256:4d8e6761424656867019081a1a01336f3cb086982682698714054fc33f782713"
       },
       "licensing": {
         "license": "OFL-1.1",
-        "basis": "Gate 6 packaging inventory records OFL-1.1; release-clearance disposition still open per ADR-0028 font policy",
+        "basis": "Upstream google/fonts ofl/notoserif/OFL.txt (Noto Project Authors); Gate 6 inventory pin; FONT-CLEARANCE-DISPOSITIONS.md",
         "noticeRequired": true,
-        "redistribution": "unresolved"
+        "redistribution": "conditional"
       },
       "artifacts": [
         "packages/pdf/packaging/inventory.json",
+        "docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md",
         "docs/release-compliance/FONT-PROVENANCE-POLICY.md"
       ],
-      "notes": "Integrity and packaging pin recorded. Font-by-font release clearance remains unresolved."
+      "notes": "Confirmed for bundling with OpenBook under OFL 1.1 conditions. Exact bytes must match inventory SHA-256."
     },
     {
       "component": "Noto Sans",
       "version": "google/fonts ofl/notosans (jsDelivr pin of main)",
       "classification": "shipped-asset",
-      "status": "unresolved",
+      "status": "confirmed",
       "provenance": {
         "source": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf",
-        "sourceReference": "packages/pdf/packaging/inventory.json#fonts.files",
+        "sourceReference": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/OFL.txt",
         "integrity": "sha256:bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d"
       },
       "licensing": {
         "license": "OFL-1.1",
-        "basis": "Gate 6 packaging inventory records OFL-1.1; release-clearance disposition still open per ADR-0028 font policy",
+        "basis": "Upstream google/fonts ofl/notosans/OFL.txt (Noto Project Authors); Gate 6 inventory pin; FONT-CLEARANCE-DISPOSITIONS.md",
         "noticeRequired": true,
-        "redistribution": "unresolved"
+        "redistribution": "conditional"
       },
       "artifacts": [
         "packages/pdf/packaging/inventory.json",
+        "docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md",
         "docs/release-compliance/FONT-PROVENANCE-POLICY.md"
       ],
-      "notes": "Integrity and packaging pin recorded. Font-by-font release clearance remains unresolved."
+      "notes": "Confirmed for bundling with OpenBook under OFL 1.1 conditions. Exact bytes must match inventory SHA-256."
     }
   ]
 }

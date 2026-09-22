@@ -32,7 +32,7 @@ The five slices preserve the accepted architecture boundary: evidence records an
 
 ### Slice 1 — inventory contract
 
-The machine-readable evidence inventory provides classifications for source, development, build, test, shipped-runtime, and shipped-asset evidence, with explicit `confirmed`, `unresolved`, and `not-applicable` states. The production inventory template remains intentionally empty as a blank form. A separately maintained production inventory at `docs/release-compliance/evidence-inventory.json` began population under foundation readiness evidence ops Slice 1 (Gate 5/6 pins); font entries remain unresolved and FOUNDATION-READY is not declared.
+The machine-readable evidence inventory provides classifications for source, development, build, test, shipped-runtime, and shipped-asset evidence, with explicit `confirmed`, `unresolved`, and `not-applicable` states. The production inventory template remains intentionally empty as a blank form. A separately maintained production inventory at `docs/release-compliance/evidence-inventory.json` began population under foundation readiness evidence ops Slice 1 (Gate 5/6 runtimes) and Slice 2 (Gate 6 fonts confirmed/conditional OFL); broader npm population remains open and FOUNDATION-READY is not declared.
 
 ### Slice 2 — third-party notices
 
@@ -40,7 +40,7 @@ The human-readable third-party notice mechanism is established and explicitly re
 
 ### Slice 3 — fonts
 
-The font policy requires authoritative provenance, licensing basis, redistribution disposition, attribution/notice obligations, integrity evidence, and artifact scope before a bundled font is treated as release-ready. Unresolved font evidence remains unresolved.
+The font policy requires authoritative provenance, licensing basis, redistribution disposition, attribution/notice obligations, integrity evidence, and artifact scope before a bundled font is treated as release-ready. Unresolved font evidence remains unresolved. Gate 6's four pinned Noto fonts have dispositions recorded in `FONT-CLEARANCE-DISPOSITIONS.md` (evidence ops Slice 2).
 
 ### Slice 4 — artifact manifest
 
