@@ -23,6 +23,8 @@
     "src/host/packagedRuntimeLocator.ts",
     "src/host/packagedRuntimeLocator.test.ts",
     "src/host/packagedResourceAssembly.ts",
-    "src/host/packagedResourceAssembly.test.ts"
+    "src/host/packagedResourceAssembly.test.ts",
+    "src/host/packagedPublishingHost.ts",
+    "src/host/packagedPublishingHost.test.ts"
   ]
 }

@@ -6,7 +6,8 @@
  * application resource root. Does not walk a git/monorepo tree, does not use
  * a system JRE or Typst, and does not download runtimes.
  *
- * Tauri resource-path wiring and installer generation are later slices.
+ * Tauri resource-path wiring is Gate 10 Slice 3 (`packagedPublishingHost`).
+ * Installer generation is a later slice.
  */
 import path from "node:path";
 import {

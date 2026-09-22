@@ -3,6 +3,10 @@
  * Node-only publishing host adapters (Typst PDF + EPUBCheck).
  * The Vite desktop bundle aliases this module to a browser stub.
  *
+ * Gate 10 Slice 3: resolves Gate 5/6 runtimes through
+ * `resolveDesktopPublishingRuntimes` (packaged resource tree first, developer
+ * `.cache/` fallback only when no packaged root is in effect).
+ *
  * PDF cancellation: @openbook/pdf buildPdf/compileTypstToPdf do not accept
  * AbortSignal. This host owns the Typst child process and passes AbortSignal
  * into execFile so abort terminates the subprocess (ADR-0023 INV-13).
@@ -177,35 +181,62 @@ export async function invokeTypstCompileWithAbort(
 export const defaultPdfPublisher = {
   async publishPdf(
     book: Readonly<Book>,
-    options: { assetResolver: AssetResolver; signal?: AbortSignal },
+    options: {
+      assetResolver: AssetResolver;
+      signal?: AbortSignal;
+      resourceRoot?: string | null;
+      validatorRuntimeRoot?: string;
+      pdfRuntimeRoot?: string;
+    },
   ): Promise<PdfPublication> {
     throwIfAborted(options.signal);
 
     const {
       processBookAssets,
-      resolveProductionTypstRuntime,
       serializeBookToTypst,
       resolveCreationTimestamp,
       TypstRuntimeError,
     } = await import("@openbook/pdf");
+    const {
+      resolveDesktopPublishingRuntimes,
+      packagedMissingRuntimeMessage,
+    } = await import("../host/packagedPublishingHost.js");
 
     const assetResult = await processBookAssets(book, options.assetResolver);
     throwIfAborted(options.signal);
 
-    const runtime = resolveProductionTypstRuntime();
-    const typstExecutablePath = runtime?.typstExecutablePath;
-    const fontPath = runtime?.fontsDirectory;
+    const resolved = await resolveDesktopPublishingRuntimes({
+      resourceRoot: options.resourceRoot,
+      validatorRuntimeRoot: options.validatorRuntimeRoot,
+      pdfRuntimeRoot: options.pdfRuntimeRoot,
+    });
+
+    let typstExecutablePath: string | undefined;
+    let fontPath: string | undefined;
+
+    if (resolved.mode === "packaged") {
+      typstExecutablePath = resolved.pdf.typstExecutablePath;
+      fontPath = resolved.pdf.fontsDirectory;
+    } else if (resolved.mode === "developer") {
+      typstExecutablePath = resolved.pdf?.typstExecutablePath;
+      fontPath = resolved.pdf?.fontsDirectory;
+    } else {
+      throw new TypstRuntimeError(
+        "MISSING_TYPST",
+        packagedMissingRuntimeMessage(resolved.error),
+      );
+    }
 
     if (!typstExecutablePath) {
       throw new TypstRuntimeError(
         "MISSING_TYPST",
-        "Typst executable not found. Run `npm run packaging:build -w @openbook/pdf` or pass typstExecutablePath.",
+        "Typst executable not found under the packaged resource tree or developer runtime cache. System Typst is not used as a recovery path.",
       );
     }
     if (!fontPath) {
       throw new TypstRuntimeError(
         "MISSING_FONTS",
-        "Font directory not found. Run `npm run packaging:build -w @openbook/pdf` or pass fontPath.",
+        "Font directory not found under the packaged resource tree or developer runtime cache. System fonts are not used for Typst packaging.",
       );
     }
 
@@ -232,35 +263,25 @@ export const defaultPdfPublisher = {
 
 export const productionValidatorService: ValidatorService = {
   async validateEpub(epubPath: string): Promise<ValidationReport> {
-    const { EpubCheckSubprocessAdapter, resolveProductionRuntime } = await import(
-      "@openbook/validator"
-    );
-    const runtime = resolveProductionRuntime();
-    if (runtime === null) {
-      return {
-        validatorName: "EPUBCheck",
-        validatorVersion: "5.3.0",
-        targetPath: epubPath,
-        isValid: false,
-        summary: {
-          totalFatal: 1,
-          totalErrors: 1,
-          totalWarnings: 0,
-          totalInfos: 0,
-          isValid: false,
-        },
-        messages: [
-          {
-            id: "MISSING-RUNTIME",
-            severity: "FATAL",
-            message: "Production EPUBCheck runtime is not installed.",
-            locations: [],
-          },
-        ],
-        rawExitCode: 1,
-        failureKind: "missing_runtime",
-      };
+    const { EpubCheckSubprocessAdapter } = await import("@openbook/validator");
+    const {
+      resolveDesktopPublishingRuntimes,
+      missingRuntimeValidationReport,
+      developerMissingRuntimeValidationReport,
+    } = await import("../host/packagedPublishingHost.js");
+
+    const resolved = await resolveDesktopPublishingRuntimes();
+
+    if (resolved.mode === "missing_runtime") {
+      return missingRuntimeValidationReport(epubPath, resolved.error);
     }
+
+    const runtime =
+      resolved.mode === "packaged" ? resolved.validator : resolved.validator;
+    if (runtime === null) {
+      return developerMissingRuntimeValidationReport(epubPath);
+    }
+
     const adapter = new EpubCheckSubprocessAdapter({
       javaExecutablePath: runtime.javaExecutablePath,
       epubcheckJarPath: runtime.epubcheckJarPath,

@@ -1,12 +1,12 @@
 # ADR-0032: Gate 10 — Desktop Packaging & Release Readiness Architecture
 
-- **Status:** Accepted; Slice 2 in progress
+- **Status:** Accepted; Slice 3 in progress
 - **Date:** 2026-09-22
 - **Gate:** Gate 10
 - **Area:** Desktop / Packaging / Release Readiness
 - **Depends on:** ADR-0005, ADR-0007, ADR-0012, ADR-0013, ADR-0023, ADR-0028, ADR-0030
 - **Supersedes:** None
-- **Implementation authorization:** Slice 2 (Windows resource layout + packaging-time checksum verification)
+- **Implementation authorization:** Slice 3 (desktop host wiring through packaged locator)
 
 ## 1. Context
 
@@ -141,7 +141,7 @@ Desktop packaging, Tauri bundle configuration, and resource-path discovery belon
 
 ## 3. Explicit non-authorizations
 
-This ADR does **not** authorize (Slice 2 resource layout is separately authorized):
+This ADR does **not** authorize (Slice 3 host wiring is separately authorized):
 
 - implementing installer generation or code signing;
 - committing JDK, EPUBCheck, Typst, or font binaries;
@@ -158,7 +158,7 @@ This ADR does **not** authorize (Slice 2 resource layout is separately authorize
 - cloud sync, DTP, or AI/Ollama;
 - Book Model, publishing-engine, project-package, or autosave redesign;
 - removing SQLite;
-- desktop host wiring of the packaged locator (Slice 3).
+- Windows distributable / release-readiness automation (Slices 4–5).
 
 ## 4. Alternatives considered
 
@@ -190,15 +190,15 @@ Architecture acceptance confirms that this ADR:
 Following acceptance, implementation must be separately authorized, one slice at a time:
 
 1. **Packaged resource locator contract** — injectable resource-root discovery for EPUBCheck/`jlink` and Typst/fonts, fail-closed, no system fallback, tests with fake roots (no installer). **Slice 1 (done).**
-2. **Windows resource layout** — copy Gate 5/6 runtime layouts into the Tauri resource tree; packaging-time inventory checksum verification. **Slice 2 (authorized).**
-3. **Desktop host wiring** — packaged OpenBook uses the locator; missing-runtime reporting through the existing validator/PDF host; no user-Java recovery path.
+2. **Windows resource layout** — copy Gate 5/6 runtime layouts into the Tauri resource tree; packaging-time inventory checksum verification. **Slice 2 (done).**
+3. **Desktop host wiring** — packaged OpenBook uses the locator; missing-runtime reporting through the existing validator/PDF host; no user-Java recovery path. **Slice 3 (authorized).**
 4. **Windows distributable + identity** — produce a reviewable Windows package via Tauri bundle; record artifact checksums and ADR-0028 manifest linkage (unresolved evidence stays unresolved).
 5. **Release-readiness verification** — automated checks that the package contains runtimes, validation does not require network, and failure kinds remain distinct. No `FOUNDATION-READY` declaration.
 
-Slices 3–5 are not authorized by Slice 2.
+Slices 4–5 are not authorized by Slice 3.
 
 ## 7. Governance
 
 Normal branch → Draft PR → CI/DCO → review → explicit Ready → explicit merge authorization (`I authorize merge PR #XX`).
 
-This ADR records the accepted architecture. Slice 2 is separately authorized. Slices 3–5 still require explicit implementation authorization.
+This ADR records the accepted architecture. Slice 3 is separately authorized. Slices 4–5 still require explicit implementation authorization.

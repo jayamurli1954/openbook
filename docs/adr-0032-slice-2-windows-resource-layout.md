@@ -1,6 +1,6 @@
 # ADR-0032 Slice 2: Windows Resource Layout — Implementation Proposal
 
-- **Status:** Implementation authorized by maintainer direction (2026-09-22)
+- **Status:** Implemented on main (PR #105)
 - **Date:** 2026-09-22
 - **Parent architecture:** ADR-0032 — Gate 10 Desktop Packaging & Release Readiness Architecture
 - **Scope:** Copy Gate 5/6 runtime layouts into the Tauri resource tree; packaging-time inventory checksum verification
