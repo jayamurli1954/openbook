@@ -86,7 +86,7 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - Publishing engines for EPUB, HTML, and Typst PDF are implemented (Gates 1–6). Gate 9 export UI and native Save As are implemented (ADR-0030).
 - ADR-0028 established the release/compliance evidence layer; production inventory population and font-by-font clearance remain evidence-pending.
 - ADR-0029 Slices 1–6 are implemented (filesystem project package). ADR-0031 Slices 1–5 are implemented (autosave / crash recovery over the package Save boundary).
-- ADR-0032 accepts Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). Slice 1 is the current authorized implementation unit.
+- ADR-0032 accepts Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). Slice 2 is the current authorized implementation unit.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -107,7 +107,7 @@ Required next product capabilities (must not be dropped — see `docs/IMPLEMENTA
 - Export UI and native Save As — **done** (Gate 9 / ADR-0030)
 - Filesystem project package — **done** (ADR-0029 Slices 1–6)
 - Autosave and crash recovery — **done** sequencing (ADR-0031 Slices 1–5)
-- Packaging / release readiness — **Accepted** (Gate 10 / ADR-0032; Slice 1 in progress)
+- Packaging / release readiness — **Accepted** (Gate 10 / ADR-0032; Slice 2 in progress)
 
 Other pending items:
 

@@ -1,6 +1,6 @@
 # ADR-0032 Slice 1: Packaged Resource Locator — Implementation Proposal
 
-- **Status:** Implementation authorized by maintainer direction (2026-09-22); implementation in progress
+- **Status:** Implemented on main (PR #104)
 - **Date:** 2026-09-22
 - **Parent architecture:** ADR-0032 — Gate 10 Desktop Packaging & Release Readiness Architecture
 - **Scope:** Injectable resource-root discovery for EPUBCheck/`jlink` and Typst/fonts; fail-closed; tests with fake roots
