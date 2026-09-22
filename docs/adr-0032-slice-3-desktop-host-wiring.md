@@ -1,6 +1,6 @@
 # ADR-0032 Slice 3: Desktop Host Wiring — Implementation Proposal
 
-- **Status:** Implementation authorized by maintainer direction (2026-09-22)
+- **Status:** Implemented on main (PR #106)
 - **Date:** 2026-09-22
 - **Parent architecture:** ADR-0032 — Gate 10 Desktop Packaging & Release Readiness Architecture
 - **Scope:** Packaged OpenBook uses `locatePackagedRuntimes`; missing-runtime reporting through the existing validator/PDF host; no user-Java / system-Typst recovery path
