@@ -3,9 +3,9 @@
   "schemaVersion": "1.0",
   "inventoryKind": "release-evidence-inventory",
   "release": {
-    "sourceCommit": "359b0467e0c3f5b79c0c7c40f2ec741aa8500fe6",
+    "sourceCommit": "657fe7b",
     "dependencyLock": "package-lock.json",
-    "environment": "windows-x64-first Gate 10 packaging baseline; evidence ops Slice 2 font clearance"
+    "environment": "windows-x64-first Gate 10 packaging baseline; evidence ops Slice 3 direct production npm"
   },
   "entries": [
     {
@@ -183,6 +183,347 @@
         "docs/release-compliance/FONT-PROVENANCE-POLICY.md"
       ],
       "notes": "Confirmed for bundling with OpenBook under OFL 1.1 conditions. Exact bytes must match inventory SHA-256."
+    },
+    {
+      "component": "react",
+      "version": "19.2.8",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/react/-/react-19.2.8.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; package-lock.json",
+        "integrity": "sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw=="
+      },
+      "licensing": {
+        "license": "MIT",
+        "basis": "Published package.json license + LICENSE (Meta Platforms); NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "Direct production dependency of @openbook/desktop; bundled into desktop webview."
+    },
+    {
+      "component": "react-dom",
+      "version": "19.2.8",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/react-dom/-/react-dom-19.2.8.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; package-lock.json",
+        "integrity": "sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ=="
+      },
+      "licensing": {
+        "license": "MIT",
+        "basis": "Published package.json license + LICENSE (Meta Platforms); NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "Direct production dependency of @openbook/desktop; bundled into desktop webview."
+    },
+    {
+      "component": "@tiptap/core",
+      "version": "3.31.3",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/@tiptap/core/-/core-3.31.3.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; ADR-0008; package-lock.json",
+        "integrity": "sha512-Cz50pvciQrxdSxgTkHOVz0uD0Yl/8Xt0QatGD6ILm47jW8EzyHR9RkUGs/D5IqzXKuVPntfw1ttaT926vXfiRg=="
+      },
+      "licensing": {
+        "license": "MIT",
+        "basis": "Published package.json license + LICENSE.md (Tiptap GmbH); NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "ADR-0008 authoring pin; direct production dependency."
+    },
+    {
+      "component": "@tiptap/react",
+      "version": "3.31.3",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/@tiptap/react/-/react-3.31.3.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; ADR-0008; package-lock.json",
+        "integrity": "sha512-QiwQqvaLFLm5EMFu5tg7nAgXJxCUiUTLD8EsK+TqVV5P4bqOoMOCM39khbhXTJyahCuYpiFWx5YOSDtC/JiPtg=="
+      },
+      "licensing": {
+        "license": "MIT",
+        "basis": "Published package.json license + LICENSE.md (Tiptap GmbH); NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "ADR-0008 authoring pin; direct production dependency."
+    },
+    {
+      "component": "@tiptap/pm",
+      "version": "3.31.3",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/@tiptap/pm/-/pm-3.31.3.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; ADR-0008; package-lock.json",
+        "integrity": "sha512-sZime0SWsz/k62W2WvHx5Ig7G2h7kVhrrmnqy+wEgIHfDwEfOlelRjaWCiBCFlF7dxGUntJusCh9FxlLhni0Ag=="
+      },
+      "licensing": {
+        "license": "MIT",
+        "basis": "Published package.json license + LICENSE (Tiptap GmbH); NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "ADR-0008 ProseMirror bridge pin; direct production dependency. Transitive prosemirror-* packages remain under the unresolved transitive bucket."
+    },
+    {
+      "component": "@tiptap/starter-kit",
+      "version": "3.31.3",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/@tiptap/starter-kit/-/starter-kit-3.31.3.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; ADR-0008; package-lock.json",
+        "integrity": "sha512-WKof9RewdmGHvWJ1wn0/HVNG2mV+HOgVRyJkKekuM9fgr6BZAAH/xZsWE1eon+94JnQ+KtK2ThydXQM/qc6b2A=="
+      },
+      "licensing": {
+        "license": "MIT",
+        "basis": "Published package.json license + LICENSE.md (Tiptap GmbH); NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "ADR-0008 authoring pin; direct production dependency."
+    },
+    {
+      "component": "@tiptap/extension-link",
+      "version": "3.31.3",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/@tiptap/extension-link/-/extension-link-3.31.3.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; ADR-0008; package-lock.json",
+        "integrity": "sha512-986wOQzTL9Zr5lf84LCLpm+YOms8A0K39/8DVoqRfebqcOe0/eq4bnztmAlfabOd+kJY92g3AgZERFUx/w+dcw=="
+      },
+      "licensing": {
+        "license": "MIT",
+        "basis": "Published package.json license + LICENSE.md (Tiptap GmbH); NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "ADR-0008 authoring pin; direct production dependency."
+    },
+    {
+      "component": "@tauri-apps/api",
+      "version": "2.11.1",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/@tauri-apps/api/-/api-2.11.1.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; ADR-0007; package-lock.json",
+        "integrity": "sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA=="
+      },
+      "licensing": {
+        "license": "Apache-2.0 OR MIT",
+        "basis": "Published package.json license + LICENSE_APACHE-2.0 / LICENSE_MIT; NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "Desktop host JS API; bundled into desktop webview."
+    },
+    {
+      "component": "@tauri-apps/plugin-dialog",
+      "version": "2.4.1",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/@tauri-apps/plugin-dialog/-/plugin-dialog-2.4.1.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; package-lock.json",
+        "integrity": "sha512-2eAueoxstrUnAf5cZWT9A/jzh4mTdUu646Q8zEX0a3RQmht7fQhdhxWfgQH4/of8iy1etDLKzokXbF2CxdBFHg=="
+      },
+      "licensing": {
+        "license": "MIT OR Apache-2.0",
+        "basis": "Published package.json license + LICENSE.spdx; NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "Native dialog plugin JS bindings; paired with Tauri Rust plugin."
+    },
+    {
+      "component": "@tauri-apps/plugin-sql",
+      "version": "2.4.1",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/@tauri-apps/plugin-sql/-/plugin-sql-2.4.1.tgz",
+        "sourceReference": "apps/desktop/package.json#dependencies; ADR-0007; package-lock.json",
+        "integrity": "sha512-w9fImJ2XaCLFEj+kLbs8nO/Idq89mpjl//Bm37JZo8AugbaVzaW5iHTjjcozHjtLgjb0IAQjYromv0YpzDOFkA=="
+      },
+      "licensing": {
+        "license": "MIT OR Apache-2.0",
+        "basis": "Published package.json license + LICENSE.spdx; NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "ADR-0007 SQLite plugin JS bindings; paired with Tauri Rust plugin / sqlite."
+    },
+    {
+      "component": "fflate",
+      "version": "0.8.3",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/fflate/-/fflate-0.8.3.tgz",
+        "sourceReference": "packages/epub/package.json#dependencies; package-lock.json",
+        "integrity": "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="
+      },
+      "licensing": {
+        "license": "MIT",
+        "basis": "Published package.json license + LICENSE; NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "packages/epub/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "Direct dependency of @openbook/epub used on the desktop publishing path."
+    },
+    {
+      "component": "markdown-it",
+      "version": "14.3.1",
+      "classification": "shipped-runtime",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/markdown-it/-/markdown-it-14.3.1.tgz",
+        "sourceReference": "packages/importer/package.json#dependencies; package-lock.json",
+        "integrity": "sha512-4Ej49aYTDFIQ+uBkfX8GBvJGccoARxxPep+7aWTs55ozbjQJpW9M26Fe53vnGgvLeVzva/amzjQQaQu9w0vMhA=="
+      },
+      "licensing": {
+        "license": "MIT",
+        "basis": "Published package.json license + LICENSE; NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": true,
+        "redistribution": "permitted"
+      },
+      "artifacts": [
+        "packages/importer/package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "Direct dependency of @openbook/importer used on the desktop import path."
+    },
+    {
+      "component": "Desktop build/dev npm toolchain",
+      "version": "see apps/desktop/package.json devDependencies + root package.json",
+      "classification": "build",
+      "status": "confirmed",
+      "provenance": {
+        "source": "https://registry.npmjs.org/",
+        "sourceReference": "apps/desktop/package.json#devDependencies; package.json#devDependencies; package-lock.json"
+      },
+      "licensing": {
+        "license": "various (Vite MIT; TypeScript Apache-2.0; Tauri CLI Apache-2.0 OR MIT; @types/* MIT)",
+        "basis": "Build/dev packages are not redistributed in the Windows NSIS artifact; NPM-PRODUCTION-INVENTORY-SLICE-3.md",
+        "noticeRequired": false,
+        "redistribution": "not-applicable"
+      },
+      "artifacts": [
+        "apps/desktop/package.json",
+        "package.json",
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "Includes Vite 8.2.2, TypeScript 5.9.3, @tauri-apps/cli 2.11.4, React type packages. Confirmed as build/dev — not treated as shipped third-party runtime."
+    },
+    {
+      "component": "npm production transitive dependencies (desktop path)",
+      "version": "package-lock.json lockfileVersion 3",
+      "classification": "shipped-runtime",
+      "status": "unresolved",
+      "provenance": {
+        "source": "https://registry.npmjs.org/",
+        "sourceReference": "package-lock.json (approx. 136 node_modules packages)"
+      },
+      "licensing": {
+        "license": "various",
+        "basis": "Direct production deps recorded in Slice 3; transitive packages not yet enumerated package-by-package",
+        "noticeRequired": true,
+        "redistribution": "unresolved"
+      },
+      "artifacts": [
+        "package-lock.json",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "Deferred. Includes transitive ProseMirror packages under @tiptap/pm and other nested deps. Do not treat as FOUNDATION-READY complete."
+    },
+    {
+      "component": "Tauri / Rust crate dependencies (Cargo)",
+      "version": "apps/desktop/src-tauri (Cargo.lock when present)",
+      "classification": "shipped-runtime",
+      "status": "unresolved",
+      "provenance": {
+        "source": "https://crates.io/",
+        "sourceReference": "apps/desktop/src-tauri"
+      },
+      "licensing": {
+        "license": "various",
+        "basis": "Native host crates are redistributed with the Windows binary; package-by-package Cargo inventory not populated in Slice 3",
+        "noticeRequired": true,
+        "redistribution": "unresolved"
+      },
+      "artifacts": [
+        "apps/desktop/src-tauri",
+        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+      ],
+      "notes": "Deferred to a later evidence-ops slice. JS plugin bindings above do not substitute for Cargo crate clearance."
     }
   ]
 }
