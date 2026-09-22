@@ -3,6 +3,7 @@ import test from "node:test";
 import * as assert from "node:assert/strict";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import * as os from "node:os";
 import { fileURLToPath } from "node:url";
 import { EpubCheckSubprocessAdapter } from "./epubcheck-adapter.js";
 import {
@@ -185,3 +186,31 @@ test(
     assert.equal(evidence.host.platformKey, resolveHostPlatformKey());
   },
 );
+
+test("injected runtimeRoot is used without walking a repository root", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "validator-runtime-locator-"));
+  try {
+    const javaName = process.platform === "win32" ? "java.exe" : "java";
+    fs.mkdirSync(path.join(tmp, "runtime", "bin"), { recursive: true });
+    fs.mkdirSync(path.join(tmp, "epubcheck-5.3.0"), { recursive: true });
+    fs.writeFileSync(path.join(tmp, "runtime", "bin", javaName), "");
+    fs.writeFileSync(path.join(tmp, "epubcheck-5.3.0", "epubcheck.jar"), "");
+    const resolved = resolveProductionRuntime({ runtimeRoot: tmp });
+    assert.ok(resolved);
+    assert.equal(resolved?.cacheRoot, tmp);
+    assert.ok(resolved?.javaExecutablePath.startsWith(tmp));
+    assert.ok(resolved?.epubcheckJarPath.startsWith(tmp));
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("incomplete injected runtimeRoot returns null instead of a system JRE", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "validator-runtime-locator-"));
+  try {
+    const resolved = resolveProductionRuntime({ runtimeRoot: tmp });
+    assert.equal(resolved, null);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});

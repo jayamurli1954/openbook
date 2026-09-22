@@ -7,15 +7,24 @@ import type { ResolvedPdfRuntime } from "./types.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function nonemptyPath(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
+}
+
 /**
  * Resolves the Gate 6 production Typst + fonts layout produced by
  * `scripts/pdf/build-runtime.mjs`.
  *
  * Lookup order:
- * 1. OPENBOOK_PDF_RUNTIME_ROOT
- * 2. <repo>/.cache/pdf-runtime
+ * 1. options.runtimeRoot
+ * 2. OPENBOOK_PDF_RUNTIME_ROOT
+ * 3. <repo>/.cache/pdf-runtime
  *
- * Never downloads artifacts. Never uses a system Typst install by default.
+ * An explicit runtime root must not walk the filesystem for a git/monorepo root
+ * (Gate 10 packaged desktop has no repository). Never downloads artifacts.
+ * Never uses a system Typst install by default.
  */
 export function resolveHostPlatformKey(
   platform: NodeJS.Platform = process.platform,
@@ -45,11 +54,15 @@ function findRepoRoot(startDir: string): string {
 export function resolveProductionTypstRuntime(
   options: { runtimeRoot?: string; repoRoot?: string } = {},
 ): ResolvedPdfRuntime | null {
-  const repoRoot = options.repoRoot ?? findRepoRoot(path.resolve(__dirname, "../../.."));
+  const explicitRoot =
+    nonemptyPath(options.runtimeRoot) ?? nonemptyPath(process.env.OPENBOOK_PDF_RUNTIME_ROOT);
   const cacheRoot =
-    options.runtimeRoot ??
-    process.env.OPENBOOK_PDF_RUNTIME_ROOT ??
-    path.join(repoRoot, ".cache", "pdf-runtime");
+    explicitRoot ??
+    path.join(
+      options.repoRoot ?? findRepoRoot(path.resolve(__dirname, "../../..")),
+      ".cache",
+      "pdf-runtime",
+    );
 
   const typstExecutablePath =
     process.platform === "win32"
