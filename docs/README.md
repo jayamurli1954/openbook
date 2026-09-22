@@ -11,7 +11,8 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [Publishing engine scorecard](PUBLISHING_ENGINE_TECHNOLOGY_SCORECARD.md) | Technology/license evaluation baseline |
 | [PDF renderer bake-off plan](PDF_RENDERER_BAKEOFF_PLAN.md) | Historical bake-off; Typst **0.15.1** selected in ADR-0013 |
 | [Foundation readiness report](FOUNDATION-READINESS-REPORT.md) | Historical gate assessment; not the current snapshot |
-| [Foundation closure](FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md) | Evidence closure and ADR-0028 selection record |
+| [Foundation closure (2026-09-16)](FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md) | Gate 8 evidence closure and ADR-0028 selection record |
+| [Foundation closure (post–Gate 10)](FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md) | Current readiness determination after Gates 9–10; FOUNDATION-READY not declared |
 | [Implementation backlog](IMPLEMENTATION-BACKLOG.md) | Future work; not an authorization to code |
 | [Project persistence architecture](PROJECT_PERSISTENCE_ARCHITECTURE.md) | SQLite project persistence contracts and boundary (PR #16) |
 | [Release/compliance](release-compliance/) | ADR-0028 evidence mechanisms (inventory not populated) |

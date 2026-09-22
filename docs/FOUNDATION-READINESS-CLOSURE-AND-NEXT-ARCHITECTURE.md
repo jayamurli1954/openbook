@@ -154,3 +154,7 @@ This record does **not** authorize:
 OpenBook is at a Gate 8 implementation-complete baseline with contributor governance substantially established. The foundation evidence reconciliation is now recorded as closed with three explicitly carried-forward evidence/policy items.
 
 The next architectural decision is therefore **Release / Compliance Architecture**, to be governed by ADR-0028. No implementation follows from this selection until separately authorized.
+
+---
+
+**Superseded for current readiness determination:** After Gates 9–10, see `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (baseline `553ba7c`, 2026-09-22). This 2026-09-16 file remains the historical ADR-0028 selection record.

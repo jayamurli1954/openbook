@@ -1,8 +1,8 @@
 # OpenBook Implementation Backlog
 
 - **Status:** Planning backlog only
-- **Date:** 2026-09-16
-- **Reconciled to:** `main` at `fd4d0e8` after ADR-0029 Slice 1 merge (#82) and front-door docs (#83)
+- **Date:** 2026-09-22
+- **Reconciled to:** `main` at `553ba7c` after Gate 10 Slice 5 merge (#108) and post–Gate 10 readiness closure docs
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`, `docs/adr/0029-project-package-filesystem-persistence-architecture.md`.
@@ -78,13 +78,16 @@ PACKAGING / RELEASE READINESS (GATE 10 / ADR-0032)
 ├── Slice 2 Windows resource layout        [DONE — PR #105]
 ├── Slice 3 desktop host wiring            [DONE — PR #106]
 ├── Slice 4 Windows distributable + identity [DONE — PR #107]
-├── Slice 5 release-readiness verification [IN PROGRESS — no FOUNDATION-READY]
+├── Slice 5 release-readiness verification [DONE — PR #108; foundationReady stays false]
 │
 REQUIRED NEXT PRODUCT CAPABILITIES (must not be dropped; not authorized by this list)
 ├── Export UI & native Save As             [DONE on main — Gate 9 / ADR-0030 Slices 1–5]
 ├── Filesystem project package             [DONE on main — ADR-0029 Slices 1–6]
 ├── Autosave & crash recovery              [DONE on main — ADR-0031 Slices 1–5]
-├── Packaging / release readiness          [ADR-0032 Accepted; Slice 5 in progress]
+├── Packaging / release readiness          [DONE on main — Gate 10 / ADR-0032 Slices 1–5]
+│
+FOUNDATION READINESS DECLARATION
+├── Post–Gate 10 closure record            [IN PROGRESS — docs only; FOUNDATION-READY not declared]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -167,7 +170,7 @@ Maintainer direction 2026-09-16: these three are necessary for a usable OpenBook
 | **Export UI & native Save As** | A person must get EPUB/HTML/PDF onto disk. Engines without a host path are not a product. | **Done on `main`:** Gate 9 Slices 1–5 under ADR-0030 (export host, Save-As host, wiring, React UI + Tauri dialog/atomic writes, E2E verification). | Closed. Follow-ups only via new authorization (e.g. packaging Gate 10). |
 | **Filesystem project package** | Save/Open must be a versioned on-disk project, not an opaque SQLite-only session. | ADR-0029 Accepted. Slices 1–6 done (#82, #93, #94, #95, #96, #97). | Closed under ADR-0029. Bound Save unification is done under ADR-0031 Slice 5. |
 | **Autosave & crash recovery** | Losing work after the app is actually used is unacceptable. | **Done on `main`:** ADR-0031 Slices 1–5 (#98–#102). | Closed under ADR-0031 sequencing. React recover/discard chrome remains separately gated. |
-| **Packaging / release readiness** | A developer `.cache/` runtime is not a shippable desktop product. | ADR-0032 **Accepted**. Slices 1–4 done. Slice 5 in progress. | Complete Slice 5. No FOUNDATION-READY from Slice 5 alone. |
+| **Packaging / release readiness** | A developer `.cache/` runtime is not a shippable desktop product. | ADR-0032 **Accepted**. Slices 1–5 done (PRs #104–#108). | No further Gate 10 slice. FOUNDATION-READY remains separately gated. |
 
 These items still require their own ADR/slice authorization before code. Recording them here is not that authorization.
 
@@ -175,7 +178,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the re
 
 ## Next architectural decision points
 
-Gates 1 through 9, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 is **Accepted**. Slices 1–4 are done (PR #104–#107). Slice 5 (release-readiness verification) is the current authorized unit.
+Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). `FOUNDATION-READY` is **not** declared; see `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`. No next engineering slice is authorized by the backlog alone.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 
