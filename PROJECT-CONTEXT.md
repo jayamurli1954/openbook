@@ -86,7 +86,7 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - Publishing engines for EPUB, HTML, and Typst PDF are implemented (Gates 1–6). Gate 9 export UI and native Save As are implemented (ADR-0030).
 - ADR-0028 established the release/compliance evidence layer; production inventory population and font-by-font clearance remain evidence-pending.
 - ADR-0029 Slices 1–6 are implemented (filesystem project package). ADR-0031 Slices 1–5 are implemented (autosave / crash recovery over the package Save boundary).
-- ADR-0032 accepts Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). Slice 5 is the current authorized implementation unit.
+- ADR-0032 accepts Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). Slices 1–5 are done on main (PRs #104–#108). `FOUNDATION-READY` is not declared (see post–Gate 10 closure record).
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -107,21 +107,22 @@ Required next product capabilities (must not be dropped — see `docs/IMPLEMENTA
 - Export UI and native Save As — **done** (Gate 9 / ADR-0030)
 - Filesystem project package — **done** (ADR-0029 Slices 1–6)
 - Autosave and crash recovery — **done** sequencing (ADR-0031 Slices 1–5)
-- Packaging / release readiness — **Accepted** (Gate 10 / ADR-0032; Slice 5 in progress)
+- Packaging / release readiness — **Done** (Gate 10 / ADR-0032 Slices 1–5)
+- Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared — **not declared** (post–Gate 10 closure record)
 
 Other pending items:
 
-- Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012; inventory pins exist; packaged desktop discovery is Gate 10 / ADR-0032)
+- Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012; inventory pins exist; Gate 10 Windows packaging done)
 - Bundled-font redistribution evidence (architecture policy exists in ADR-0028 Slice 3; font-by-font clearance remains evidence-dependent)
-- Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared (**not** declared)
-- AI/Ollama and DTP/page layout (future; must not displace the required product capabilities above)
+- AI/Ollama and DTP/page layout (future; must not displace remaining evidence/ADR work)
 
 ## Important existing documents
 
 - `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`
 - `docs/IMPLEMENTATION-BACKLOG.md`
 - `docs/FOUNDATION-READINESS-REPORT.md` (historical audit; not the current snapshot)
-- `docs/FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md`
+- `docs/FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md` (2026-09-16 ADR-0028 selection)
+- `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (current post–Gate 10 determination)
 - `docs/governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md`
 - `SECURITY.md`
 - `CODE_OF_CONDUCT.md`

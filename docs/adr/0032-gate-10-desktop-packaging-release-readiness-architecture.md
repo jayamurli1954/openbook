@@ -1,12 +1,12 @@
 # ADR-0032: Gate 10 — Desktop Packaging & Release Readiness Architecture
 
-- **Status:** Accepted; Slice 5 in progress
+- **Status:** Accepted; Slices 1–5 done
 - **Date:** 2026-09-22
 - **Gate:** Gate 10
 - **Area:** Desktop / Packaging / Release Readiness
 - **Depends on:** ADR-0005, ADR-0007, ADR-0012, ADR-0013, ADR-0023, ADR-0028, ADR-0030
 - **Supersedes:** None
-- **Implementation authorization:** Slice 5 (release-readiness verification; no FOUNDATION-READY)
+- **Implementation authorization:** Slices 1–5 complete (PRs #104–#108); no further Gate 10 slice authorized by this ADR alone
 
 ## 1. Context
 
@@ -191,10 +191,10 @@ Following acceptance, implementation must be separately authorized, one slice at
 2. **Windows resource layout** — copy Gate 5/6 runtime layouts into the Tauri resource tree; packaging-time inventory checksum verification. **Slice 2 (done).**
 3. **Desktop host wiring** — packaged OpenBook uses the locator; missing-runtime reporting through the existing validator/PDF host; no user-Java recovery path. **Slice 3 (done).**
 4. **Windows distributable + identity** — produce a reviewable Windows package via Tauri NSIS bundle; record artifact checksums and ADR-0028 manifest linkage (unresolved evidence stays unresolved). **Slice 4 (done).**
-5. **Release-readiness verification** — automated checks that the package contains runtimes, validation does not require network, and failure kinds remain distinct. No `FOUNDATION-READY` declaration. **Slice 5 (authorized).**
+5. **Release-readiness verification** — automated checks that the package contains runtimes, validation does not require network, and failure kinds remain distinct. No `FOUNDATION-READY` declaration. **Slice 5 (done).**
 
 ## 7. Governance
 
 Normal branch → Draft PR → CI/DCO → review → explicit Ready → explicit merge authorization (`I authorize merge PR #XX`).
 
-This ADR records the accepted architecture. Slice 5 is separately authorized. Passing Slice 5 does not declare FOUNDATION-READY.
+This ADR records the accepted architecture. Slices 1–5 are complete. Passing Gate 10 does not declare FOUNDATION-READY; see `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`.

@@ -1,6 +1,6 @@
 # ADR-0032 Slice 5: Release-Readiness Verification — Implementation Proposal
 
-- **Status:** Implementation authorized by maintainer direction (2026-09-22)
+- **Status:** Implemented on main (PR #108)
 - **Date:** 2026-09-22
 - **Parent architecture:** ADR-0032 — Gate 10 Desktop Packaging & Release Readiness Architecture
 - **Scope:** Automated checks that the packaged tree contains Gate 5/6 runtimes, validation does not require network, and failure kinds remain distinct — without declaring FOUNDATION-READY
