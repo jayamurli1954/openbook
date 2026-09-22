@@ -47,6 +47,11 @@ Gate 8 domain integration is on `main` (ADR-0019–ADR-0023). Frozen desktop pin
 - `@openbook/authoring` hashes IDs with `node:crypto`. The desktop Vite
   bundle aliases that module to `src/nodeCryptoShim.ts` so BookSession can
   run in the Tauri webview without changing Gate 7 packages.
+- Gate 10 Slice 2 stages Gate 5/6 runtimes under `src-tauri/resources/`
+  (`validator-runtime`, `pdf-runtime`) after packaging-time inventory
+  checksum verification. Assemble with
+  `npm run packaging:assemble-windows-resources -w @openbook/desktop`
+  (requires prior Gate 5/6 `packaging:build`). Host wiring is Slice 3.
 
 ## Commands
 

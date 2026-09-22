@@ -21,6 +21,8 @@
     "src/host/desktopExportController.ts",
     "src/host/desktopExportController.test.ts",
     "src/host/packagedRuntimeLocator.ts",
-    "src/host/packagedRuntimeLocator.test.ts"
+    "src/host/packagedRuntimeLocator.test.ts",
+    "src/host/packagedResourceAssembly.ts",
+    "src/host/packagedResourceAssembly.test.ts"
   ]
 }
