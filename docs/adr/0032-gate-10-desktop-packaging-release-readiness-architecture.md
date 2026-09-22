@@ -1,12 +1,12 @@
 # ADR-0032: Gate 10 — Desktop Packaging & Release Readiness Architecture
 
-- **Status:** Accepted; Slice 3 in progress
+- **Status:** Accepted; Slice 4 in progress
 - **Date:** 2026-09-22
 - **Gate:** Gate 10
 - **Area:** Desktop / Packaging / Release Readiness
 - **Depends on:** ADR-0005, ADR-0007, ADR-0012, ADR-0013, ADR-0023, ADR-0028, ADR-0030
 - **Supersedes:** None
-- **Implementation authorization:** Slice 3 (desktop host wiring through packaged locator)
+- **Implementation authorization:** Slice 4 (Windows NSIS distributable + ADR-0028 identity)
 
 ## 1. Context
 
@@ -141,14 +141,13 @@ Desktop packaging, Tauri bundle configuration, and resource-path discovery belon
 
 ## 3. Explicit non-authorizations
 
-This ADR does **not** authorize (Slice 3 host wiring is separately authorized):
+This ADR does **not** authorize (Slices 1–4 are separately authorized when granted):
 
-- implementing installer generation or code signing;
-- committing JDK, EPUBCheck, Typst, or font binaries;
+- code signing, notarization, SmartScreen, or store submission;
+- committing JDK, EPUBCheck, Typst, font binaries, or installers;
 - changing EPUBCheck, Temurin, or Typst version pins;
 - using a system JRE or system Typst as a production fallback;
 - first-run or auto-update download of runtimes;
-- code signing, notarization, SmartScreen, or store submission;
 - declaring macOS/Linux production-supported;
 - populating ADR-0028 production inventory as complete;
 - declaring fonts release-cleared;
@@ -158,7 +157,7 @@ This ADR does **not** authorize (Slice 3 host wiring is separately authorized):
 - cloud sync, DTP, or AI/Ollama;
 - Book Model, publishing-engine, project-package, or autosave redesign;
 - removing SQLite;
-- Windows distributable / release-readiness automation (Slices 4–5).
+- release-readiness automation claiming FOUNDATION-READY (Slice 5).
 
 ## 4. Alternatives considered
 
@@ -191,14 +190,14 @@ Following acceptance, implementation must be separately authorized, one slice at
 
 1. **Packaged resource locator contract** — injectable resource-root discovery for EPUBCheck/`jlink` and Typst/fonts, fail-closed, no system fallback, tests with fake roots (no installer). **Slice 1 (done).**
 2. **Windows resource layout** — copy Gate 5/6 runtime layouts into the Tauri resource tree; packaging-time inventory checksum verification. **Slice 2 (done).**
-3. **Desktop host wiring** — packaged OpenBook uses the locator; missing-runtime reporting through the existing validator/PDF host; no user-Java recovery path. **Slice 3 (authorized).**
-4. **Windows distributable + identity** — produce a reviewable Windows package via Tauri bundle; record artifact checksums and ADR-0028 manifest linkage (unresolved evidence stays unresolved).
+3. **Desktop host wiring** — packaged OpenBook uses the locator; missing-runtime reporting through the existing validator/PDF host; no user-Java recovery path. **Slice 3 (done).**
+4. **Windows distributable + identity** — produce a reviewable Windows package via Tauri NSIS bundle; record artifact checksums and ADR-0028 manifest linkage (unresolved evidence stays unresolved). **Slice 4 (authorized).**
 5. **Release-readiness verification** — automated checks that the package contains runtimes, validation does not require network, and failure kinds remain distinct. No `FOUNDATION-READY` declaration.
 
-Slices 4–5 are not authorized by Slice 3.
+Slice 5 is not authorized by Slice 4.
 
 ## 7. Governance
 
 Normal branch → Draft PR → CI/DCO → review → explicit Ready → explicit merge authorization (`I authorize merge PR #XX`).
 
-This ADR records the accepted architecture. Slice 3 is separately authorized. Slices 4–5 still require explicit implementation authorization.
+This ADR records the accepted architecture. Slice 4 is separately authorized. Slice 5 still requires explicit implementation authorization.
