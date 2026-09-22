@@ -1,6 +1,6 @@
 # ADR-0032 Slice 4: Windows Distributable + Identity — Implementation Proposal
 
-- **Status:** Implementation authorized by maintainer direction (2026-09-22)
+- **Status:** Implemented on main (PR #107)
 - **Date:** 2026-09-22
 - **Parent architecture:** ADR-0032 — Gate 10 Desktop Packaging & Release Readiness Architecture
 - **Scope:** Reviewable Windows x64 package via Tauri NSIS bundle; record artifact checksums and ADR-0028 manifest linkage; unresolved evidence stays unresolved
