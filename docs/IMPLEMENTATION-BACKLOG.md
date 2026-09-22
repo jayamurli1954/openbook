@@ -65,17 +65,26 @@ PROJECT PACKAGE (ADR-0029)
 ├── Integrity / migration / recovery       [DONE — Slice 5 integrity (#96); Slice 6 migration/recovery (#97)]
 │
 AUTOSAVE & CRASH RECOVERY (ADR-0031)
-├── Autosave & crash recovery architecture [PROPOSED — ADR-0031]
+├── Autosave & crash recovery architecture [DONE — ADR-0031 Accepted; Slices 1–5 on main]
 ├── Slice 1 autosave controller            [DONE — PR #98; dirty/debounce/coalesce + Save port]
 ├── Slice 2 package Save port adapter      [DONE — PR #99; AutosaveSavePort → saveProjectPackage]
 ├── Slice 3 coordinator dirty hooks        [DONE — PR #100; bound package root + mutation hooks]
 ├── Slice 4 crash-recovery open path       [DONE — PR #101; discovery + explicit open-with-recover]
-├── Slice 5 SQLite/package Save unification [IN PROGRESS — package-first explicit Save when bound]
+├── Slice 5 SQLite/package Save unification [DONE — PR #102; package-first explicit Save when bound]
+│
+PACKAGING / RELEASE READINESS (GATE 10 / ADR-0032)
+├── Desktop packaging architecture         [PROPOSED — ADR-0032; no implementation]
+├── Slice 1 packaged resource locator      [NOT AUTHORIZED]
+├── Slice 2 Windows resource layout        [NOT AUTHORIZED]
+├── Slice 3 desktop host wiring            [NOT AUTHORIZED]
+├── Slice 4 Windows distributable + identity [NOT AUTHORIZED]
+├── Slice 5 release-readiness verification [NOT AUTHORIZED]
 │
 REQUIRED NEXT PRODUCT CAPABILITIES (must not be dropped; not authorized by this list)
 ├── Export UI & native Save As             [DONE on main — Gate 9 / ADR-0030 Slices 1–5]
 ├── Filesystem project package             [DONE on main — ADR-0029 Slices 1–6]
-├── Autosave & crash recovery              [DONE sequencing — ADR-0031 Slices 1–5; Slice 5 in progress]
+├── Autosave & crash recovery              [DONE on main — ADR-0031 Slices 1–5]
+├── Packaging / release readiness          [PROPOSED — Gate 10 / ADR-0032; implementation gated]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -115,7 +124,8 @@ Status against the ordered list:
 21. **Gate 8 Desktop Studio Integration (Slices 1–5)** — **DONE** (ADR-0019–ADR-0023; PRs through #51; final merge `92c38c3e5cb7c64cc4ff3ceea0e0f1bc60993af5`).
 22. **ADR-0028 Release & Compliance implementation (Slices 1–5)** — **DONE** (PRs #73–#77; final Slice 5 merge `8de6969068768cdb55029e720aebad53a50a04a1`).
 23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slices 1–6 **DONE** (#82, #93, #94, #95, #96, #97).
-24. **ADR-0031 Autosave & Crash Recovery** — **Accepted**. Slices 1–4 **DONE** (#98–#101). Slice 5 (SQLite/package Save unification) authorized and in progress — closes ADR-0031 sequencing. Gate 10 remains separately gated.
+24. **ADR-0031 Autosave & Crash Recovery** — **Accepted**. Slices 1–5 **DONE** (#98–#102; Slice 5 merge `d51121d`). Sequencing closed. React recover chrome remains separately gated.
+25. **Gate 10 packaging / release readiness** — ADR-0032 **Proposed**. Architecture only; no implementation slice is authorized.
 
 **Current Test Suite State:**
 - **231 / 231 automated tests passing** (0 failures, 0 skipped, 0 cancelled) across all 12 monorepo packages at the Gate 8 Slice 5 merge checkpoint. ADR-0028 is documentation/schema-only and introduced no application test changes.
@@ -155,16 +165,17 @@ Maintainer direction 2026-09-16: these three are necessary for a usable OpenBook
 | Capability | Why it is required | Current state | Next authorized unit |
 |---|---|---|---|
 | **Export UI & native Save As** | A person must get EPUB/HTML/PDF onto disk. Engines without a host path are not a product. | **Done on `main`:** Gate 9 Slices 1–5 under ADR-0030 (export host, Save-As host, wiring, React UI + Tauri dialog/atomic writes, E2E verification). | Closed. Follow-ups only via new authorization (e.g. packaging Gate 10). |
-| **Filesystem project package** | Save/Open must be a versioned on-disk project, not an opaque SQLite-only session. | ADR-0029 Accepted. Slices 1–6 done (#82, #93, #94, #95, #96, #97). | Closed under ADR-0029. Coordinator FS wiring and SQLite/package unification remain later/gated work. |
-| **Autosave & crash recovery** | Losing work after the app is actually used is unacceptable. | ADR-0031 Accepted. Slices 1–4 done (#98–#101). Slice 5 Save unification in progress. | Complete Slice 5. Follow-ups (React recover chrome, Gate 10) remain separately gated. |
+| **Filesystem project package** | Save/Open must be a versioned on-disk project, not an opaque SQLite-only session. | ADR-0029 Accepted. Slices 1–6 done (#82, #93, #94, #95, #96, #97). | Closed under ADR-0029. Bound Save unification is done under ADR-0031 Slice 5. |
+| **Autosave & crash recovery** | Losing work after the app is actually used is unacceptable. | **Done on `main`:** ADR-0031 Slices 1–5 (#98–#102). | Closed under ADR-0031 sequencing. React recover/discard chrome remains separately gated. |
+| **Packaging / release readiness** | A developer `.cache/` runtime is not a shippable desktop product. | ADR-0032 **Proposed**. | Accept ADR-0032, then authorize Slice 1 (packaged resource locator) only. |
 
 These items still require their own ADR/slice authorization before code. Recording them here is not that authorization.
 
-Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the three required capabilities above.
+Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the required product capabilities above.
 
 ## Next architectural decision points
 
-Gates 1 through 9 and ADR-0028's five implementation slices are complete on `main`. ADR-0029 Slices 1–6 are complete. ADR-0031 Slices 1–4 are done (#98–#101). Slice 5 (SQLite/package Save unification) is the current authorized unit and closes ADR-0031 sequencing. Gate 10 packaging/release readiness remains separately gated.
+Gates 1 through 9, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 packaging/release readiness is the current gated unit: ADR-0032 is **Proposed** and authorizes no implementation.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 
@@ -181,4 +192,6 @@ Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-
 - Adding autosave as a second save path, or persisting Tiptap JSON, instead of using the ADR-0029 package boundary
 - Implementing the filesystem package or autosave without their own explicit authorization
 - Reopening Gate 9 export work without a new ADR/authorization after Gate 9 closure
-- Treating DTP, AI/Ollama, or compliance evidence follow-ons as higher priority than the required three product capabilities
+- Treating DTP, AI/Ollama, or compliance evidence follow-ons as higher priority than the required product capabilities
+- Implementing Gate 10 packaging, Tauri bundle wiring, or installer generation without ADR-0032 acceptance and a separately authorized slice
+- Falling back to a user-installed JRE or Typst, or downloading runtimes on first launch, to make packaging “easier”
