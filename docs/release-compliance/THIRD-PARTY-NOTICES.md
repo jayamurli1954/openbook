@@ -1,10 +1,11 @@
 # OpenBook Third-Party Notices
 
-- **Status:** Maintenance mechanism established; **Slice 1** records Gate 5/6 shipped-runtime notices; **Slice 2** records Gate 6 bundled-font OFL clearance (confirmed / conditional). Full npm production dependency population remains deferred.
+- **Status:** Maintenance mechanism established; **Slices 1–2** record Gate 5/6 runtimes and Gate 6 font OFL clearance; **Slice 3** records direct production npm dependencies for the desktop shipping path. Transitive npm and Cargo crates remain unresolved.
 - **Scope:** Release-oriented attribution and provenance evidence.
 - **Authority:** `docs/adr/0028-release-compliance-architecture.md`
 - **Inventory:** `docs/release-compliance/evidence-inventory.json` (machine-readable companion)
 - **Font dispositions:** `docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md`
+- **npm Slice 3 method:** `docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md`
 - **Selection:** `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md`
 
 ## Purpose
@@ -23,15 +24,18 @@ It is not a replacement for package manifests, `package-lock.json`, runtime prov
 6. Update this record when a shipped third-party component, runtime, asset, or relevant dependency changes.
 7. Review the corresponding release evidence inventory so the human-readable notice and machine-readable evidence do not contradict one another.
 
-## Current evidence status (Slice 2)
+## Current evidence status (Slice 3)
 
 | Category | Status |
 |---|---|
-| Gate 5 EPUBCheck 5.3.0 | Recorded below from packaging inventory/notices |
+| Gate 5 EPUBCheck 5.3.0 | Recorded below |
 | Gate 5 Temurin 21 windows-x64 pin / jlink image obligations | Recorded below |
 | Gate 6 Typst 0.15.1 windows-x64 | Recorded below |
-| Gate 6 bundled fonts (4 Noto families) | **Confirmed** / redistribution **conditional** (OFL 1.1) — see dispositions |
-| Full npm production dependency tree | Not populated |
+| Gate 6 bundled fonts (4 Noto families) | **Confirmed** / redistribution **conditional** (OFL 1.1) |
+| Direct production npm (desktop path) | **Confirmed** — see § npm below |
+| npm production transitive tree | **Unresolved** (deferred) |
+| Tauri / Cargo crates | **Unresolved** (deferred) |
+| Desktop build/dev npm toolchain | **Confirmed** as build-only (not redistributed) |
 | `FOUNDATION-READY` | **Not declared** |
 
 ## Shipped runtimes (Gate 5 / Gate 6 — Windows-first)
@@ -64,8 +68,6 @@ It is not a replacement for package manifests, `package-lock.json`, runtime prov
 
 ## Bundled fonts (Gate 6 — OFL clearance confirmed)
 
-Gate 6 packaging pins the following OFL-1.1 fonts with SHA-256 digests in `packages/pdf/packaging/inventory.json`. Evidence ops Slice 2 records font-by-font release clearance in `FONT-CLEARANCE-DISPOSITIONS.md` from upstream `google/fonts` `OFL.txt` files.
-
 | Font | Role | Release clearance | Redistribution |
 |---|---|---|---|
 | Noto Serif Kannada | Body (Kannada) | **Confirmed** | **Conditional** (OFL 1.1) |
@@ -73,22 +75,34 @@ Gate 6 packaging pins the following OFL-1.1 fonts with SHA-256 digests in `packa
 | Noto Serif | Body (Latin fallback) | **Confirmed** | **Conditional** (OFL 1.1) |
 | Noto Sans | Headings (Latin fallback) | **Confirmed** | **Conditional** (OFL 1.1) |
 
-**Shipping conditions (must remain true):**
+See `FONT-CLEARANCE-DISPOSITIONS.md` for OFL shipping conditions and upstream `OFL.txt` URLs.
 
-1. Include the applicable copyright notice and SIL OFL 1.1 text with each shipped copy (Gate 6 packaging extracts `OFL.txt` beside fonts when available).
-2. Do not sell the fonts as a standalone product.
-3. Exact file bytes must match the inventory SHA-256 pins (or update inventory and disposition together).
+## Direct production npm (desktop path — Slice 3)
 
-Upstream OFL references:
+Pinned in `package-lock.json`. License text is the published package `LICENSE*` file. Integrity identifiers are npm `sha512-…` digests from the lockfile (see inventory).
 
-- https://raw.githubusercontent.com/google/fonts/main/ofl/notoserifkannada/OFL.txt
-- https://raw.githubusercontent.com/google/fonts/main/ofl/notosanskannada/OFL.txt
-- https://raw.githubusercontent.com/google/fonts/main/ofl/notoserif/OFL.txt
-- https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/OFL.txt
+| Package | Version | License | Path |
+|---|---|---|---|
+| `react` | 19.2.8 | MIT | `@openbook/desktop` |
+| `react-dom` | 19.2.8 | MIT | `@openbook/desktop` |
+| `@tiptap/core` | 3.31.3 | MIT | `@openbook/desktop` (ADR-0008) |
+| `@tiptap/react` | 3.31.3 | MIT | `@openbook/desktop` |
+| `@tiptap/pm` | 3.31.3 | MIT | `@openbook/desktop` |
+| `@tiptap/starter-kit` | 3.31.3 | MIT | `@openbook/desktop` |
+| `@tiptap/extension-link` | 3.31.3 | MIT | `@openbook/desktop` |
+| `@tauri-apps/api` | 2.11.1 | Apache-2.0 OR MIT | `@openbook/desktop` |
+| `@tauri-apps/plugin-dialog` | 2.4.1 | MIT OR Apache-2.0 | `@openbook/desktop` |
+| `@tauri-apps/plugin-sql` | 2.4.1 | MIT OR Apache-2.0 | `@openbook/desktop` (ADR-0007) |
+| `fflate` | 0.8.3 | MIT | `@openbook/epub` |
+| `markdown-it` | 14.3.1 | MIT | `@openbook/importer` |
+
+**Build/dev toolchain** (Vite, TypeScript, Tauri CLI, `@types/*`, etc.) is **not** redistributed in the Windows NSIS artifact and is recorded as build-only in the inventory.
+
+**Still unresolved:** full transitive npm production tree; Tauri/Cargo native crates. Method and deferrals: `NPM-PRODUCTION-INVENTORY-SLICE-3.md`.
 
 ## Relationship to the evidence inventory
 
-`evidence-inventory.json` is the structured companion for this notice file. Slice 1 populates Gate 5/6 runtime entries as `confirmed`. Slice 2 updates the four Gate 6 font entries to `confirmed` with `redistribution: conditional`. Broader npm dependency population is deferred. This notice update does **not** declare `FOUNDATION-READY`.
+`evidence-inventory.json` is the structured companion for this notice file. Slices 1–3 populate Gate 5/6 runtimes, Gate 6 fonts, and direct production npm packages. This notice update does **not** declare `FOUNDATION-READY`.
 
 ## Non-actions
 

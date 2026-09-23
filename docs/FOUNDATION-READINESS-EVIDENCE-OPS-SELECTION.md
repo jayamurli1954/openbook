@@ -1,44 +1,45 @@
 # Foundation Readiness — Next Domain Selection: Evidence Operations
 
-- **Status:** Selected by maintainer direction (2026-09-22); Slice 1 done on main (PR #110); **Slice 2 authorized** on this follow-on
-- **Date:** 2026-09-22
-- **Baseline:** `main` at `50b2173` (post–evidence ops Slice 1 / PR #110)
-- **Prior records:** `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`; Slice 1 conversation
+- **Status:** Selected by maintainer direction (2026-09-22); Slices 1–2 done on main (PRs #110–#111); **Slice 3 authorized** on this follow-on
+- **Date:** 2026-09-23
+- **Baseline:** `main` at `657fe7b` (post–evidence ops Slice 2 / PR #111)
+- **Prior records:** `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`; Slice 1–2 conversations
 - **Selected domain:** Foundation readiness **evidence operations** (ADR-0028 mechanisms)
-- **Implementation authorization:** Slice 2 — Gate 6 font-by-font OFL clearance dispositions; no `FOUNDATION-READY`
+- **Implementation authorization:** Slice 3 — direct production npm inventory for the desktop shipping path; no `FOUNDATION-READY`
 
 ## 1. Why this domain
 
-The post–Gate 10 closure left `FOUNDATION-READY` undeclared primarily because production ADR-0028 evidence population and font-by-font clearance remain open. Product domains (DTP, AI, Gate 11) should not displace closing that evidence path.
+The post–Gate 10 closure left `FOUNDATION-READY` undeclared primarily because production ADR-0028 evidence population remained open. Product domains (DTP, AI, Gate 11) should not displace closing that evidence path.
 
 ## 2. Slice 1 (done — PR #110)
 
-1. Select evidence ops as the controlled next path (this record).
-2. Populate `docs/release-compliance/evidence-inventory.json` from authoritative Gate 5/6 packaging inventories and package notices:
-   - EPUBCheck 5.3.0 — `confirmed` shipped-runtime (windows-x64 Gate 10 focus noted)
-   - Eclipse Temurin 21 (`jdk-21.0.12.1+1`) windows-x64 pin — `confirmed` shipped-runtime
-   - Typst 0.15.1 windows-x64 pin — `confirmed` shipped-runtime
-   - Gate 6 bundled fonts — entries present with integrity + OFL claim from packaging inventory, initially **`status: unresolved`**
-3. Update `docs/release-compliance/THIRD-PARTY-NOTICES.md` to reference those confirmed runtime notices without asserting font clearance.
-4. Keep `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` **not declared**.
+Populate Gate 5/6 runtime inventory/notices from packaging pins; fonts initially unresolved; no `FOUNDATION-READY`.
 
-## 3. Slice 2 (authorized — this PR)
+## 3. Slice 2 (done — PR #111)
 
-1. Record font-by-font release-clearance dispositions for the four Gate 6 Noto fonts in `docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md`, using upstream `google/fonts` `OFL.txt` (SIL OFL 1.1) plus Gate 6 inventory SHA-256 pins.
-2. Update `evidence-inventory.json` so those four fonts are `status: confirmed` with `redistribution: conditional`.
-3. Update `THIRD-PARTY-NOTICES.md` to reflect confirmed / conditional font clearance and OFL shipping conditions.
-4. Reconcile front-door / conversation docs.
-5. Keep `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` **not declared**.
+Gate 6 four Noto fonts → `confirmed` / `conditional` OFL; dispositions in `FONT-CLEARANCE-DISPOSITIONS.md`; no `FOUNDATION-READY`.
 
-## 4. Explicit exclusions
+## 4. Slice 3 (authorized — this PR)
+
+1. Record method/scope in `docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md`.
+2. Add inventory + notice entries for **direct** third-party production npm deps on the desktop path (`react` / TipTap / Tauri JS plugins / `fflate` / `markdown-it`), using `package-lock.json` integrity and published LICENSE files.
+3. Classify desktop build/dev toolchain as build-only (`redistribution: not-applicable`).
+4. Leave **transitive npm** and **Cargo/Rust crates** explicitly `unresolved`.
+5. Reconcile front-door / conversation docs.
+6. Keep `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` **not declared**.
+
+## 5. Explicit exclusions
 
 - Declaring `FOUNDATION-READY`
-- Font acquisition or changing Gate 5/6 pins
+- Dependency upgrades or pin changes
+- Full transitive npm enumeration
+- Cargo crate inventory
 - Code signing / multi-OS production packaging
 - Gate 11, DTP, AI, React recover chrome
-- Asserting production inventory “complete” (npm tree still deferred)
+- Asserting production inventory “complete”
 
-## 5. Later slices (not authorized here)
+## 6. Later slices (not authorized here)
 
-- Broader dependency inventory beyond Gate 5/6 shipped runtimes and Gate 6 fonts
+- Transitive npm production dependency enumeration (or formal waiver)
+- Tauri/Cargo crate inventory
 - Explicit `FOUNDATION-READY` determination PR when evidence warrants
