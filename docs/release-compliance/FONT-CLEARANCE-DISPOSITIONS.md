@@ -52,7 +52,7 @@ Verified upstream OFL URLs (2026-09-22):
 
 ## 5. What this does **not** close
 
-- Full npm production dependency inventory population remains open for **transitive** packages and **Cargo** crates (direct production npm recorded in Slice 3)
+- Full npm production dependency inventory population remains open for **Cargo** crates (desktop-path npm production closure recorded in Slices 3–4)
 - Code signing / multi-OS production packaging certification
 - Byte-for-byte reproducible signed release claims
 - `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` declaration

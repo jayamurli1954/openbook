@@ -1,11 +1,13 @@
 # OpenBook Third-Party Notices
 
-- **Status:** Maintenance mechanism established; **Slices 1–2** record Gate 5/6 runtimes and Gate 6 font OFL clearance; **Slice 3** records direct production npm dependencies for the desktop shipping path. Transitive npm and Cargo crates remain unresolved.
+- **Status:** Maintenance mechanism established; **Slices 1–2** record Gate 5/6 runtimes and Gate 6 font OFL clearance; **Slice 3** records direct production npm; **Slice 4** records the production npm closure (direct + transitive). Tauri/Cargo crates remain unresolved.
 - **Scope:** Release-oriented attribution and provenance evidence.
 - **Authority:** `docs/adr/0028-release-compliance-architecture.md`
 - **Inventory:** `docs/release-compliance/evidence-inventory.json` (machine-readable companion)
+- **npm closure:** `docs/release-compliance/npm-production-closure-inventory.json`
 - **Font dispositions:** `docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md`
 - **npm Slice 3 method:** `docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md`
+- **npm Slice 4 method:** `docs/release-compliance/NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md`
 - **Selection:** `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md`
 
 ## Purpose
@@ -24,7 +26,7 @@ It is not a replacement for package manifests, `package-lock.json`, runtime prov
 6. Update this record when a shipped third-party component, runtime, asset, or relevant dependency changes.
 7. Review the corresponding release evidence inventory so the human-readable notice and machine-readable evidence do not contradict one another.
 
-## Current evidence status (Slice 3)
+## Current evidence status (Slice 4)
 
 | Category | Status |
 |---|---|
@@ -33,7 +35,7 @@ It is not a replacement for package manifests, `package-lock.json`, runtime prov
 | Gate 6 Typst 0.15.1 windows-x64 | Recorded below |
 | Gate 6 bundled fonts (4 Noto families) | **Confirmed** / redistribution **conditional** (OFL 1.1) |
 | Direct production npm (desktop path) | **Confirmed** — see § npm below |
-| npm production transitive tree | **Unresolved** (deferred) |
+| npm production closure (transitive) | **Confirmed** — 50 transitive packages in closure inventory |
 | Tauri / Cargo crates | **Unresolved** (deferred) |
 | Desktop build/dev npm toolchain | **Confirmed** as build-only (not redistributed) |
 | `FOUNDATION-READY` | **Not declared** |
@@ -98,11 +100,24 @@ Pinned in `package-lock.json`. License text is the published package `LICENSE*` 
 
 **Build/dev toolchain** (Vite, TypeScript, Tauri CLI, `@types/*`, etc.) is **not** redistributed in the Windows NSIS artifact and is recorded as build-only in the inventory.
 
-**Still unresolved:** full transitive npm production tree; Tauri/Cargo native crates. Method and deferrals: `NPM-PRODUCTION-INVENTORY-SLICE-3.md`.
+## npm production closure (Slice 4)
+
+The full production closure from the Slice 3 roots is recorded in `npm-production-closure-inventory.json` (regenerate: `node scripts/release-compliance/generate-npm-production-closure.mjs`).
+
+| Metric | Value |
+|---|---|
+| Total packages | 62 |
+| Direct | 12 |
+| Transitive | 50 |
+| License mix | MIT (57), Apache-2.0 OR MIT (1), MIT OR Apache-2.0 (2), BSD-2-Clause (1), Python-2.0 (1) |
+
+`argparse@2.0.1` is licensed **Python-2.0** (redistribution **conditional**). Per-package integrity digests and LICENSE paths are in the closure inventory.
+
+**Still unresolved:** Tauri/Cargo native crates. Method: `NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md`.
 
 ## Relationship to the evidence inventory
 
-`evidence-inventory.json` is the structured companion for this notice file. Slices 1–3 populate Gate 5/6 runtimes, Gate 6 fonts, and direct production npm packages. This notice update does **not** declare `FOUNDATION-READY`.
+`evidence-inventory.json` is the structured companion for this notice file. Slices 1–4 populate Gate 5/6 runtimes, Gate 6 fonts, and the desktop-path npm production closure. This notice update does **not** declare `FOUNDATION-READY`.
 
 ## Non-actions
 

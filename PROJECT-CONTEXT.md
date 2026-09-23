@@ -84,7 +84,7 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - DCO 1.1 is the contribution sign-off mechanism (ADR-0024). Code of Conduct: ADR-0026. Security disclosure: ADR-0027 / `SECURITY.md`.
 - Book Model remains canonical (ADR-0006). Tiptap JSON is never persisted.
 - Publishing engines for EPUB, HTML, and Typst PDF are implemented (Gates 1–6). Gate 9 export UI and native Save As are implemented (ADR-0030).
-- ADR-0028 established the release/compliance evidence layer; Gate 5/6 runtimes, Gate 6 fonts, and direct production npm deps are populated under evidence ops; transitive npm and Cargo crates remain open; FOUNDATION-READY is not declared.
+- ADR-0028 established the release/compliance evidence layer; Gate 5/6 runtimes, Gate 6 fonts, and the desktop-path npm production closure are populated under evidence ops; Cargo crates remain open; FOUNDATION-READY is not declared.
 - ADR-0029 Slices 1–6 are implemented (filesystem project package). ADR-0031 Slices 1–5 are implemented (autosave / crash recovery over the package Save boundary).
 - ADR-0032 accepts Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). Slices 1–5 are done on main (PRs #104–#108). `FOUNDATION-READY` is not declared (see post–Gate 10 closure record).
 
@@ -108,14 +108,13 @@ Required next product capabilities (must not be dropped — see `docs/IMPLEMENTA
 - Filesystem project package — **done** (ADR-0029 Slices 1–6)
 - Autosave and crash recovery — **done** sequencing (ADR-0031 Slices 1–5)
 - Packaging / release readiness — **Done** (Gate 10 / ADR-0032 Slices 1–5)
-- Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared — **not declared** (post–Gate 10 closure; evidence ops Slice 3 in progress)
-- Foundation readiness evidence ops — **selected**; Slices 1–2 done (PRs #110–#111); Slice 3 records direct production npm deps; transitive npm and Cargo crates still deferred
+- Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared — **not declared** (post–Gate 10 closure; evidence ops Slice 4 in progress)
+- Foundation readiness evidence ops — **selected**; Slices 1–2 done (PRs #110–#111); Slice 3 Draft (#112); Slice 4 records npm production closure; Cargo crates still deferred
 - Bundled-font redistribution evidence — Gate 6 four Noto fonts **confirmed / conditional** (`FONT-CLEARANCE-DISPOSITIONS.md`); additional fonts still require the same process
 
 Other pending items:
 
 - Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012; inventory pins exist; Gate 10 Windows packaging done)
-- Transitive npm production dependency enumeration (or formal waiver)
 - Tauri / Cargo crate inventory
 - AI/Ollama and DTP/page layout (future; must not displace remaining evidence/ADR work)
 
@@ -127,9 +126,11 @@ Other pending items:
 - `docs/FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md` (2026-09-16 ADR-0028 selection)
 - `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (current post–Gate 10 determination)
 - `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md` (selected next evidence path)
-- `docs/release-compliance/evidence-inventory.json` (Slices 1–3 population)
+- `docs/release-compliance/evidence-inventory.json` (Slices 1–4 population)
 - `docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md` (Slice 2 Gate 6 font clearance)
 - `docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md` (Slice 3 direct npm method)
+- `docs/release-compliance/NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md` (Slice 4 npm closure)
+- `docs/release-compliance/npm-production-closure-inventory.json` (Slice 4 machine-readable closure)
 - `docs/governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md`
 - `SECURITY.md`
 - `CODE_OF_CONDUCT.md`
