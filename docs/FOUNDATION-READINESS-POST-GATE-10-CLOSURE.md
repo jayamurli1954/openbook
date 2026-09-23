@@ -76,8 +76,8 @@ DCO continues to be enforced via the DCO workflow on pull requests (observed gre
 | Item | State |
 |---|---|
 | ADR-0028 inventory / notices / font **policy** / manifest / verification **schemas** | Established on main |
-| Production evidence inventory population | **Partial** — Gate 5/6 runtimes + Gate 6 fonts + direct production npm (Slices 1–3); transitive npm / Cargo unresolved |
-| Third-party notice production population | **Partial** — same as inventory; transitive npm / Cargo unresolved |
+| Production evidence inventory population | **Partial** — Gate 5/6 runtimes + Gate 6 fonts + npm production closure (Slices 1–4); Cargo unresolved |
+| Third-party notice production population | **Partial** — same as inventory; Cargo unresolved |
 | Font-by-font redistribution clearance | **Partial** — Gate 6 four Noto fonts **confirmed / conditional** (OFL 1.1); additional fonts still evidence-dependent |
 | Gate 10 Windows identity + ADR-0028 manifest linkage | Mechanism done; release status remains `unresolved` |
 
@@ -115,7 +115,7 @@ Front-door docs (`PROJECT-CONTEXT.md`, ADR index, implementation backlog) must b
 
 **Not formally declared by this record.**
 
-Contributor governance (ADR-0024–0027) remains established. Repository controls are now partially re-verified (§3.2). Broader release/provenance production evidence (transitive npm, Cargo crates, signing/multi-OS) remains open; Slices 1–3 cover Gate 5/6 runtimes, Gate 6 fonts, and direct production npm.
+Contributor governance (ADR-0024–0027) remains established. Repository controls are now partially re-verified (§3.2). Broader release/provenance production evidence (Cargo crates, signing/multi-OS) remains open; Slices 1–4 cover Gate 5/6 runtimes, Gate 6 fonts, and the desktop-path npm production closure.
 
 ### `FOUNDATION-READY`
 
@@ -125,13 +125,15 @@ Engineering Gates 1–10 and the four required product capabilities are complete
 
 Carried-forward blockers / limitations that prevent this record from declaring `FOUNDATION-READY`:
 
-1. Broader production ADR-0028 inventory / notice population (transitive npm; Cargo crates) remains unresolved.
+1. Broader production ADR-0028 inventory / notice population (Cargo crates) remains unresolved.
 2. Contributor “reproducible release” is not established as a signed, multi-platform, production-certified package.
 3. No maintainer explicit declaration is made here.
 
 **Update (2026-09-22, evidence ops Slice 2):** Gate 6 four Noto fonts are dispositioned as confirmed / conditional OFL — see `FONT-CLEARANCE-DISPOSITIONS.md`. That does **not** by itself declare `FOUNDATION-READY`.
 
-**Update (2026-09-23, evidence ops Slice 3):** Direct production npm deps for the desktop path are recorded — see `NPM-PRODUCTION-INVENTORY-SLICE-3.md`. Transitive npm and Cargo remain unresolved. That does **not** by itself declare `FOUNDATION-READY`.
+**Update (2026-09-23, evidence ops Slice 3):** Direct production npm deps for the desktop path are recorded — see `NPM-PRODUCTION-INVENTORY-SLICE-3.md`. That does **not** by itself declare `FOUNDATION-READY`.
+
+**Update (2026-09-23, evidence ops Slice 4):** Desktop-path npm production closure (50 transitive) is recorded — see `NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md`. Cargo remains unresolved. That does **not** by itself declare `FOUNDATION-READY`.
 
 This distinction is intentional and consistent with ADR-0032 and Gate 10 Slice 5 (`foundationReady: false`).
 
@@ -147,7 +149,7 @@ This distinction is intentional and consistent with ADR-0032 and Gate 10 Slice 5
 
 Open items to carry forward (evidence/ops or separately authorized architecture):
 
-1. Populate or explicitly waive remaining production ADR-0028 inventory/notice evidence (transitive npm; Cargo crates).
+1. Populate or explicitly waive remaining production ADR-0028 inventory/notice evidence (Cargo crates).
 2. Optional: stronger contributor packaging/signing story (Windows first; other OS later).
 3. Optional: Gate 11+ security / determinism ADRs when selected.
 4. Optional: React recover/discard chrome (ADR-0031 residual).

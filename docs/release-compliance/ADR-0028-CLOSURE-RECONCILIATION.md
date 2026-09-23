@@ -32,11 +32,11 @@ The five slices preserve the accepted architecture boundary: evidence records an
 
 ### Slice 1 — inventory contract
 
-The machine-readable evidence inventory provides classifications for source, development, build, test, shipped-runtime, and shipped-asset evidence, with explicit `confirmed`, `unresolved`, and `not-applicable` states. The production inventory template remains intentionally empty as a blank form. A separately maintained production inventory at `docs/release-compliance/evidence-inventory.json` began population under foundation readiness evidence ops Slice 1 (Gate 5/6 runtimes), Slice 2 (Gate 6 fonts), and Slice 3 (direct production npm; transitive npm and Cargo unresolved); FOUNDATION-READY is not declared.
+The machine-readable evidence inventory provides classifications for source, development, build, test, shipped-runtime, and shipped-asset evidence, with explicit `confirmed`, `unresolved`, and `not-applicable` states. The production inventory template remains intentionally empty as a blank form. A separately maintained production inventory at `docs/release-compliance/evidence-inventory.json` began population under foundation readiness evidence ops Slices 1–4 (Gate 5/6 runtimes, Gate 6 fonts, desktop-path npm production closure); Cargo crates remain unresolved; FOUNDATION-READY is not declared.
 
 ### Slice 2 — third-party notices
 
-The human-readable third-party notice mechanism is established and explicitly remains a maintenance surface rather than a replacement for package manifests, lockfiles, runtime provenance, or the evidence inventory. Production notice population for Gate 5/6 runtimes, Gate 6 fonts, and direct production npm is recorded under evidence ops; transitive npm and Cargo remain pending.
+The human-readable third-party notice mechanism is established and explicitly remains a maintenance surface rather than a replacement for package manifests, lockfiles, runtime provenance, or the evidence inventory. Production notice population for Gate 5/6 runtimes, Gate 6 fonts, and the desktop-path npm production closure is recorded under evidence ops; Cargo remains pending.
 
 ### Slice 3 — fonts
 

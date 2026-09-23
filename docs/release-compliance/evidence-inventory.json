@@ -5,7 +5,7 @@
   "release": {
     "sourceCommit": "657fe7b",
     "dependencyLock": "package-lock.json",
-    "environment": "windows-x64-first Gate 10 packaging baseline; evidence ops Slice 3 direct production npm"
+    "environment": "windows-x64-first Gate 10 packaging baseline; evidence ops Slice 4 npm production closure"
   },
   "entries": [
     {
@@ -485,24 +485,26 @@
     },
     {
       "component": "npm production transitive dependencies (desktop path)",
-      "version": "package-lock.json lockfileVersion 3",
+      "version": "package-lock.json lockfileVersion 3 — closure inventory",
       "classification": "shipped-runtime",
-      "status": "unresolved",
+      "status": "confirmed",
       "provenance": {
         "source": "https://registry.npmjs.org/",
-        "sourceReference": "package-lock.json (approx. 136 node_modules packages)"
+        "sourceReference": "docs/release-compliance/npm-production-closure-inventory.json"
       },
       "licensing": {
-        "license": "various",
-        "basis": "Direct production deps recorded in Slice 3; transitive packages not yet enumerated package-by-package",
+        "license": "various (see closure inventory; mostly MIT; one Python-2.0 conditional)",
+        "basis": "Slice 4 walk of package-lock from Slice 3 roots; each package LICENSE* present; NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md",
         "noticeRequired": true,
-        "redistribution": "unresolved"
+        "redistribution": "conditional"
       },
       "artifacts": [
         "package-lock.json",
-        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+        "docs/release-compliance/npm-production-closure-inventory.json",
+        "docs/release-compliance/NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md",
+        "scripts/release-compliance/generate-npm-production-closure.mjs"
       ],
-      "notes": "Deferred. Includes transitive ProseMirror packages under @tiptap/pm and other nested deps. Do not treat as FOUNDATION-READY complete."
+      "notes": "50 transitive packages confirmed in the production closure (62 total with direct roots). Redistribution marked conditional at the bucket level because argparse@2.0.1 is Python-2.0; all others in the closure are MIT/Apache/BSD. Per-package detail is in the closure inventory. Cargo crates remain unresolved. Does not declare FOUNDATION-READY."
     },
     {
       "component": "Tauri / Rust crate dependencies (Cargo)",
@@ -515,15 +517,15 @@
       },
       "licensing": {
         "license": "various",
-        "basis": "Native host crates are redistributed with the Windows binary; package-by-package Cargo inventory not populated in Slice 3",
+        "basis": "Native host crates are redistributed with the Windows binary; package-by-package Cargo inventory not populated in Slice 4",
         "noticeRequired": true,
         "redistribution": "unresolved"
       },
       "artifacts": [
         "apps/desktop/src-tauri",
-        "docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md"
+        "docs/release-compliance/NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md"
       ],
-      "notes": "Deferred to a later evidence-ops slice. JS plugin bindings above do not substitute for Cargo crate clearance."
+      "notes": "Deferred to a later evidence-ops slice. JS/npm closure does not substitute for Cargo crate clearance."
     }
   ]
 }
