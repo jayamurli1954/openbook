@@ -70,6 +70,8 @@ ROADMAP Phase 0 Acceptance Gate is satisfied on the baseline above, subject to t
 - Claiming a production-certified signed release exists
 - Changing Gate 10 verification to emit `foundationReady: true` in packaging artifacts (those stay false by design)
 
+**Update (2026-09-24):** Phase 1 Book Wizard architecture is selected and ADR-0033 Accepted — see `docs/PHASE-1-NEXT-DOMAIN-SELECTION.md`. Implementation slices remain separately gated.
+
 ## 7. Front-door linkage
 
 After merge, the current readiness snapshot is this determination. The post–Gate 10 closure remains historical bridge context and is superseded for the Phase 0 gate outcome.
