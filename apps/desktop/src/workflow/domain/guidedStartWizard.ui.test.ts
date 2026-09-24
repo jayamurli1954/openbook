@@ -19,6 +19,7 @@ test("GuidedStartWizard stays free of coordinator, Tauri, and filesystem calls",
   );
   const editor = readFileSync(join(repoSrc, "EditorSurface.tsx"), "utf8");
 
+  assert.match(wizard, /formatGuidedStartFailure|GUIDED_START_EMPTY_RECENT/);
   assert.match(wizard, /IGuidedStartHostAdapter/);
   assert.match(wizard, /getGuidedStartFieldHelp/);
   assert.match(wizard, /guided-start-path-\$\{key\}/);

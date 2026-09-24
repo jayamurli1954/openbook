@@ -1,7 +1,7 @@
 /**
  * SPDX-License-Identifier: Apache-2.0
  *
- * ADR-0033 Slice 3 — thin React guided-start wizard shell.
+ * ADR-0033 Slice 5 — guided-start wizard shell with failure UX + empty-state copy.
  * Delegates execution to GuidedStartHostAdapter. No Tauri, filesystem,
  * or coordinator methods live here.
  */
@@ -17,6 +17,20 @@ import {
   getGuidedStartFieldHelp,
   type GuidedStartFieldHelpKey,
 } from "../workflow/domain/guidedStartTerminology.js";
+import {
+  GUIDED_START_CONTINUE_HINT,
+  GUIDED_START_EMPTY_RECENT,
+  GUIDED_START_HUB_STATUS,
+  GUIDED_START_IMPORT_EMPTY,
+  GUIDED_START_OPEN_ROOT_EMPTY,
+  formatGuidedStartFailure,
+  formatGuidedStartImportSuccess,
+  formatGuidedStartNewBookSuccess,
+  formatGuidedStartOpenSuccess,
+  formatGuidedStartPathStatus,
+  guidedStartStatusClass,
+  type GuidedStartStatusKind,
+} from "../workflow/domain/guidedStartUx.js";
 
 const PATH_LABELS: Record<GuidedStartPath, string> = {
   "new-book": "New Book",
@@ -45,7 +59,8 @@ export default function GuidedStartWizard({
 }: GuidedStartWizardProps) {
   const [path, setPath] = useState<GuidedStartPath | null>(null);
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState("Choose how you want to start.");
+  const [statusKind, setStatusKind] = useState<GuidedStartStatusKind>("idle");
+  const [status, setStatus] = useState(GUIDED_START_HUB_STATUS);
   const [recent, setRecent] = useState<readonly GuidedStartRecentEntry[]>([]);
 
   const [title, setTitle] = useState("");
@@ -73,7 +88,18 @@ export default function GuidedStartWizard({
     };
   }, [host, path]);
 
+  const showIdle = (message: string) => {
+    setStatusKind("idle");
+    setStatus(message);
+  };
+
+  const showError = (message: string) => {
+    setStatusKind("error");
+    setStatus(message);
+  };
+
   const finishOk = (message: string) => {
+    setStatusKind("ok");
     setStatus(message);
     setPath(null);
     onStarted?.();
@@ -81,6 +107,8 @@ export default function GuidedStartWizard({
 
   const startNewBook = async () => {
     setBusy(true);
+    setStatusKind("busy");
+    setStatus("Creating book…");
     try {
       const authorList = authors
         .split(",")
@@ -102,10 +130,12 @@ export default function GuidedStartWizard({
       };
       const result = await host.startNewBook(fields);
       if (!result.ok) {
-        setStatus(`${result.code}: ${result.message}`);
+        showError(formatGuidedStartFailure(result.code, result.message));
         return;
       }
-      finishOk(`Started “${result.projectName}” (${result.language}).`);
+      finishOk(
+        formatGuidedStartNewBookSuccess(result.projectName, result.language),
+      );
     } finally {
       setBusy(false);
     }
@@ -113,10 +143,12 @@ export default function GuidedStartWizard({
 
   const runImport = async () => {
     setBusy(true);
+    setStatusKind("busy");
+    setStatus("Importing…");
     try {
       const content = importText.trim();
       if (!content) {
-        setStatus("Paste manuscript text before importing.");
+        showError(GUIDED_START_IMPORT_EMPTY);
         return;
       }
       const result = await host.importBook({
@@ -128,11 +160,14 @@ export default function GuidedStartWizard({
         options: { mode: "new-project" },
       });
       if (!result.ok) {
-        setStatus(`${result.code}: ${result.message}`);
+        showError(formatGuidedStartFailure(result.code, result.message));
         return;
       }
       finishOk(
-        `Imported ${result.result.sectionCount} section(s), ${result.result.wordCount} word(s).`,
+        formatGuidedStartImportSuccess(
+          result.result.sectionCount,
+          result.result.wordCount,
+        ),
       );
     } finally {
       setBusy(false);
@@ -140,14 +175,27 @@ export default function GuidedStartWizard({
   };
 
   const openRecentRoot = async (projectRoot: string) => {
+    if (!projectRoot.trim()) {
+      showError(GUIDED_START_OPEN_ROOT_EMPTY);
+      return;
+    }
     setBusy(true);
+    setStatusKind("busy");
+    setStatus("Opening package…");
     try {
       const result = await host.openRecent({ projectRoot });
       if (!result.ok) {
-        setStatus(`${result.code}: ${result.message}`);
+        showError(formatGuidedStartFailure(result.code, result.message));
         return;
       }
-      finishOk(`Opened package at ${result.result.projectRoot}.`);
+      finishOk(
+        formatGuidedStartOpenSuccess(
+          result.result.projectRoot,
+          result.result.recovered,
+        ),
+      );
+      const entries = await host.listRecent();
+      setRecent(entries);
     } finally {
       setBusy(false);
     }
@@ -155,13 +203,20 @@ export default function GuidedStartWizard({
 
   const continueExisting = async () => {
     setBusy(true);
+    setStatusKind("busy");
+    setStatus("Continuing last package…");
     try {
       const result = await host.continueExisting();
       if (!result.ok) {
-        setStatus(`${result.code}: ${result.message}`);
+        showError(formatGuidedStartFailure(result.code, result.message));
         return;
       }
-      finishOk(`Continued package at ${result.result.projectRoot}.`);
+      finishOk(
+        formatGuidedStartOpenSuccess(
+          result.result.projectRoot,
+          result.result.recovered,
+        ),
+      );
     } finally {
       setBusy(false);
     }
@@ -185,7 +240,7 @@ export default function GuidedStartWizard({
               disabled={busy}
               onClick={() => {
                 setPath(key);
-                setStatus(`Path: ${PATH_LABELS[key]}`);
+                showIdle(formatGuidedStartPathStatus(key));
               }}
             >
               {PATH_LABELS[key]}
@@ -200,7 +255,7 @@ export default function GuidedStartWizard({
             disabled={busy}
             onClick={() => {
               setPath(null);
-              setStatus("Choose how you want to start.");
+              showIdle(GUIDED_START_HUB_STATUS);
             }}
           >
             Back
@@ -222,6 +277,7 @@ export default function GuidedStartWizard({
             <input
               data-testid="guided-start-title"
               value={title}
+              lang={language || undefined}
               onChange={(event) => setTitle(event.target.value)}
               required
             />
@@ -233,6 +289,7 @@ export default function GuidedStartWizard({
             <input
               data-testid="guided-start-subtitle"
               value={subtitle}
+              lang={language || undefined}
               onChange={(event) => setSubtitle(event.target.value)}
             />
           </label>
@@ -243,6 +300,7 @@ export default function GuidedStartWizard({
             <input
               data-testid="guided-start-authors"
               value={authors}
+              lang={language || undefined}
               onChange={(event) => setAuthors(event.target.value)}
             />
           </label>
@@ -294,6 +352,7 @@ export default function GuidedStartWizard({
             <input
               data-testid="guided-start-goal"
               value={writingGoal}
+              lang={language || undefined}
               onChange={(event) => setWritingGoal(event.target.value)}
             />
           </label>
@@ -362,7 +421,7 @@ export default function GuidedStartWizard({
         <div className="guided-start-form" data-testid="guided-start-open-recent">
           {recent.length === 0 ? (
             <p className="note" data-testid="guided-start-recent-empty">
-              No recent packages yet. Open a package root to add one.
+              {GUIDED_START_EMPTY_RECENT}
             </p>
           ) : (
             <ul className="guided-start-recent-list" data-testid="guided-start-recent-list">
@@ -402,9 +461,8 @@ export default function GuidedStartWizard({
 
       {path === "continue" ? (
         <div className="guided-start-form" data-testid="guided-start-continue">
-          <p className="note">
-            Continues the last opened package through ADR-0031 recovery discovery
-            when the live package is missing and a single backup is available.
+          <p className="note" data-testid="guided-start-continue-hint">
+            {GUIDED_START_CONTINUE_HINT}
           </p>
           <div className="project-actions">
             <button
@@ -419,7 +477,11 @@ export default function GuidedStartWizard({
         </div>
       ) : null}
 
-      <p className="detail" data-testid="guided-start-status">
+      <p
+        className={`detail ${guidedStartStatusClass(statusKind)}`}
+        data-testid="guided-start-status"
+        data-status-kind={statusKind}
+      >
         {status}
       </p>
     </div>

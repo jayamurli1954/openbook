@@ -1,6 +1,6 @@
 # ADR-0033 Slice 4: Recent List + Continue Integration — Implementation Proposal
 
-- **Status:** Implementation authorized by maintainer direction (2026-09-24); implementation in progress
+- **Status:** Implemented on main (PR #120)
 - **Date:** 2026-09-24
 - **Parent architecture:** ADR-0033 — Phase 1 Book Wizard / Guided Start Architecture
 - **Scope:** Durable recent-list state + Continue via ADR-0031 recovery discovery; remember on successful open; no React redesign
