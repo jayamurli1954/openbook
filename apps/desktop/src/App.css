@@ -323,3 +323,8 @@ dd {
 .guided-start-recent-list li {
   margin: 0.2rem 0;
 }
+
+.guided-start-wizard [data-testid="guided-start-status"] {
+  display: block;
+  margin-top: 0.55rem;
+}
