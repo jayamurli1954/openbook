@@ -89,6 +89,7 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - ADR-0032 accepts Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). Slices 1–5 are done on main (PRs #104–#108).
 - **`FOUNDATION-READY` is declared** (2026-09-24) — see `docs/FOUNDATION-READY-DETERMINATION.md`. Gate 10 packaging reports still keep `foundationReady: false` by design.
 - ADR-0033 accepts Phase 1 Book Wizard / Guided Start architecture; Slices 1–5 are done on main (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`.
+- ADR-0034 accepts Phase 1 Writing Studio architecture; implementation is **not** authorized by ADR acceptance alone — see `docs/PHASE-1-WRITING-STUDIO-SELECTION.md`.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -118,6 +119,7 @@ Other pending items:
 
 - Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012; inventory pins exist; Gate 10 Windows packaging done)
 - Phase 1 Book Wizard / Guided Start — **ADR-0033 Accepted**; Slices 1–5 **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`
+- Phase 1 Writing Studio — **ADR-0034 Accepted**; implementation **not** authorized — see `docs/PHASE-1-WRITING-STUDIO-SELECTION.md`
 - Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
 - AI/Ollama and DTP/page layout (future; must not displace the next Phase 1 domain selection)
 
@@ -129,7 +131,9 @@ Other pending items:
 - `docs/FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md` (2026-09-16 ADR-0028 selection)
 - `docs/FOUNDATION-READY-DETERMINATION.md` (current Phase 0 gate declaration)
 - `docs/PHASE-1-NEXT-DOMAIN-SELECTION.md` (selected Phase 1 first domain; Book Wizard slices complete)
+- `docs/PHASE-1-WRITING-STUDIO-SELECTION.md` (selected Phase 1 Writing Studio domain)
 - `docs/adr/0033-phase-1-book-wizard-guided-start-architecture.md`
+- `docs/adr/0034-phase-1-writing-studio-architecture.md`
 - `docs/adr-0033-closure-reconciliation.md` (ADR-0033 Slices 1–5 closure)
 - `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (historical post–Gate 10 bridge; superseded for Phase 0 outcome)
 - `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md` (evidence ops path; Slices 1–5 complete)

@@ -30,7 +30,7 @@ Optional leftovers (signing, Gate 11, React recover chrome, DTP, AI) must not di
 1. Merge this selection + ADR-0033 (Draft PR → CI/DCO → explicit merge authorization). **Done (PR #116).**
 2. Maintainer separately authorizes implementation slices. **Done — Slices 1–5 (PRs #117–#121).**
 3. Closure recorded in `docs/adr-0033-closure-reconciliation.md`.
-4. Next Phase 1 domain requires a new selection/ADR (Writing Studio is the natural candidate).
+4. Next Phase 1 domain requires a new selection/ADR — **Writing Studio selected** (`docs/PHASE-1-WRITING-STUDIO-SELECTION.md`; ADR-0034).
 
 ## 5. Candidates not selected (historical context)
 
