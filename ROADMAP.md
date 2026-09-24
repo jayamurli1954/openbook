@@ -71,6 +71,8 @@ Phase 0 passes only when:
 
 **Gate:** `FOUNDATION-READY`
 
+**Status (2026-09-24):** **Declared** — see `docs/FOUNDATION-READY-DETERMINATION.md` (baseline `13ba691`; signing/multi-OS waived as Phase 0 requirements).
+
 ---
 
 # 3. Phase 1 — MVP: Guided Book Creation

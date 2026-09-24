@@ -87,12 +87,13 @@ REQUIRED NEXT PRODUCT CAPABILITIES (must not be dropped; not authorized by this 
 ├── Packaging / release readiness          [DONE on main — Gate 10 / ADR-0032 Slices 1–5]
 │
 FOUNDATION READINESS DECLARATION
-├── Post–Gate 10 closure record            [DONE — PR #109; FOUNDATION-READY not declared]
+├── Post–Gate 10 closure record            [DONE — PR #109; historical bridge]
 ├── Evidence ops selection + Slice 1       [DONE — PR #110; Gate 5/6 runtime inventory]
 ├── Evidence ops Slice 2 (font clearance)  [DONE — PR #111; Gate 6 Noto OFL confirmed/conditional]
 ├── Evidence ops Slice 3 (direct npm)      [DONE — PR #112]
 ├── Evidence ops Slice 4 (npm closure)     [DONE — PR #113]
-├── Evidence ops Slice 5 (Cargo closure)   [IN PROGRESS — Tauri/Cargo.lock inventory; FOUNDATION-READY not declared]
+├── Evidence ops Slice 5 (Cargo closure)   [DONE — PR #114]
+├── FOUNDATION-READY determination         [IN PROGRESS — ROADMAP Phase 0 declaration]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -175,7 +176,7 @@ Maintainer direction 2026-09-16: these three are necessary for a usable OpenBook
 | **Export UI & native Save As** | A person must get EPUB/HTML/PDF onto disk. Engines without a host path are not a product. | **Done on `main`:** Gate 9 Slices 1–5 under ADR-0030 (export host, Save-As host, wiring, React UI + Tauri dialog/atomic writes, E2E verification). | Closed. Follow-ups only via new authorization (e.g. packaging Gate 10). |
 | **Filesystem project package** | Save/Open must be a versioned on-disk project, not an opaque SQLite-only session. | ADR-0029 Accepted. Slices 1–6 done (#82, #93, #94, #95, #96, #97). | Closed under ADR-0029. Bound Save unification is done under ADR-0031 Slice 5. |
 | **Autosave & crash recovery** | Losing work after the app is actually used is unacceptable. | **Done on `main`:** ADR-0031 Slices 1–5 (#98–#102). | Closed under ADR-0031 sequencing. React recover/discard chrome remains separately gated. |
-| **Packaging / release readiness** | A developer `.cache/` runtime is not a shippable desktop product. | ADR-0032 **Accepted**. Slices 1–5 done (PRs #104–#108). | No further Gate 10 slice. FOUNDATION-READY remains separately gated. |
+| **Packaging / release readiness** | A developer `.cache/` runtime is not a shippable desktop product. | ADR-0032 **Accepted**. Slices 1–5 done (PRs #104–#108). | No further Gate 10 slice. FOUNDATION-READY declared separately (`FOUNDATION-READY-DETERMINATION.md`). |
 
 These items still require their own ADR/slice authorization before code. Recording them here is not that authorization.
 
@@ -183,7 +184,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the re
 
 ## Next architectural decision points
 
-Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). `FOUNDATION-READY` is **not** declared; see `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`. The selected next path is **foundation readiness evidence ops** (`docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md`); Slices 1–4 (PRs #110–#113) covered Gate 5/6 runtimes, Gate 6 fonts, and the desktop-path npm production closure; Slice 5 records the Tauri/Cargo crate closure without declaring FOUNDATION-READY.
+Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1+ product work still requires normal ADR/slice authorization.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 

@@ -1,6 +1,6 @@
 # OpenBook Third-Party Notices
 
-- **Status:** Maintenance mechanism established; **Slices 1–4** record Gate 5/6 runtimes, Gate 6 fonts, and the desktop-path npm production closure; **Slice 5** records the Tauri/Cargo crate closure. `FOUNDATION-READY` remains not declared.
+- **Status:** Maintenance mechanism established; Slices 1–5 populate Windows-first production evidence. ROADMAP Phase 0 `FOUNDATION-READY` is declared separately in `docs/FOUNDATION-READY-DETERMINATION.md`.
 - **Scope:** Release-oriented attribution and provenance evidence.
 - **Authority:** `docs/adr/0028-release-compliance-architecture.md`
 - **Inventory:** `docs/release-compliance/evidence-inventory.json` (machine-readable companion)
@@ -11,6 +11,7 @@
 - **npm Slice 4 method:** `docs/release-compliance/NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md`
 - **Cargo Slice 5 method:** `docs/release-compliance/CARGO-PRODUCTION-INVENTORY-SLICE-5.md`
 - **Selection:** `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md`
+- **Phase 0 determination:** `docs/FOUNDATION-READY-DETERMINATION.md`
 
 ## Purpose
 
@@ -40,7 +41,7 @@ It is not a replacement for package manifests, `package-lock.json`, runtime prov
 | npm production closure (transitive) | **Confirmed** — 50 transitive packages in closure inventory |
 | Tauri / Cargo crates | **Confirmed** — 550 locked packages; 5× MPL-2.0 **conditional** |
 | Desktop build/dev npm toolchain | **Confirmed** as build-only (not redistributed) |
-| `FOUNDATION-READY` | **Not declared** |
+| `FOUNDATION-READY` | **Declared** (see `FOUNDATION-READY-DETERMINATION.md`; this notices file is not the declaration) |
 
 ## Shipped runtimes (Gate 5 / Gate 6 — Windows-first)
 
@@ -132,7 +133,7 @@ License metadata comes from `cargo metadata` for each `Cargo.lock` pin. Method: 
 
 ## Relationship to the evidence inventory
 
-`evidence-inventory.json` is the structured companion for this notice file. Slices 1–5 populate Gate 5/6 runtimes, Gate 6 fonts, the desktop-path npm production closure, and the Tauri/Cargo crate closure. This notice update does **not** declare `FOUNDATION-READY`.
+`evidence-inventory.json` is the structured companion for this notice file. Slices 1–5 populate Gate 5/6 runtimes, Gate 6 fonts, the desktop-path npm production closure, and the Tauri/Cargo crate closure. ROADMAP Phase 0 `FOUNDATION-READY` is declared in `docs/FOUNDATION-READY-DETERMINATION.md`, not by this notices file.
 
 ## Non-actions
 

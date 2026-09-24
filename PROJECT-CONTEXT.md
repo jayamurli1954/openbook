@@ -84,9 +84,10 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - DCO 1.1 is the contribution sign-off mechanism (ADR-0024). Code of Conduct: ADR-0026. Security disclosure: ADR-0027 / `SECURITY.md`.
 - Book Model remains canonical (ADR-0006). Tiptap JSON is never persisted.
 - Publishing engines for EPUB, HTML, and Typst PDF are implemented (Gates 1–6). Gate 9 export UI and native Save As are implemented (ADR-0030).
-- ADR-0028 established the release/compliance evidence layer; Gate 5/6 runtimes, Gate 6 fonts, desktop-path npm closure, and Tauri/Cargo crate closure are populated under evidence ops; FOUNDATION-READY is not declared.
+- ADR-0028 established the release/compliance evidence layer; Gate 5/6 runtimes, Gate 6 fonts, desktop-path npm closure, and Tauri/Cargo crate closure are populated under evidence ops.
 - ADR-0029 Slices 1–6 are implemented (filesystem project package). ADR-0031 Slices 1–5 are implemented (autosave / crash recovery over the package Save boundary).
-- ADR-0032 accepts Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). Slices 1–5 are done on main (PRs #104–#108). `FOUNDATION-READY` is not declared (see post–Gate 10 closure record).
+- ADR-0032 accepts Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). Slices 1–5 are done on main (PRs #104–#108).
+- **`FOUNDATION-READY` is declared** (2026-09-24) — see `docs/FOUNDATION-READY-DETERMINATION.md`. Gate 10 packaging reports still keep `foundationReady: false` by design.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -108,15 +109,16 @@ Required next product capabilities (must not be dropped — see `docs/IMPLEMENTA
 - Filesystem project package — **done** (ADR-0029 Slices 1–6)
 - Autosave and crash recovery — **done** sequencing (ADR-0031 Slices 1–5)
 - Packaging / release readiness — **Done** (Gate 10 / ADR-0032 Slices 1–5)
-- Whether `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` can be declared — **not declared** (post–Gate 10 closure; evidence ops Slice 5 in progress; determination PR still required)
-- Foundation readiness evidence ops — **selected**; Slices 1–4 done (PRs #110–#113); Slice 5 records Tauri/Cargo crate closure
-- Bundled-font redistribution evidence — Gate 6 four Noto fonts **confirmed / conditional** (`FONT-CLEARANCE-DISPOSITIONS.md`); additional fonts still require the same process
+- **`FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` — declared** (2026-09-24; `docs/FOUNDATION-READY-DETERMINATION.md`)
+- Foundation readiness evidence ops — **complete** through Slice 5 (PRs #110–#114)
+- Bundled-font redistribution evidence — Gate 6 four Noto fonts **confirmed / conditional**; additional fonts still require the same process
 
 Other pending items:
 
 - Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012; inventory pins exist; Gate 10 Windows packaging done)
-- Optional: code signing / multi-OS production packaging (or formal waiver in a FOUNDATION-READY determination)
-- AI/Ollama and DTP/page layout (future; must not displace remaining evidence/ADR work)
+- Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
+- Phase 1 MVP / DTP / AI work — must use normal ADR/slice authorization; determination does not auto-authorize product slices
+- AI/Ollama and DTP/page layout (future)
 
 ## Important existing documents
 
@@ -124,8 +126,9 @@ Other pending items:
 - `docs/IMPLEMENTATION-BACKLOG.md`
 - `docs/FOUNDATION-READINESS-REPORT.md` (historical audit; not the current snapshot)
 - `docs/FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md` (2026-09-16 ADR-0028 selection)
-- `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (current post–Gate 10 determination)
-- `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md` (selected next evidence path)
+- `docs/FOUNDATION-READY-DETERMINATION.md` (current Phase 0 gate declaration)
+- `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (historical post–Gate 10 bridge; superseded for Phase 0 outcome)
+- `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md` (evidence ops path; Slices 1–5 complete)
 - `docs/release-compliance/evidence-inventory.json` (Slices 1–5 population)
 - `docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md` (Slice 2 Gate 6 font clearance)
 - `docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md` (Slice 3 direct npm method)
