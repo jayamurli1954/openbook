@@ -29,7 +29,7 @@ test("GuidedStartWizard stays free of coordinator, Tauri, and filesystem calls",
   assert.doesNotMatch(wizard, /\bOllama\b/);
 
   assert.match(factory, /GuidedStartHostAdapter/);
-  assert.match(factory, /createUnavailableContinuePort/);
+  assert.match(factory, /createGuidedStartContinuePort|createGuidedStartRecentPort/);
   assert.doesNotMatch(factory, /plugin-dialog|plugin-fs|localStorage/);
 
   assert.match(editor, /GuidedStartWizard/);

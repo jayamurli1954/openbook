@@ -3,8 +3,8 @@
  * ADR-0033 Slice 2 — Guided-start host adapter.
  *
  * Wires the four guided-start paths onto existing coordinator / recent /
- * continue ports. React, Tauri dialogs, filesystem, and durable recent-list
- * persistence remain outside this module (Slices 3–4).
+ * continue ports. React/Tauri dialogs remain outside this module.
+ * Optional recentWrite records successful open/continue for Slice 4.
  */
 import type {
   OpenFromProjectPackageResult,
@@ -22,6 +22,10 @@ import {
   type NewBookFields,
   type NewBookValidationErrorCode,
 } from "./guidedStartContract.js";
+import {
+  displayNameFromProjectRoot,
+  type GuidedStartRecentWritePort,
+} from "./guidedStartRecentStore.js";
 
 export type GuidedStartHostErrorCode =
   | NewBookValidationErrorCode
@@ -74,6 +78,9 @@ export interface GuidedStartHostAdapterDeps {
   readonly coordinator: GuidedStartCoordinatorPort;
   readonly recentList: GuidedStartRecentListPort;
   readonly continuePort: GuidedStartContinuePort;
+  /** When set, successful open/continue updates the durable recent list. */
+  readonly recentWrite?: GuidedStartRecentWritePort;
+  readonly now?: () => string;
 }
 
 export interface GuidedStartHostCallOptions {
@@ -119,11 +126,15 @@ export class GuidedStartHostAdapter implements IGuidedStartHostAdapter {
   readonly #coordinator: GuidedStartCoordinatorPort;
   readonly #recentList: GuidedStartRecentListPort;
   readonly #continuePort: GuidedStartContinuePort;
+  readonly #recentWrite: GuidedStartRecentWritePort | undefined;
+  readonly #now: () => string;
 
   constructor(deps: GuidedStartHostAdapterDeps) {
     this.#coordinator = deps.coordinator;
     this.#recentList = deps.recentList;
     this.#continuePort = deps.continuePort;
+    this.#recentWrite = deps.recentWrite;
+    this.#now = deps.now ?? (() => new Date().toISOString());
   }
 
   async startNewBook(
@@ -197,6 +208,7 @@ export class GuidedStartHostAdapter implements IGuidedStartHostAdapter {
         request.options,
       );
       assertNotAborted(options?.signal);
+      await this.#rememberOpened(result.projectRoot);
       return { ok: true, path: "open-recent", result };
     } catch (err) {
       return this.#failure("open-recent", err);
@@ -223,6 +235,7 @@ export class GuidedStartHostAdapter implements IGuidedStartHostAdapter {
         target.options,
       );
       assertNotAborted(options?.signal);
+      await this.#rememberOpened(result.projectRoot);
       return { ok: true, path: "continue", result };
     } catch (err) {
       return this.#failure("continue", err);
@@ -231,6 +244,15 @@ export class GuidedStartHostAdapter implements IGuidedStartHostAdapter {
 
   listRecent(): Promise<readonly GuidedStartRecentEntry[]> {
     return this.#recentList.listRecent();
+  }
+
+  async #rememberOpened(projectRoot: string): Promise<void> {
+    if (!this.#recentWrite) return;
+    await this.#recentWrite.rememberOpened({
+      projectRoot,
+      displayName: displayNameFromProjectRoot(projectRoot),
+      lastOpenedAt: this.#now(),
+    });
   }
 
   #failure(

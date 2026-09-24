@@ -7,7 +7,7 @@
 - **Depends on:** ADR-0006, ADR-0007, ADR-0008, ADR-0014, ADR-0015, ADR-0019, ADR-0020, ADR-0029, ADR-0030, ADR-0031
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-NEXT-DOMAIN-SELECTION.md`
-- **Implementation authorization:** Slices 1–3 authorized (contract + host adapter + React wizard shell); Slices 4–5 not authorized
+- **Implementation authorization:** Slices 1–4 authorized (contract + host + wizard + recent/continue); Slice 5 not authorized
 
 ## 1. Context
 
@@ -99,8 +99,8 @@ When separately authorized, implementation should proceed in small slices, for e
 
 1. **Slice 1 — Guided-start contract:** types/ports for the four entry paths + New Book field model; tests; no UI chrome required. **(done — PR #117)**
 2. **Slice 2 — Host adapter:** wire new/open/import/continue to existing coordinator/package/import APIs; fake host tests. **(done — PR #118)**
-3. **Slice 3 — React wizard shell:** minimal UI for the four paths + New Book form; terminology stubs. **(in progress)**
-4. **Slice 4 — Recent list + continue integration:** durable recent entries; continue/recovery handoff.
+3. **Slice 3 — React wizard shell:** minimal UI for the four paths + New Book form; terminology stubs. **(done — PR #119)**
+4. **Slice 4 — Recent list + continue integration:** durable recent entries; continue/recovery handoff. **(in progress)**
 5. **Slice 5 — Hardening:** failure UX, empty-state copy, round-trip tests with English + Kannada metadata.
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.

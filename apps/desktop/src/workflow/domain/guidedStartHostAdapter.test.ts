@@ -212,6 +212,53 @@ test("cancelled AbortSignal performs no coordinator mutation", async () => {
   assert.equal(calls.length, 0);
 });
 
+test("openRecent remembers successful opens when recentWrite is provided", async () => {
+  const remembered: Array<{ projectRoot: string; displayName: string }> = [];
+  const writing = new GuidedStartHostAdapter({
+    coordinator: {
+      async newProject() {},
+      async importContent() {
+        return {
+          success: true,
+          mode: "new-project",
+          sectionCount: 0,
+          blockCount: 0,
+          wordCount: 0,
+          issues: [],
+        };
+      },
+      async openFromProjectPackage(projectRoot) {
+        return { projectRoot, recovered: false };
+      },
+    },
+    recentList: {
+      async listRecent() {
+        return [];
+      },
+    },
+    continuePort: {
+      async resolveContinueTarget() {
+        return { kind: "unavailable", reason: "none" };
+      },
+    },
+    recentWrite: {
+      async rememberOpened(entry) {
+        remembered.push({
+          projectRoot: entry.projectRoot,
+          displayName: entry.displayName,
+        });
+      },
+    },
+    now: () => "2026-09-24T12:00:00.000Z",
+  });
+
+  const opened = await writing.openRecent({ projectRoot: "/tmp/Demo.obproj" });
+  assert.equal(opened.ok, true);
+  assert.deepEqual(remembered, [
+    { projectRoot: "/tmp/Demo.obproj", displayName: "Demo.obproj" },
+  ]);
+});
+
 test("adapter surface stays free of filesystem and React operations", () => {
   const { adapter } = fakePorts();
   assert.equal("writeFile" in adapter, false);
