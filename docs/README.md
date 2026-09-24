@@ -5,7 +5,7 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | Document | Role |
 | --- | --- |
 | [Architecture decision index](decisions/ARCHITECTURE-DECISION-INDEX.md) | Navigation for ADRs and pending decisions |
-| [ADRs](adr/) | Durable architecture decisions (`0002`–`0032` on `main`; `0001` unused) |
+| [ADRs](adr/) | Durable architecture decisions (`0002`–`0033` on `main`; `0001` unused) |
 | [Conversation-to-knowledge policy](governance/CONVERSATION-TO-KNOWLEDGE-POLICY.md) | How chat becomes repository knowledge |
 | [Conversation archive](conversations/) | Level-1 records; not specifications |
 | [Publishing engine scorecard](PUBLISHING_ENGINE_TECHNOLOGY_SCORECARD.md) | Technology/license evaluation baseline |
@@ -13,6 +13,7 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [Foundation readiness report](FOUNDATION-READINESS-REPORT.md) | Historical gate assessment; not the current snapshot |
 | [Foundation closure (2026-09-16)](FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md) | Gate 8 evidence closure and ADR-0028 selection record |
 | [Foundation Ready determination](FOUNDATION-READY-DETERMINATION.md) | Current ROADMAP Phase 0 gate: **FOUNDATION-READY declared** (2026-09-24) |
+| [Phase 1 next domain selection](PHASE-1-NEXT-DOMAIN-SELECTION.md) | Selected next path: Book Wizard / Guided Start (ADR-0033) |
 | [Foundation closure (post–Gate 10)](FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md) | Historical bridge after Gates 9–10; superseded for Phase 0 outcome by the determination |
 | [Foundation evidence ops selection](FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md) | Evidence ops Slices 1–5 complete (PRs #110–#114) |
 | [Implementation backlog](IMPLEMENTATION-BACKLOG.md) | Future work; not an authorization to code |
