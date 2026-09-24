@@ -7,7 +7,7 @@
 - **Depends on:** ADR-0006, ADR-0007, ADR-0008, ADR-0014, ADR-0015, ADR-0019, ADR-0020, ADR-0029, ADR-0030, ADR-0031
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-NEXT-DOMAIN-SELECTION.md`
-- **Implementation authorization:** **None**
+- **Implementation authorization:** Slice 1 authorized (guided-start contract); Slices 2–5 not authorized
 
 ## 1. Context
 
@@ -97,7 +97,7 @@ Missing or unreadable packages fail closed with structured errors; no silent emp
 
 When separately authorized, implementation should proceed in small slices, for example:
 
-1. **Slice 1 — Guided-start contract:** types/ports for the four entry paths + New Book field model; tests; no UI chrome required.
+1. **Slice 1 — Guided-start contract:** types/ports for the four entry paths + New Book field model; tests; no UI chrome required. **(in progress)**
 2. **Slice 2 — Host adapter:** wire new/open/import/continue to existing coordinator/package/import APIs; fake host tests.
 3. **Slice 3 — React wizard shell:** minimal UI for the four paths + New Book form; terminology stubs.
 4. **Slice 4 — Recent list + continue integration:** durable recent entries; continue/recovery handoff.
