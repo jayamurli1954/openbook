@@ -362,7 +362,7 @@ export default function GuidedStartWizard({
         <div className="guided-start-form" data-testid="guided-start-open-recent">
           {recent.length === 0 ? (
             <p className="note" data-testid="guided-start-recent-empty">
-              No durable recent list yet (Slice 4). Enter a package root to open.
+              No recent packages yet. Open a package root to add one.
             </p>
           ) : (
             <ul className="guided-start-recent-list" data-testid="guided-start-recent-list">
@@ -403,8 +403,8 @@ export default function GuidedStartWizard({
       {path === "continue" ? (
         <div className="guided-start-form" data-testid="guided-start-continue">
           <p className="note">
-            Continues the last bound package / recovery handoff through the host
-            adapter. Durable continue wiring arrives in Slice 4.
+            Continues the last opened package through ADR-0031 recovery discovery
+            when the live package is missing and a single backup is available.
           </p>
           <div className="project-actions">
             <button
