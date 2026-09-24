@@ -52,7 +52,7 @@ Verified upstream OFL URLs (2026-09-22):
 
 ## 5. What this does **not** close
 
-- Full npm production dependency inventory population remains open for **Cargo** crates (desktop-path npm production closure recorded in Slices 3–4)
+- Production ADR-0028 inventory for the Windows-first ship path is populated through evidence ops Slices 1–5 (Cargo closure in Slice 5); signing/multi-OS and explicit FOUNDATION-READY declaration remain separate
 - Code signing / multi-OS production packaging certification
 - Byte-for-byte reproducible signed release claims
 - `FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` declaration
