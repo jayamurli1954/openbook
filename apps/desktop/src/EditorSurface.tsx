@@ -25,7 +25,9 @@ import { SqliteProjectPersistence } from "./persistence/sqlitePersistence";
 import type { ProjectSummary } from "./persistence/types";
 import { DesktopExportController } from "./host/desktopExportController";
 import { createTauriExportSaveHost } from "./host/createTauriExportSaveHost";
+import { createGuidedStartHost } from "./host/createGuidedStartHost";
 import ExportPanel from "./ui/ExportPanel";
+import GuidedStartWizard from "./ui/GuidedStartWizard";
 import englishFixture from "./fixtures/english-tiptap.json";
 
 type ProjectionStatus = "idle" | "ok" | "error";
@@ -61,6 +63,7 @@ export default function EditorSurface() {
         getStage: () => coordinator.getState().stage,
       }),
   );
+  const [guidedStartHost] = useState(() => createGuidedStartHost({ coordinator }));
   const [studio, setStudio] = useState(() => coordinator.getState());
   const refresh = () => setStudio(coordinator.getState());
 
@@ -403,6 +406,16 @@ export default function EditorSurface() {
         Path: Tiptap → EditorAdapter → BookSession.getBook() → ProjectPersistence →
         SQLite. Tiptap JSON is never saved. Pipeline state is @openbook/workflow.
       </p>
+
+      <GuidedStartWizard
+        host={guidedStartHost}
+        onStarted={() => {
+          refresh();
+          loadSectionIntoEditor();
+          setSessionNote("Guided start completed through host adapter");
+          setPersistStatus("Persistence: ready (guided start)");
+        }}
+      />
 
       <div className="project-bar" aria-label="Workflow stage">
         <span className="project-binding" data-testid="workflow-stage">

@@ -1,6 +1,6 @@
 # ADR-0033 Slice 2: Guided-Start Host Adapter — Implementation Proposal
 
-- **Status:** Implementation authorized by maintainer direction (2026-09-24); implementation in progress
+- **Status:** Implemented on main (PR #118)
 - **Date:** 2026-09-24
 - **Parent architecture:** ADR-0033 — Phase 1 Book Wizard / Guided Start Architecture
 - **Scope:** Host adapter wiring New Book / Import / Open Recent / Continue onto existing coordinator ports; fake-host unit tests; no React/Tauri
