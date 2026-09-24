@@ -1,6 +1,6 @@
 # ADR-0033 Slice 1: Guided-Start Contract — Implementation Proposal
 
-- **Status:** Implementation authorized by maintainer direction (2026-09-24); implementation in progress
+- **Status:** Implemented on main (PR #117)
 - **Date:** 2026-09-24
 - **Parent architecture:** ADR-0033 — Phase 1 Book Wizard / Guided Start Architecture
 - **Scope:** Types/ports for the four entry paths + New Book field validation; unit tests; no UI/host wiring
