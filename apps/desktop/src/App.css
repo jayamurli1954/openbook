@@ -286,3 +286,40 @@ dd {
 .export-panel .project-actions {
   margin-top: 0.15rem;
 }
+
+.guided-start-wizard {
+  margin-top: 0.75rem;
+}
+
+.guided-start-form {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.guided-start-form label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.9rem;
+}
+
+.guided-start-form input {
+  font: inherit;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid #ccc;
+  background: #fff;
+}
+
+.guided-start-help {
+  margin: 0 0 0.35rem;
+}
+
+.guided-start-recent-list {
+  list-style: none;
+  margin: 0.35rem 0;
+  padding: 0;
+}
+
+.guided-start-recent-list li {
+  margin: 0.2rem 0;
+}

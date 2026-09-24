@@ -20,6 +20,8 @@
     "src/persistence/**/*.ts",
     "src/host/desktopExportController.ts",
     "src/host/desktopExportController.test.ts",
+    "src/host/createGuidedStartHost.ts",
+    "src/host/createGuidedStartHost.test.ts",
     "src/host/packagedRuntimeLocator.ts",
     "src/host/packagedRuntimeLocator.test.ts",
     "src/host/packagedResourceAssembly.ts",
