@@ -63,7 +63,7 @@ This reconciliation records the current governance state only. It does **not** d
 
 ADR-0028 Release & Compliance Architecture is **implementation-complete and reconciled** on `main` through PRs #73–#77. The five slices establish the evidence inventory contract, third-party notice maintenance mechanism, font provenance policy, release artifact manifest/evidence mechanism, and reproducibility/compliance verification mechanism.
 
-Production evidence population for Gate 5/6 runtimes, Gate 6 fonts, desktop-path npm closure, and Tauri/Cargo crate closure is recorded under evidence ops Slices 1–5. Remaining blockers for an eventual `FOUNDATION-READY` determination are an explicit maintainer declaration and any formal position on signing/multi-OS packaging. Full branch-protection configuration remains not independently re-verified beyond the post–Gate 10 closure API check. These limitations do not reopen ADR-0028 or authorize additional work; future operational evidence collection must follow the normal authorization sequence.
+Production evidence population for Gate 5/6 runtimes, Gate 6 fonts, desktop-path npm closure, and Tauri/Cargo crate closure is recorded under evidence ops Slices 1–5. **`FOUNDATION-READY` is declared** in `docs/FOUNDATION-READY-DETERMINATION.md` (2026-09-24); signing/multi-OS packaging is waived as a Phase 0 requirement. Full branch-protection configuration remains not independently re-verified beyond the post–Gate 10 closure API check. These notes do not reopen ADR-0028.
 
 See `docs/release-compliance/ADR-0028-CLOSURE-RECONCILIATION.md` for the detailed closure record.
 
@@ -84,8 +84,8 @@ See also `docs/FOUNDATION-READINESS-REPORT.md`, `docs/FOUNDATION-READINESS-CLOSU
 - ~~Stewardship and maintainer governance~~ — resolved by ADR-0025: **Accepted**; documented governance policy recorded
 - ~~Code of Conduct governance~~ — resolved by ADR-0026: **Accepted**; documented governance policy recorded
 - ~~Security disclosure and vulnerability response governance~~ — resolved by ADR-0027: **Accepted** and operational security policy implemented on `main` through PR #64
-- Whether `FOUNDATION-GOVERNANCE-READY` / `ROADMAP.md` `FOUNDATION-READY` can be declared (audit: **not passed** / post–Gate 10 closure: **not declared**; evidence ops Slice 5 does not declare — determination PR still required)
-- **Required next product capabilities:** complete through Gate 10. **Selected next path:** foundation readiness evidence ops — see `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md` and `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`.
+- Whether `FOUNDATION-GOVERNANCE-READY` / `ROADMAP.md` `FOUNDATION-READY` can be declared — **declared** (2026-09-24; `docs/FOUNDATION-READY-DETERMINATION.md`)
+- **Required next product capabilities:** complete through Gate 10. Evidence ops Slices 1–5 complete. Phase 1+ work requires new ADR/slice authorization — see `docs/FOUNDATION-READY-DETERMINATION.md` and `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`.
 - AI/Ollama and DTP/page layout remain future work and must not displace the required product capabilities above
 - ~~Exact Tiptap/ProseMirror (editor) package versions~~ — resolved by ADR-0008 (OSS pins Frozen; implementation still gated)
 - ~~Frontend bundler (e.g. Vite) exact version~~ — Vite **8.2.2** recorded with the desktop shell (`apps/desktop`)
@@ -110,7 +110,7 @@ ADR-0031 (Autosave & Crash Recovery) is **Accepted**. Slices 1–5 are **done** 
 
 ## Gate 10 status
 
-ADR-0032 is **Accepted**. Slices 1–5 are **done** (PR #104–#108). `FOUNDATION-READY` remains not declared; see `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md`.
+ADR-0032 is **Accepted**. Slices 1–5 are **done** (PR #104–#108). `FOUNDATION-READY` is declared separately — see `docs/FOUNDATION-READY-DETERMINATION.md`.
 
 This index update does **not** authorize Slices 4–5 (Windows distributable, release-readiness verification).
 

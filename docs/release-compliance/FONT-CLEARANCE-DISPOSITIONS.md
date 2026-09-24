@@ -4,7 +4,7 @@
 - **Date:** 2026-09-22
 - **Authority:** ADR-0028; `FONT-PROVENANCE-POLICY.md`; Gate 6 packaging inventory
 - **Selection:** `FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md` (Slice 2)
-- **FOUNDATION-READY:** **Not declared** by this disposition record
+- **FOUNDATION-READY:** Declared separately in `FOUNDATION-READY-DETERMINATION.md`; this disposition record is not that declaration
 
 ## 1. Purpose
 

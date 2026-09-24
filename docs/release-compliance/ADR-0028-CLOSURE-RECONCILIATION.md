@@ -10,7 +10,7 @@
 
 This record reconciles the implementation of ADR-0028 against the accepted architecture and records the remaining release/compliance evidence limitations.
 
-It is a governance and evidence record. It does not declare a production release compliant, does not populate a production dependency inventory, and does not declare `FOUNDATION-READY` or `FOUNDATION-GOVERNANCE-READY`.
+It is a governance and evidence record for the ADR-0028 mechanism slices. Production inventory population and the ROADMAP Phase 0 gate are handled in later evidence-ops / determination records (`evidence-inventory.json`; `FOUNDATION-READY-DETERMINATION.md`).
 
 ## 2. Architecture reconciliation
 
@@ -32,7 +32,7 @@ The five slices preserve the accepted architecture boundary: evidence records an
 
 ### Slice 1 — inventory contract
 
-The machine-readable evidence inventory provides classifications for source, development, build, test, shipped-runtime, and shipped-asset evidence, with explicit `confirmed`, `unresolved`, and `not-applicable` states. The production inventory template remains intentionally empty as a blank form. A separately maintained production inventory at `docs/release-compliance/evidence-inventory.json` is populated under foundation readiness evidence ops Slices 1–5 (Gate 5/6 runtimes, Gate 6 fonts, desktop-path npm production closure, Tauri/Cargo crate closure); FOUNDATION-READY is not declared.
+The machine-readable evidence inventory provides classifications for source, development, build, test, shipped-runtime, and shipped-asset evidence, with explicit `confirmed`, `unresolved`, and `not-applicable` states. The production inventory template remains intentionally empty as a blank form. A separately maintained production inventory at `docs/release-compliance/evidence-inventory.json` is populated under foundation readiness evidence ops Slices 1–5 (Gate 5/6 runtimes, Gate 6 fonts, desktop-path npm production closure, Tauri/Cargo crate closure). ROADMAP Phase 0 `FOUNDATION-READY` is declared in `docs/FOUNDATION-READY-DETERMINATION.md`.
 
 ### Slice 2 — third-party notices
 

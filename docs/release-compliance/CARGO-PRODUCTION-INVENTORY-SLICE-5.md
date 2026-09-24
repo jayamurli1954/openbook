@@ -4,7 +4,7 @@
 - **Date:** 2026-09-24
 - **Authority:** ADR-0028; `FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md`
 - **Baseline:** `main` at `0c10929` (post–Slice 4 / PR #113)
-- **FOUNDATION-READY:** **Not declared**
+- **FOUNDATION-READY:** Declared separately in `FOUNDATION-READY-DETERMINATION.md`; this Cargo inventory is not that declaration
 
 ## 1. Purpose
 
@@ -61,11 +61,12 @@ License mix is dominated by MIT / Apache-2.0 dual-licensing, with smaller sets o
 2. For the five MPL-2.0 crates, comply with MPL-2.0 file-level obligations if those files are modified; unmodified binary redistribution with notices remains the baseline disposition here.
 3. Changing `Cargo.lock` / pins requires regenerating this inventory.
 
-## 6. Still open after this slice (not FOUNDATION-READY)
+## 6. Still open after this slice
 
-- Explicit maintainer `FOUNDATION-READY` determination PR
-- Optional: code signing / multi-OS production packaging (or formal waiver in that determination)
-- Gate 10 verification continues to report `foundationReady: false` until that determination
+- Optional code signing / multi-OS production packaging (waived for Phase 0; see determination)
+- Gate 10 verification continues to report `foundationReady: false` in packaging artifacts by design
+
+Phase 0 `FOUNDATION-READY` is declared in `docs/FOUNDATION-READY-DETERMINATION.md`.
 
 ## 7. Inventory linkage
 

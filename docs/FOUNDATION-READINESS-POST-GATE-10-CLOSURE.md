@@ -1,11 +1,14 @@
 # OpenBook Foundation Readiness — Post–Gate 10 Closure Record
 
-- **Status:** Evidence closure / readiness determination record
-- **Date:** 2026-09-22
-- **Baseline:** `main` at `553ba7c65566e69ed2d0149948b74abe1250d1c7` (PR #108 merge — Gate 10 Slice 5)
+- **Status:** Historical bridge after Gates 9–10; **Phase 0 gate outcome superseded** by `docs/FOUNDATION-READY-DETERMINATION.md` (2026-09-24)
+- **Date:** 2026-09-22 (bridge); determination 2026-09-24
+- **Baseline (bridge):** `main` at `553ba7c65566e69ed2d0149948b74abe1250d1c7` (PR #108 merge — Gate 10 Slice 5)
+- **Determination baseline:** `main` at `13ba691` (PR #114)
 - **Prior closure:** `docs/FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md` (2026-09-16; Gate 8 + ADR-0028 selection)
-- **Scope:** Refresh foundation readiness evidence after Gates 9–10 and ADRs 0028–0032; record what remains open
+- **Scope:** Refresh foundation readiness evidence after Gates 9–10 and ADRs 0028–0032; record what remained open at bridge time
 - **Implementation authorization:** **None** — documentation and evidence only
+
+> **Current Phase 0 status:** `FOUNDATION-READY` and `FOUNDATION-GOVERNANCE-READY` are **declared** in `docs/FOUNDATION-READY-DETERMINATION.md`. This post–Gate 10 closure remains useful historical context and must not be read as the current gate outcome.
 
 ## 1. Purpose
 
@@ -113,30 +116,17 @@ Front-door docs (`PROJECT-CONTEXT.md`, ADR index, implementation backlog) must b
 
 ### `FOUNDATION-GOVERNANCE-READY`
 
-**Not formally declared by this record.**
+**Superseded:** Declared in `docs/FOUNDATION-READY-DETERMINATION.md` (2026-09-24).
 
-Contributor governance (ADR-0024–0027) remains established. Repository controls are now partially re-verified (§3.2). Production ADR-0028 inventory for the Windows-first ship path is populated through evidence ops Slices 1–5; signing/multi-OS packaging and an explicit `FOUNDATION-READY` declaration remain open.
+Contributor governance (ADR-0024–0027) was already established at bridge time; the determination makes the formal declaration.
 
 ### `FOUNDATION-READY`
 
-**Not formally declared by this record.**
+**Superseded:** Declared in `docs/FOUNDATION-READY-DETERMINATION.md` (2026-09-24).
 
-Engineering Gates 1–10 and the four required product capabilities are complete on `main`. That is **implementation completeness**, not the ROADMAP Phase 0 declaration.
+At bridge time this record did **not** declare the gate. Evidence ops Slices 1–5 and the determination PR closed the remaining items (Cargo inventory; explicit declaration; signing/multi-OS waived for Phase 0).
 
-Carried-forward blockers / limitations that prevent this record from declaring `FOUNDATION-READY`:
-
-1. Contributor “reproducible release” is not established as a signed, multi-platform, production-certified package (may be waived or deferred in a determination PR).
-2. No maintainer explicit `FOUNDATION-READY` declaration is made here.
-
-**Update (2026-09-22, evidence ops Slice 2):** Gate 6 four Noto fonts are dispositioned as confirmed / conditional OFL — see `FONT-CLEARANCE-DISPOSITIONS.md`. That does **not** by itself declare `FOUNDATION-READY`.
-
-**Update (2026-09-23, evidence ops Slice 3):** Direct production npm deps for the desktop path are recorded — see `NPM-PRODUCTION-INVENTORY-SLICE-3.md`. That does **not** by itself declare `FOUNDATION-READY`.
-
-**Update (2026-09-23, evidence ops Slice 4):** Desktop-path npm production closure (50 transitive) is recorded — see `NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md`. That does **not** by itself declare `FOUNDATION-READY`.
-
-**Update (2026-09-24, evidence ops Slice 5):** Tauri/Cargo crate closure (550 packages) is recorded — see `CARGO-PRODUCTION-INVENTORY-SLICE-5.md`. That does **not** by itself declare `FOUNDATION-READY`.
-
-This distinction is intentional and consistent with ADR-0032 and Gate 10 Slice 5 (`foundationReady: false`).
+Gate 10 Slice 5 packaging verification continues to keep `foundationReady: false` by design so packaging artifacts never substitute for the ROADMAP determination.
 
 ## 6. Closure outcome
 
@@ -144,17 +134,16 @@ This distinction is intentional and consistent with ADR-0032 and Gate 10 Slice 5
 |---|---|
 | Post–Gate 10 evidence refresh | **Closed** as a reconciliation activity |
 | Engineering Gates 1–10 | **Recorded complete** on baseline |
-| `FOUNDATION-READY` | **Not declared** |
-| `FOUNDATION-GOVERNANCE-READY` | **Not declared** |
-| Next engineering slice | **Not authorized** |
+| `FOUNDATION-READY` | **Deferred at bridge time** → later **declared** in `FOUNDATION-READY-DETERMINATION.md` |
+| `FOUNDATION-GOVERNANCE-READY` | **Deferred at bridge time** → later **declared** in `FOUNDATION-READY-DETERMINATION.md` |
+| Next engineering slice | **Not authorized by this bridge** |
 
-Open items to carry forward (evidence/ops or separately authorized architecture):
+Open items after determination (not Phase 0 blockers):
 
-1. Explicit `FOUNDATION-READY` determination when the maintainer authorizes it (including any waiver of signing/multi-OS as a Phase 0 requirement).
-2. Optional: stronger contributor packaging/signing story (Windows first; other OS later).
-3. Optional: Gate 11+ security / determinism ADRs when selected.
-4. Optional: React recover/discard chrome (ADR-0031 residual).
-5. Future product domains: DTP, AI/Ollama, cloud sync (must not silently displace evidence closure).
+1. Optional: stronger contributor packaging/signing story (Windows first; other OS later).
+2. Optional: Gate 11+ security / determinism ADRs when selected.
+3. Optional: React recover/discard chrome (ADR-0031 residual).
+4. Future product domains: DTP, AI/Ollama, cloud sync — require normal ADR/slice authorization.
 
 ## 7. Next architecture domain — candidates (not selected)
 
