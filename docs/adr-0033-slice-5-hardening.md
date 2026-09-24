@@ -1,6 +1,6 @@
 # ADR-0033 Slice 5: Guided-Start Hardening — Implementation Proposal
 
-- **Status:** Implementation authorized by maintainer direction (2026-09-24); implementation in progress
+- **Status:** Implemented on main (PR #121)
 - **Date:** 2026-09-24
 - **Parent architecture:** ADR-0033 — Phase 1 Book Wizard / Guided Start Architecture
 - **Scope:** Failure UX + empty-state copy + English/Kannada round-trip tests through the host boundary

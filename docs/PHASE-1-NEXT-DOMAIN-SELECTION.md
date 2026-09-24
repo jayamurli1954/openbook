@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Book Wizard / Guided Start
 
-- **Status:** Selected by maintainer direction after `FOUNDATION-READY` (2026-09-24)
+- **Status:** Selected and implemented — ADR-0033 Slices 1–5 done (PRs #117–#121); see `docs/adr-0033-closure-reconciliation.md`
 - **Date:** 2026-09-24
-- **Baseline:** `main` at `4d14dfb` (PR #115 — FOUNDATION-READY determination)
+- **Baseline:** `main` after ADR-0033 Slice 5 (PR #121)
 - **Prior record:** `docs/FOUNDATION-READY-DETERMINATION.md`
 - **Selected domain:** ROADMAP Phase 1 MVP — **Book Wizard / Guided Start** (first Phase 1 architecture)
-- **Architecture ADR:** ADR-0033 (Accepted on this follow-on; **implementation not authorized** by selection alone)
+- **Architecture ADR:** ADR-0033 (Accepted; implementation slices complete)
 
 ## 1. Why this domain
 
@@ -27,9 +27,10 @@ Optional leftovers (signing, Gate 11, React recover chrome, DTP, AI) must not di
 
 ## 4. Controlled sequence after ADR acceptance
 
-1. Merge this selection + ADR-0033 (Draft PR → CI/DCO → explicit merge authorization).
-2. Maintainer separately authorizes **implementation Slice 1** (contract/types or host boundary only — per ADR-0033 sequencing).
-3. Further slices only under explicit authorization.
+1. Merge this selection + ADR-0033 (Draft PR → CI/DCO → explicit merge authorization). **Done (PR #116).**
+2. Maintainer separately authorizes implementation slices. **Done — Slices 1–5 (PRs #117–#121).**
+3. Closure recorded in `docs/adr-0033-closure-reconciliation.md`.
+4. Next Phase 1 domain requires a new selection/ADR (Writing Studio is the natural candidate).
 
 ## 5. Candidates not selected (historical context)
 

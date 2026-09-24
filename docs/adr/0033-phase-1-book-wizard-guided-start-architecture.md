@@ -1,13 +1,14 @@
 # ADR-0033: Phase 1 — Book Wizard / Guided Start Architecture
 
-- **Status:** Accepted; implementation requires separate explicit authorization
+- **Status:** Accepted; Slices 1–5 done
 - **Date:** 2026-09-24
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.1)
 - **Area:** Desktop / Product Surface / Guided Start
 - **Depends on:** ADR-0006, ADR-0007, ADR-0008, ADR-0014, ADR-0015, ADR-0019, ADR-0020, ADR-0029, ADR-0030, ADR-0031
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-NEXT-DOMAIN-SELECTION.md`
-- **Implementation authorization:** Slices 1–4 complete (PRs #117–#120); Slice 5 authorized (hardening in progress)
+- **Closure record:** `docs/adr-0033-closure-reconciliation.md`
+- **Implementation authorization:** Slices 1–5 complete (PRs #117–#121); no further ADR-0033 slice authorized by this ADR alone
 
 ## 1. Context
 
@@ -101,7 +102,7 @@ When separately authorized, implementation should proceed in small slices, for e
 2. **Slice 2 — Host adapter:** wire new/open/import/continue to existing coordinator/package/import APIs; fake host tests. **(done — PR #118)**
 3. **Slice 3 — React wizard shell:** minimal UI for the four paths + New Book form; terminology stubs. **(done — PR #119)**
 4. **Slice 4 — Recent list + continue integration:** durable recent entries; continue/recovery handoff. **(done — PR #120)**
-5. **Slice 5 — Hardening:** failure UX, empty-state copy, round-trip tests with English + Kannada metadata. **(in progress)**
+5. **Slice 5 — Hardening:** failure UX, empty-state copy, round-trip tests with English + Kannada metadata. **(done — PR #121)**
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.
 
