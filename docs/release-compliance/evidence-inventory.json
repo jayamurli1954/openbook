@@ -5,7 +5,7 @@
   "release": {
     "sourceCommit": "657fe7b",
     "dependencyLock": "package-lock.json",
-    "environment": "windows-x64-first Gate 10 packaging baseline; evidence ops Slice 4 npm production closure"
+    "environment": "windows-x64-first Gate 10 packaging baseline; evidence ops Slice 5 Cargo closure"
   },
   "entries": [
     {
@@ -508,24 +508,27 @@
     },
     {
       "component": "Tauri / Rust crate dependencies (Cargo)",
-      "version": "apps/desktop/src-tauri (Cargo.lock when present)",
+      "version": "apps/desktop/src-tauri/Cargo.lock (550 packages)",
       "classification": "shipped-runtime",
-      "status": "unresolved",
+      "status": "confirmed",
       "provenance": {
         "source": "https://crates.io/",
-        "sourceReference": "apps/desktop/src-tauri"
+        "sourceReference": "docs/release-compliance/cargo-production-closure-inventory.json"
       },
       "licensing": {
-        "license": "various",
-        "basis": "Native host crates are redistributed with the Windows binary; package-by-package Cargo inventory not populated in Slice 4",
+        "license": "various (mostly MIT/Apache-2.0; 5× MPL-2.0 conditional)",
+        "basis": "cargo metadata license fields for Cargo.lock pins; CARGO-PRODUCTION-INVENTORY-SLICE-5.md",
         "noticeRequired": true,
-        "redistribution": "unresolved"
+        "redistribution": "conditional"
       },
       "artifacts": [
-        "apps/desktop/src-tauri",
-        "docs/release-compliance/NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md"
+        "apps/desktop/src-tauri/Cargo.toml",
+        "apps/desktop/src-tauri/Cargo.lock",
+        "docs/release-compliance/cargo-production-closure-inventory.json",
+        "docs/release-compliance/CARGO-PRODUCTION-INVENTORY-SLICE-5.md",
+        "scripts/release-compliance/generate-cargo-production-closure.mjs"
       ],
-      "notes": "Deferred to a later evidence-ops slice. JS/npm closure does not substitute for Cargo crate clearance."
+      "notes": "550 locked packages confirmed. Bucket redistribution is conditional because five crates are standalone MPL-2.0 (cssparser, cssparser-macros, dtoa-short, option-ext, selectors). Build-only tauri-build is not redistributed. Does not declare FOUNDATION-READY; signing/multi-OS and explicit declaration remain separate."
     }
   ]
 }

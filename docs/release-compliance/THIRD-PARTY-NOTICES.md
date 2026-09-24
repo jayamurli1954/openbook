@@ -1,13 +1,15 @@
 # OpenBook Third-Party Notices
 
-- **Status:** Maintenance mechanism established; **Slices 1–2** record Gate 5/6 runtimes and Gate 6 font OFL clearance; **Slice 3** records direct production npm; **Slice 4** records the production npm closure (direct + transitive). Tauri/Cargo crates remain unresolved.
+- **Status:** Maintenance mechanism established; **Slices 1–4** record Gate 5/6 runtimes, Gate 6 fonts, and the desktop-path npm production closure; **Slice 5** records the Tauri/Cargo crate closure. `FOUNDATION-READY` remains not declared.
 - **Scope:** Release-oriented attribution and provenance evidence.
 - **Authority:** `docs/adr/0028-release-compliance-architecture.md`
 - **Inventory:** `docs/release-compliance/evidence-inventory.json` (machine-readable companion)
 - **npm closure:** `docs/release-compliance/npm-production-closure-inventory.json`
+- **Cargo closure:** `docs/release-compliance/cargo-production-closure-inventory.json`
 - **Font dispositions:** `docs/release-compliance/FONT-CLEARANCE-DISPOSITIONS.md`
 - **npm Slice 3 method:** `docs/release-compliance/NPM-PRODUCTION-INVENTORY-SLICE-3.md`
 - **npm Slice 4 method:** `docs/release-compliance/NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md`
+- **Cargo Slice 5 method:** `docs/release-compliance/CARGO-PRODUCTION-INVENTORY-SLICE-5.md`
 - **Selection:** `docs/FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md`
 
 ## Purpose
@@ -26,7 +28,7 @@ It is not a replacement for package manifests, `package-lock.json`, runtime prov
 6. Update this record when a shipped third-party component, runtime, asset, or relevant dependency changes.
 7. Review the corresponding release evidence inventory so the human-readable notice and machine-readable evidence do not contradict one another.
 
-## Current evidence status (Slice 4)
+## Current evidence status (Slice 5)
 
 | Category | Status |
 |---|---|
@@ -36,7 +38,7 @@ It is not a replacement for package manifests, `package-lock.json`, runtime prov
 | Gate 6 bundled fonts (4 Noto families) | **Confirmed** / redistribution **conditional** (OFL 1.1) |
 | Direct production npm (desktop path) | **Confirmed** — see § npm below |
 | npm production closure (transitive) | **Confirmed** — 50 transitive packages in closure inventory |
-| Tauri / Cargo crates | **Unresolved** (deferred) |
+| Tauri / Cargo crates | **Confirmed** — 550 locked packages; 5× MPL-2.0 **conditional** |
 | Desktop build/dev npm toolchain | **Confirmed** as build-only (not redistributed) |
 | `FOUNDATION-READY` | **Not declared** |
 
@@ -113,11 +115,24 @@ The full production closure from the Slice 3 roots is recorded in `npm-productio
 
 `argparse@2.0.1` is licensed **Python-2.0** (redistribution **conditional**). Per-package integrity digests and LICENSE paths are in the closure inventory.
 
-**Still unresolved:** Tauri/Cargo native crates. Method: `NPM-TRANSITIVE-PRODUCTION-INVENTORY-SLICE-4.md`.
+## Tauri / Cargo production closure (Slice 5)
+
+The locked Cargo closure for `apps/desktop/src-tauri` is recorded in `cargo-production-closure-inventory.json` (regenerate: `node scripts/release-compliance/generate-cargo-production-closure.mjs`; requires `cargo`).
+
+| Metric | Value |
+|---|---|
+| Total locked packages | 550 |
+| First-party | 1 (`openbook-desktop`, Apache-2.0) |
+| Direct runtime | 5 (`tauri`, plugins, `serde`, `serde_json`) |
+| Direct build | 1 (`tauri-build`, not redistributed) |
+| Transitive | 543 |
+| Conditional (MPL-2.0) | 5 (`cssparser`, `cssparser-macros`, `dtoa-short`, `option-ext`, `selectors`) |
+
+License metadata comes from `cargo metadata` for each `Cargo.lock` pin. Method: `CARGO-PRODUCTION-INVENTORY-SLICE-5.md`.
 
 ## Relationship to the evidence inventory
 
-`evidence-inventory.json` is the structured companion for this notice file. Slices 1–4 populate Gate 5/6 runtimes, Gate 6 fonts, and the desktop-path npm production closure. This notice update does **not** declare `FOUNDATION-READY`.
+`evidence-inventory.json` is the structured companion for this notice file. Slices 1–5 populate Gate 5/6 runtimes, Gate 6 fonts, the desktop-path npm production closure, and the Tauri/Cargo crate closure. This notice update does **not** declare `FOUNDATION-READY`.
 
 ## Non-actions
 
