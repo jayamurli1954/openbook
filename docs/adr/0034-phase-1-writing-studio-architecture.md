@@ -7,7 +7,7 @@
 - **Depends on:** ADR-0006, ADR-0007, ADR-0008, ADR-0014, ADR-0015, ADR-0019, ADR-0020, ADR-0029, ADR-0030, ADR-0031, ADR-0033
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-WRITING-STUDIO-SELECTION.md`
-- **Implementation authorization:** **None**
+- **Implementation authorization:** Slice 1 authorized (Writing Studio contract); further slices require separate explicit authorization
 
 ## 1. Context
 
@@ -105,7 +105,7 @@ Writing Studio must not:
 
 When separately authorized, implementation should proceed in small slices, for example:
 
-1. **Slice 1 — Writing Studio contract:** capability matrix + ports for toolbar commands, word count, search; tests; no full chrome required.
+1. **Slice 1 — Writing Studio contract:** capability matrix + ports for toolbar commands, word count, search; tests; no full chrome required. **(authorized — this PR)**
 2. **Slice 2 — Formatting chrome:** complete heading/emphasis/list/quote/link toolbar bound to TipTap → adapter → BookSession; EN/KN smoke.
 3. **Slice 3 — Word count + document search:** Book-derived counts and find-in-book UI/ports; fail-closed empty query.
 4. **Slice 4 — Image insertion UI:** wire native/file pick → existing asset ingest/insert APIs; no parallel asset model.
