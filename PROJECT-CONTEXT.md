@@ -89,7 +89,7 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - ADR-0032 accepts Gate 10 desktop packaging / release readiness (packaged-resource locator; Windows-first bundle of Gate 5/6 runtimes). Slices 1–5 are done on main (PRs #104–#108).
 - **`FOUNDATION-READY` is declared** (2026-09-24) — see `docs/FOUNDATION-READY-DETERMINATION.md`. Gate 10 packaging reports still keep `foundationReady: false` by design.
 - ADR-0033 accepts Phase 1 Book Wizard / Guided Start architecture; Slices 1–5 are done on main (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`.
-- ADR-0034 accepts Phase 1 Writing Studio architecture; Slice 1 (contract) is authorized separately — see `docs/PHASE-1-WRITING-STUDIO-SELECTION.md` and `docs/adr-0034-slice-1-writing-studio-contract.md`.
+- ADR-0034 accepts Phase 1 Writing Studio architecture; Slice 1 is done (PR #124); Slice 2 (formatting chrome) is authorized separately — see `docs/adr-0034-slice-2-formatting-chrome.md`.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -119,7 +119,7 @@ Other pending items:
 
 - Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012; inventory pins exist; Gate 10 Windows packaging done)
 - Phase 1 Book Wizard / Guided Start — **ADR-0033 Accepted**; Slices 1–5 **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`
-- Phase 1 Writing Studio — **ADR-0034 Accepted**; Slice 1 (contract) authorized; further slices gated — see `docs/adr-0034-slice-1-writing-studio-contract.md`
+- Phase 1 Writing Studio — **ADR-0034 Accepted**; Slice 1 done (PR #124); Slice 2 (formatting chrome) authorized — see `docs/adr-0034-slice-2-formatting-chrome.md`
 - Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
 - AI/Ollama and DTP/page layout (future; must not displace the next Phase 1 domain selection)
 
