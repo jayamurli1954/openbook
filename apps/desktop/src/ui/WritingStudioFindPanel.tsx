@@ -45,8 +45,9 @@ export default function WritingStudioFindPanel({
         className="writing-studio-word-count detail"
         data-testid="writing-studio-word-count"
       >
-        Book: {counts.bookWordCount} word
-        {counts.bookWordCount === 1 ? "" : "s"}
+        {`Book: ${counts.bookWordCount} word${
+          counts.bookWordCount === 1 ? "" : "s"
+        }`}
         {counts.sectionId
           ? ` · Section: ${counts.sectionWordCount} word${
               counts.sectionWordCount === 1 ? "" : "s"

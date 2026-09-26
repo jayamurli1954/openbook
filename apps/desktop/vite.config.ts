@@ -35,6 +35,11 @@ export default defineConfig(() => ({
     alias: {
       // BookSession / createBook import node:crypto; shim for the Tauri webview.
       "node:crypto": path.resolve(here, "src/nodeCryptoShim.ts"),
+      // Package/asset host modules import Node FS; allow the renderer to load
+      // without Vite's externalized-module crash (blank OpenBook Studio window).
+      "node:fs/promises": path.resolve(here, "src/nodeFsPromisesShim.ts"),
+      "node:fs": path.resolve(here, "src/nodeFsShim.ts"),
+      "node:path": path.resolve(here, "src/nodePathShim.ts"),
     },
   },
 
