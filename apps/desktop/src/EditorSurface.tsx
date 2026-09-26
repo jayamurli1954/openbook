@@ -30,9 +30,12 @@ import ExportPanel from "./ui/ExportPanel";
 import GuidedStartWizard from "./ui/GuidedStartWizard";
 import WritingStudioToolbar from "./ui/WritingStudioToolbar";
 import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
+import WritingStudioImageButton from "./ui/WritingStudioImageButton";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
+import { createWritingStudioImagePickPort } from "./host/createWritingStudioImagePickPort";
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
 import { createWritingStudioQueryAdapter } from "./workflow/domain/writingStudioQueryAdapter";
+import { createWritingStudioImageAdapter } from "./workflow/domain/writingStudioImageAdapter";
 import englishFixture from "./fixtures/english-tiptap.json";
 
 type ProjectionStatus = "idle" | "ok" | "error";
@@ -119,6 +122,17 @@ export default function EditorSurface() {
   const [writingStudioQuery] = useState(() =>
     createWritingStudioQueryAdapter({
       bookSource: { getBook: () => coordinator.getBook() },
+    }),
+  );
+  const [writingStudioImage] = useState(() =>
+    createWritingStudioImageAdapter({
+      pick: createWritingStudioImagePickPort(),
+      coordinator: {
+        getBook: () => coordinator.getBook(),
+        getStage: () => coordinator.getState().stage,
+        advanceStage: () => coordinator.advanceStage(),
+        insertImageBlock: (input) => coordinator.insertImageBlock(input),
+      },
     }),
   );
 
@@ -615,6 +629,24 @@ export default function EditorSurface() {
             toolbar={writingStudioToolbar}
             disabled={!editor}
           />
+          <div className="writing-studio-media-row">
+            <WritingStudioImageButton
+              imageAdapter={writingStudioImage}
+              sectionId={studio.selectedSectionId}
+              disabled={!editor}
+              onInserted={() => {
+                loadSectionIntoEditor();
+                refresh();
+              }}
+              onStatus={(message, kind) => {
+                setSessionNote(message);
+                if (kind === "error") {
+                  setStatus("error");
+                  setDetail(message);
+                }
+              }}
+            />
+          </div>
           <WritingStudioFindPanel
             queryAdapter={writingStudioQuery}
             sectionId={studio.selectedSectionId}

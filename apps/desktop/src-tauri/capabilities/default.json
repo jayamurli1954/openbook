@@ -8,6 +8,7 @@
     "sql:default",
     "dialog:default",
     "allow-export-path-exists",
-    "allow-export-write-atomically"
+    "allow-export-write-atomically",
+    "allow-asset-read-bytes"
   ]
 }

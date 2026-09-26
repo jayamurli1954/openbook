@@ -7,7 +7,7 @@
 - **Depends on:** ADR-0006, ADR-0007, ADR-0008, ADR-0014, ADR-0015, ADR-0019, ADR-0020, ADR-0029, ADR-0030, ADR-0031, ADR-0033
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-WRITING-STUDIO-SELECTION.md`
-- **Implementation authorization:** Slices 1–3 authorized (contract + formatting chrome + word count/search); further slices require separate explicit authorization
+- **Implementation authorization:** Slices 1–4 authorized (contract + formatting chrome + word count/search + image insertion); further slices require separate explicit authorization
 
 ## 1. Context
 
@@ -107,8 +107,8 @@ When separately authorized, implementation should proceed in small slices, for e
 
 1. **Slice 1 — Writing Studio contract:** capability matrix + ports for toolbar commands, word count, search; tests; no full chrome required. **(done — PR #124)**
 2. **Slice 2 — Formatting chrome:** complete heading/emphasis/list/quote/link toolbar bound to TipTap → adapter → BookSession; EN/KN smoke. **(done — PR #125)**
-3. **Slice 3 — Word count + document search:** Book-derived counts and find-in-book UI/ports; fail-closed empty query. **(authorized — this PR)**
-4. **Slice 4 — Image insertion UI:** wire native/file pick → existing asset ingest/insert APIs; no parallel asset model.
+3. **Slice 3 — Word count + document search:** Book-derived counts and find-in-book UI/ports; fail-closed empty query. **(done — PR #126)**
+4. **Slice 4 — Image insertion UI:** wire native/file pick → existing asset ingest/insert APIs; no parallel asset model. **(authorized — this PR)**
 5. **Slice 5 — Hardening:** empty-state/failure UX, EN+KN authoring round-trips, regression guards that TipTap is never persisted.
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization. A **tables** capability may only be added after a Book Model/SDM extension ADR is accepted and authorized.
