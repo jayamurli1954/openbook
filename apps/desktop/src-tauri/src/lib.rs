@@ -1,8 +1,9 @@
-//! OpenBook Studio desktop shell — foundation + Gate 9 export host commands.
+//! OpenBook Studio desktop shell — foundation + Gate 9 export + Writing Studio
+//! image-read host commands.
 //!
 //! Registers Tauri + the SQL plugin for SQLite connectivity, and the official
-//! dialog plugin for native Save As / overwrite confirmation (ADR-0030).
-//! Export filesystem writes use dedicated commands (no shell, no broad FS plugin).
+//! dialog plugin for native Save As / open (ADR-0030 / ADR-0034 Slice 4).
+//! Filesystem reads/writes use dedicated commands (no shell, no broad FS plugin).
 
 use serde::Deserialize;
 use std::fs;
@@ -19,7 +20,7 @@ struct ExportFileWrite {
 #[tauri::command]
 fn export_path_exists(path: String) -> Result<bool, String> {
     let candidate = PathBuf::from(&path);
-    if !is_safe_export_path(&candidate) {
+    if !is_safe_dialog_path(&candidate) {
         return Err(format!("Refusing unsafe export path: {path}"));
     }
     Ok(candidate.exists())
@@ -36,7 +37,7 @@ fn export_write_atomically(files: Vec<ExportFileWrite>) -> Result<(), String> {
 
     for file in &files {
         let target = PathBuf::from(&file.path);
-        if !is_safe_export_path(&target) {
+        if !is_safe_dialog_path(&target) {
             cleanup_temps(&temps);
             return Err(format!("Refusing unsafe export path: {}", file.path));
         }
@@ -84,6 +85,19 @@ fn export_write_atomically(files: Vec<ExportFileWrite>) -> Result<(), String> {
     Ok(())
 }
 
+/// ADR-0034 Slice 4 — read image bytes from a dialog-selected path only.
+#[tauri::command]
+fn asset_read_bytes(path: String) -> Result<Vec<u8>, String> {
+    let candidate = PathBuf::from(&path);
+    if !is_safe_dialog_path(&candidate) {
+        return Err(format!("Refusing unsafe asset path: {path}"));
+    }
+    if !candidate.is_file() {
+        return Err(format!("Asset path is not a file: {path}"));
+    }
+    fs::read(&candidate).map_err(|err| format!("Cannot read asset file {path}: {err}"))
+}
+
 fn temporary_path_for(target: &Path) -> PathBuf {
     let file_name = target
         .file_name()
@@ -102,7 +116,7 @@ fn cleanup_temps(temps: &[PathBuf]) {
     }
 }
 
-fn is_safe_export_path(path: &Path) -> bool {
+fn is_safe_dialog_path(path: &Path) -> bool {
     let raw = path.to_string_lossy();
     if raw.trim().is_empty() || raw.contains('\0') {
         return false;
@@ -124,11 +138,12 @@ pub fn run() {
     tauri::Builder::default()
         // Connectivity only — no migrations / production schema (ADR-0007 §6).
         .plugin(tauri_plugin_sql::Builder::default().build())
-        // Native Save As / overwrite confirmation for Gate 9 export (ADR-0030).
+        // Native Save As / open dialogs (ADR-0030 / ADR-0034 Slice 4).
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             export_path_exists,
-            export_write_atomically
+            export_write_atomically,
+            asset_read_bytes
         ])
         .run(tauri::generate_context!())
         .expect("error while running OpenBook desktop shell");

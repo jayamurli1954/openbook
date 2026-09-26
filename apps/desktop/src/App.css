@@ -243,6 +243,26 @@ dd {
   cursor: default;
 }
 
+.writing-studio-media-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+}
+
+.writing-studio-image-insert {
+  font: inherit;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid #bbb;
+  background: #fff;
+  cursor: pointer;
+}
+
+.writing-studio-image-insert:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .writing-studio-find {
   margin: 0.35rem 0 0.65rem;
   padding: 0.5rem 0.65rem;

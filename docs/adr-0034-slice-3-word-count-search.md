@@ -1,6 +1,6 @@
 # ADR-0034 Slice 3: Word Count + Document Search — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #126)
 - **Date:** 2026-09-26
 - **Parent architecture:** ADR-0034 — Phase 1 Writing Studio Architecture
 - **Scope:** Book-derived word counts + find-in-book UI/ports; fail-closed empty query; no image insertion

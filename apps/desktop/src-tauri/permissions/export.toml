@@ -7,3 +7,8 @@ commands.allow = ["export_path_exists"]
 identifier = "allow-export-write-atomically"
 description = "Allows atomic Gate 9 export artifact writes to dialog-selected destinations."
 commands.allow = ["export_write_atomically"]
+
+[[permission]]
+identifier = "allow-asset-read-bytes"
+description = "Allows reading image bytes from a dialog-selected path for Writing Studio insertion (ADR-0034 Slice 4)."
+commands.allow = ["asset_read_bytes"]
