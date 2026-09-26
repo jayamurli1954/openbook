@@ -29,8 +29,10 @@ import { createGuidedStartHost } from "./host/createGuidedStartHost";
 import ExportPanel from "./ui/ExportPanel";
 import GuidedStartWizard from "./ui/GuidedStartWizard";
 import WritingStudioToolbar from "./ui/WritingStudioToolbar";
+import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
+import { createWritingStudioQueryAdapter } from "./workflow/domain/writingStudioQueryAdapter";
 import englishFixture from "./fixtures/english-tiptap.json";
 
 type ProjectionStatus = "idle" | "ok" | "error";
@@ -112,6 +114,11 @@ export default function EditorSurface() {
         const current = editorRef.current;
         return current ? createTipTapEditorCommandPort(current) : null;
       },
+    }),
+  );
+  const [writingStudioQuery] = useState(() =>
+    createWritingStudioQueryAdapter({
+      bookSource: { getBook: () => coordinator.getBook() },
     }),
   );
 
@@ -607,6 +614,11 @@ export default function EditorSurface() {
           <WritingStudioToolbar
             toolbar={writingStudioToolbar}
             disabled={!editor}
+          />
+          <WritingStudioFindPanel
+            queryAdapter={writingStudioQuery}
+            sectionId={studio.selectedSectionId}
+            onSelectHit={(hit) => onSelectChapter(hit.sectionId)}
           />
           <EditorContent editor={editor} />
         </div>
