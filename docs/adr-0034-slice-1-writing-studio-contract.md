@@ -1,6 +1,6 @@
 # ADR-0034 Slice 1: Writing Studio Contract — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #124)
 - **Date:** 2026-09-25
 - **Parent architecture:** ADR-0034 — Phase 1 Writing Studio Architecture
 - **Scope:** Capability matrix + ports/helpers for toolbar commands, word count, and document search; unit tests; no UI/host wiring

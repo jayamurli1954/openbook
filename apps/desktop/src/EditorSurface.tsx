@@ -28,6 +28,9 @@ import { createTauriExportSaveHost } from "./host/createTauriExportSaveHost";
 import { createGuidedStartHost } from "./host/createGuidedStartHost";
 import ExportPanel from "./ui/ExportPanel";
 import GuidedStartWizard from "./ui/GuidedStartWizard";
+import WritingStudioToolbar from "./ui/WritingStudioToolbar";
+import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
+import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
 import englishFixture from "./fixtures/english-tiptap.json";
 
 type ProjectionStatus = "idle" | "ok" | "error";
@@ -82,6 +85,7 @@ export default function EditorSurface() {
   const chapters = coordinator.listChapters();
   const selected = chapters.find((c) => c.id === studio.selectedSectionId);
 
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -100,6 +104,16 @@ export default function EditorSurface() {
       },
     },
   });
+  editorRef.current = editor;
+
+  const [writingStudioToolbar] = useState(() =>
+    createWritingStudioToolbarAdapter({
+      getEditor: () => {
+        const current = editorRef.current;
+        return current ? createTipTapEditorCommandPort(current) : null;
+      },
+    }),
+  );
 
   useEffect(() => {
     void coordinator
@@ -590,43 +604,10 @@ export default function EditorSurface() {
         </aside>
 
         <div className="editor-main">
-          <div className="editor-toolbar" role="toolbar" aria-label="Formatting">
-            <button
-              type="button"
-              disabled={!editor}
-              onClick={() => editor?.chain().focus().toggleBold().run()}
-            >
-              Bold
-            </button>
-            <button
-              type="button"
-              disabled={!editor}
-              onClick={() => editor?.chain().focus().toggleItalic().run()}
-            >
-              Italic
-            </button>
-            <button
-              type="button"
-              disabled={!editor}
-              onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-            >
-              H2
-            </button>
-            <button
-              type="button"
-              disabled={!editor}
-              onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            >
-              List
-            </button>
-            <button
-              type="button"
-              disabled={!editor}
-              onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-            >
-              Quote
-            </button>
-          </div>
+          <WritingStudioToolbar
+            toolbar={writingStudioToolbar}
+            disabled={!editor}
+          />
           <EditorContent editor={editor} />
         </div>
       </div>
