@@ -1,6 +1,6 @@
 # ADR-0034 Slice 2: Formatting Chrome — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #125)
 - **Date:** 2026-09-26
 - **Parent architecture:** ADR-0034 — Phase 1 Writing Studio Architecture
 - **Scope:** Complete heading/emphasis/list/quote/link toolbar chrome bound TipTap → EditorAdapter → BookSession; EN/KN smoke; no word-count/search UI
