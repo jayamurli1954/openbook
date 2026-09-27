@@ -151,6 +151,10 @@ export default function EditorSurface() {
         session().updateSectionTitle(sectionId, title),
       reorderSection: (matter, fromIndex, toIndex) =>
         session().reorderSection(matter, fromIndex, toIndex),
+      moveSection: (sectionId, targetMatter, targetIndex) =>
+        session().moveSection(sectionId, targetMatter, targetIndex),
+      updateSectionRole: (sectionId, role) =>
+        session().updateSectionRole(sectionId, role),
     });
   });
 

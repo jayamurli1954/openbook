@@ -1,6 +1,6 @@
 # ADR-0035 Slice 2: Matter Rail — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #133)
 - **Date:** 2026-09-27
 - **Parent architecture:** ADR-0035 — Phase 1 Structure Studio Architecture
 - **Scope:** Front/main/back rail chrome for add, rename, and reorder within one matter; uses the Slice 1 command port

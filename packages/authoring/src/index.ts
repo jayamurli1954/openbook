@@ -17,4 +17,4 @@ export {
   InvalidStructureOperationError,
   DomainValidationError,
 } from "./errors.js";
-export { isRoleValidForMatter } from "./roles.js";
+export { isRoleValidForMatter, rolesForMatter } from "./roles.js";
