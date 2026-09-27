@@ -30,6 +30,19 @@ const BACK_ROLES = new Set([
   "custom",
 ]);
 
+export function rolesForMatter(matter: MatterKind): readonly string[] {
+  switch (matter) {
+    case "front":
+      return [...FRONT_ROLES];
+    case "main":
+      return [...MAIN_ROLES];
+    case "back":
+      return [...BACK_ROLES];
+    default:
+      return [];
+  }
+}
+
 export function isRoleValidForMatter(
   role: string,
   matter: MatterKind,

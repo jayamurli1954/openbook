@@ -62,8 +62,51 @@ test("empty title and reorder bounds fail closed", () => {
   assert.equal(JSON.stringify(session.getBook()), before);
 });
 
-test("matter rail surface does not expose move, remove, or role", () => {
+test("matter rail surface exposes move and role, not remove", () => {
   const { rail: studio } = rail();
   const keys = Object.keys(studio);
-  assert.deepEqual(keys.sort(), ["add", "list", "rename", "reorder"]);
+  assert.ok(keys.includes("move"));
+  assert.ok(keys.includes("setRole"));
+  assert.ok(keys.includes("rolesFor"));
+  assert.equal(keys.includes("remove"), false);
+  assert.ok(studio.rolesFor("main").includes("chapter"));
+  assert.equal(studio.rolesFor("main").includes("appendix"), false);
+  assert.ok(studio.rolesFor("back").includes("appendix"));
+});
+
+test("move and setRole follow matter role rules and protect the last chapter", () => {
+  const { session, rail: studio } = rail();
+  const onlyId = session.getBook().chapters[0]?.id;
+  assert.ok(onlyId);
+  const blocked = studio.move(onlyId, "back");
+  assert.equal(blocked.ok, false);
+  if (!blocked.ok) assert.equal(blocked.code, "LAST_MAIN_CHAPTER");
+  assert.equal(session.getBook().chapters.length, 1);
+
+  assert.equal(studio.add("main", "Second").ok, true);
+  const firstId = session.getBook().chapters[0]?.id;
+  assert.ok(firstId);
+  const invalidMove = studio.move(firstId, "back");
+  assert.equal(invalidMove.ok, false);
+  if (!invalidMove.ok) assert.equal(invalidMove.code, "INVALID_ROLE");
+  assert.equal(session.getBook().backMatter.length, 0);
+
+  const role = studio.setRole(firstId, "introduction");
+  assert.equal(role.ok, true);
+  assert.equal(session.getBook().chapters[0]?.role, "introduction");
+  const badRole = studio.setRole(firstId, "appendix");
+  assert.equal(badRole.ok, false);
+  if (!badRole.ok) assert.equal(badRole.code, "INVALID_ROLE");
+  assert.equal(session.getBook().chapters[0]?.role, "introduction");
+
+  const front = studio.add("front", "Note");
+  assert.equal(front.ok, true);
+  const frontId = session.getBook().frontMatter[0]?.id;
+  assert.ok(frontId);
+  assert.equal(session.getBook().frontMatter[0]?.role, "custom");
+  const moved = studio.move(frontId, "back");
+  assert.equal(moved.ok, true);
+  assert.equal(session.getBook().frontMatter.length, 0);
+  assert.equal(session.getBook().backMatter[0]?.id, frontId);
+  assert.equal(session.getBook().backMatter[0]?.title, "Note");
 });

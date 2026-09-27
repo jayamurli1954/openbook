@@ -1,9 +1,9 @@
 /**
  * SPDX-License-Identifier: Apache-2.0
  *
- * ADR-0035 Slice 2 — Structure Studio matter rail.
- * Add, rename, and reorder within front, main, or back matter.
- * No move, remove, or role controls.
+ * ADR-0035 Slice 3 — Structure Studio matter rail.
+ * Add, rename, and reorder within a matter. Move between matters and set a
+ * role that is valid for the section's current matter. No remove control.
  */
 import { useState } from "react";
 import type { MatterKind } from "@openbook/book-model";
@@ -13,6 +13,12 @@ const MATTER_LABEL: Record<MatterKind, string> = {
   front: "Front matter",
   main: "Main matter",
   back: "Back matter",
+};
+
+const OTHER_MATTERS: Record<MatterKind, readonly MatterKind[]> = {
+  front: ["main", "back"],
+  main: ["front", "back"],
+  back: ["front", "main"],
 };
 
 export interface StructureStudioRailProps {
@@ -35,6 +41,8 @@ export default function StructureStudioRail({
     back: "",
   });
   const [renameDraft, setRenameDraft] = useState<Record<string, string>>({});
+  const [moveDraft, setMoveDraft] = useState<Record<string, MatterKind>>({});
+  const [roleDraft, setRoleDraft] = useState<Record<string, string>>({});
 
   const groups = rail.list();
   void revision;
@@ -69,6 +77,10 @@ export default function StructureStudioRail({
           <ul className="structure-studio-sections">
             {group.sections.map((section) => {
               const draft = renameDraft[section.id] ?? section.title;
+              const moveTo =
+                moveDraft[section.id] ?? OTHER_MATTERS[group.matter][0];
+              const role = roleDraft[section.id] ?? section.role;
+              const roles = rail.rolesFor(group.matter);
               return (
                 <li key={section.id}>
                   <button
@@ -128,6 +140,70 @@ export default function StructureStudioRail({
                     }
                   >
                     Down
+                  </button>
+                  <label>
+                    Move to
+                    <select
+                      aria-label={`Move ${section.title} to`}
+                      data-testid={`structure-studio-move-target-${section.id}`}
+                      value={moveTo}
+                      onChange={(event) =>
+                        setMoveDraft((current) => ({
+                          ...current,
+                          [section.id]: event.target.value as MatterKind,
+                        }))
+                      }
+                    >
+                      {OTHER_MATTERS[group.matter].map((matter) => (
+                        <option key={matter} value={matter}>
+                          {MATTER_LABEL[matter]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    data-testid={`structure-studio-move-${section.id}`}
+                    onClick={() =>
+                      apply(
+                        rail.move(section.id, moveTo),
+                        `Moved section to ${MATTER_LABEL[moveTo]}.`,
+                      )
+                    }
+                  >
+                    Move
+                  </button>
+                  <label>
+                    Role
+                    <select
+                      aria-label={`Role for ${section.title}`}
+                      data-testid={`structure-studio-role-${section.id}`}
+                      value={roles.includes(role) ? role : roles[0]}
+                      onChange={(event) =>
+                        setRoleDraft((current) => ({
+                          ...current,
+                          [section.id]: event.target.value,
+                        }))
+                      }
+                    >
+                      {roles.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    data-testid={`structure-studio-set-role-${section.id}`}
+                    onClick={() =>
+                      apply(
+                        rail.setRole(section.id, role),
+                        `Set role to “${role}”.`,
+                      )
+                    }
+                  >
+                    Set role
                   </button>
                 </li>
               );

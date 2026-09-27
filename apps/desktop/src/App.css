@@ -300,6 +300,7 @@ dd {
 }
 
 .structure-studio-sections input,
+.structure-studio-sections select,
 .structure-studio-add input {
   flex: 1 1 8rem;
   font: inherit;
