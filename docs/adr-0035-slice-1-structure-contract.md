@@ -1,6 +1,6 @@
 # ADR-0035 Slice 1: Structure Studio Contract — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #132)
 - **Date:** 2026-09-27
 - **Parent architecture:** ADR-0035 — Phase 1 Structure Studio Architecture
 - **Scope:** Capability matrix + command port for list/add/rename/reorder/move/remove/role; fail-closed last chapter and invalid role; tests; no chrome
