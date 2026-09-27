@@ -25,7 +25,8 @@ test("WritingStudioFindPanel stays free of TipTap JSON, Tauri, and coordinator c
   assert.match(panel, /writing-studio-find-panel/);
   assert.match(panel, /writing-studio-word-count/);
   assert.match(panel, /searchDocument/);
-  assert.match(panel, /EMPTY_QUERY|outcome\.message/);
+  assert.match(panel, /formatWritingStudioSearchFailure/);
+  assert.match(panel, /WRITING_STUDIO_SEARCH_NO_MATCHES/);
   assert.doesNotMatch(
     panel,
     /DesktopStudioCoordinator|getJSON\(|applyActiveSectionTipTap|plugin-dialog|plugin-fs|child_process|Ollama/,

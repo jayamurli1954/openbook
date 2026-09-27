@@ -6,6 +6,10 @@
  */
 import { useState } from "react";
 import type { IWritingStudioImageAdapter } from "../workflow/domain/writingStudioImageAdapter.js";
+import {
+  formatWritingStudioImageFailure,
+  formatWritingStudioImageInserted,
+} from "../workflow/domain/writingStudioUx.js";
 
 export interface WritingStudioImageButtonProps {
   readonly imageAdapter: IWritingStudioImageAdapter;
@@ -30,15 +34,15 @@ export default function WritingStudioImageButton({
     try {
       const result = await imageAdapter.insertImage({ sectionId });
       if (!result.ok) {
-        if (result.code === "CANCELLED") {
-          onStatus?.(result.message, "info");
-        } else {
-          onStatus?.(result.message, "error");
-        }
+        const failure = formatWritingStudioImageFailure(
+          result.code,
+          result.message,
+        );
+        onStatus?.(failure.message, failure.kind);
         return;
       }
       onStatus?.(
-        `Inserted image “${result.assetRef.fileName}” into the Book.`,
+        formatWritingStudioImageInserted(result.assetRef.fileName),
         "ok",
       );
       onInserted?.();
