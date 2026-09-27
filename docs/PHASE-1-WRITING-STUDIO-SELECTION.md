@@ -34,7 +34,7 @@ Optional leftovers (Structure Studio, Design Studio, Metadata Wizard, AI outline
 1. Merge this selection + ADR-0034 (Draft PR → CI/DCO → explicit merge authorization). **Done (PR #123).**
 2. Maintainer separately authorizes implementation slices. **Done — Slices 1–5 (PRs #124–#126, #128, #129).**
 3. Closure recorded in `docs/adr-0034-closure-reconciliation.md`.
-4. Next Phase 1 domain requires a new selection/ADR (Structure Studio is the natural candidate).
+4. Next Phase 1 domain requires a new selection/ADR — **Structure Studio selected** (`docs/PHASE-1-STRUCTURE-STUDIO-SELECTION.md`; ADR-0035).
 
 ## 5. Candidates not selected
 
