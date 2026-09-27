@@ -31,11 +31,13 @@ import GuidedStartWizard from "./ui/GuidedStartWizard";
 import WritingStudioToolbar from "./ui/WritingStudioToolbar";
 import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
 import WritingStudioImageButton from "./ui/WritingStudioImageButton";
+import StructureStudioRail from "./ui/StructureStudioRail";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
 import { createWritingStudioImagePickPort } from "./host/createWritingStudioImagePickPort";
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
 import { createWritingStudioQueryAdapter } from "./workflow/domain/writingStudioQueryAdapter";
 import { createWritingStudioImageAdapter } from "./workflow/domain/writingStudioImageAdapter";
+import { createStructureStudioMatterRail } from "./workflow/domain/structureStudioMatterRail";
 import {
   WRITING_STUDIO_EDITOR_UNAVAILABLE,
   WRITING_STUDIO_EMPTY_CHAPTERS,
@@ -140,6 +142,17 @@ export default function EditorSurface() {
       },
     }),
   );
+  const [structureRail] = useState(() => {
+    const session = () => coordinator.getSession();
+    return createStructureStudioMatterRail({
+      getBook: () => coordinator.getBook(),
+      addSection: (params) => session().addSection(params),
+      updateSectionTitle: (sectionId, title) =>
+        session().updateSectionTitle(sectionId, title),
+      reorderSection: (matter, fromIndex, toIndex) =>
+        session().reorderSection(matter, fromIndex, toIndex),
+    });
+  });
 
   useEffect(() => {
     void coordinator
@@ -635,6 +648,21 @@ export default function EditorSurface() {
           <p className="detail" data-testid="chapter-session-note">
             {sessionNote}
           </p>
+          <StructureStudioRail
+            rail={structureRail}
+            onSelectSection={onSelectChapter}
+            onChanged={() => {
+              refresh();
+              loadSectionIntoEditor();
+            }}
+            onStatus={(message, kind) => {
+              setSessionNote(message);
+              if (kind === "error") {
+                setStatus("error");
+                setDetail(message);
+              }
+            }}
+          />
         </aside>
 
         <div className="editor-main">

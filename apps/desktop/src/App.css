@@ -268,6 +268,59 @@ dd {
   color: #444;
 }
 
+.structure-studio-rail {
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #ddd;
+}
+
+.structure-studio-rail h3,
+.structure-studio-rail h4 {
+  margin: 0.4rem 0 0.3rem;
+}
+
+.structure-studio-rail h4 {
+  font-size: 0.92rem;
+}
+
+.structure-studio-sections {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.structure-studio-sections li,
+.structure-studio-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.structure-studio-sections input,
+.structure-studio-add input {
+  flex: 1 1 8rem;
+  font: inherit;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid #bbb;
+  background: #fff;
+}
+
+.structure-studio-rail button {
+  font: inherit;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid #bbb;
+  background: #fff;
+  cursor: pointer;
+}
+
+.structure-studio-rail button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .writing-studio-find {
   margin: 0.35rem 0 0.65rem;
   padding: 0.5rem 0.65rem;
