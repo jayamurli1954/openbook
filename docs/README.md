@@ -14,7 +14,8 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [Foundation closure (2026-09-16)](FOUNDATION-READINESS-CLOSURE-AND-NEXT-ARCHITECTURE.md) | Gate 8 evidence closure and ADR-0028 selection record |
 | [Foundation Ready determination](FOUNDATION-READY-DETERMINATION.md) | Current ROADMAP Phase 0 gate: **FOUNDATION-READY declared** (2026-09-24) |
 | [Phase 1 next domain selection](PHASE-1-NEXT-DOMAIN-SELECTION.md) | First Phase 1 path: Book Wizard / Guided Start (ADR-0033; slices complete) |
-| [Phase 1 Writing Studio selection](PHASE-1-WRITING-STUDIO-SELECTION.md) | Selected next path: Writing Studio (ADR-0034; implementation gated) |
+| [Phase 1 Writing Studio selection](PHASE-1-WRITING-STUDIO-SELECTION.md) | Writing Studio (ADR-0034; Slices 1–5 done) |
+| [Phase 1 Structure Studio selection](PHASE-1-STRUCTURE-STUDIO-SELECTION.md) | Selected next path: Structure Studio (ADR-0035; implementation gated) |
 | [Foundation closure (post–Gate 10)](FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md) | Historical bridge after Gates 9–10; superseded for Phase 0 outcome by the determination |
 | [Foundation evidence ops selection](FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md) | Evidence ops Slices 1–5 complete (PRs #110–#114) |
 | [Implementation backlog](IMPLEMENTATION-BACKLOG.md) | Future work; not an authorization to code |
