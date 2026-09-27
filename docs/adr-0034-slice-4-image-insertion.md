@@ -1,6 +1,6 @@
 # ADR-0034 Slice 4: Image Insertion UI — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #128)
 - **Date:** 2026-09-26
 - **Parent architecture:** ADR-0034 — Phase 1 Writing Studio Architecture
 - **Scope:** Native/file pick → existing coordinator asset ingest / `insertImageBlock`; cancel = no mutation; no parallel asset model

@@ -11,6 +11,10 @@ import type {
   IWritingStudioQueryAdapter,
   WritingStudioSearchOutcome,
 } from "../workflow/domain/writingStudioQueryAdapter.js";
+import {
+  WRITING_STUDIO_SEARCH_NO_MATCHES,
+  formatWritingStudioSearchFailure,
+} from "../workflow/domain/writingStudioUx.js";
 
 export interface WritingStudioFindPanelProps {
   readonly queryAdapter: IWritingStudioQueryAdapter;
@@ -88,7 +92,7 @@ export default function WritingStudioFindPanel({
           data-testid="writing-studio-search-error"
           role="alert"
         >
-          {outcome.message}
+          {formatWritingStudioSearchFailure(outcome.code)}
         </p>
       ) : null}
 
@@ -100,7 +104,7 @@ export default function WritingStudioFindPanel({
           </p>
           {outcome.hits.length === 0 ? (
             <p className="note" data-testid="writing-studio-search-empty">
-              No matches in the Book.
+              {WRITING_STUDIO_SEARCH_NO_MATCHES}
             </p>
           ) : (
             <ul className="writing-studio-search-hits">

@@ -263,6 +263,11 @@ dd {
   cursor: default;
 }
 
+.writing-studio-empty {
+  margin: 0.35rem 0;
+  color: #444;
+}
+
 .writing-studio-find {
   margin: 0.35rem 0 0.65rem;
   padding: 0.5rem 0.65rem;

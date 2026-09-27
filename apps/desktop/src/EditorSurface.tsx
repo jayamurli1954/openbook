@@ -36,6 +36,11 @@ import { createWritingStudioImagePickPort } from "./host/createWritingStudioImag
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
 import { createWritingStudioQueryAdapter } from "./workflow/domain/writingStudioQueryAdapter";
 import { createWritingStudioImageAdapter } from "./workflow/domain/writingStudioImageAdapter";
+import {
+  WRITING_STUDIO_EDITOR_UNAVAILABLE,
+  WRITING_STUDIO_EMPTY_CHAPTERS,
+  WRITING_STUDIO_NO_SECTION,
+} from "./workflow/domain/writingStudioUx";
 import englishFixture from "./fixtures/english-tiptap.json";
 
 type ProjectionStatus = "idle" | "ok" | "error";
@@ -156,7 +161,7 @@ export default function EditorSurface() {
     const selectedId = coordinator.getState().selectedSectionId;
     if (!selectedId) {
       setStatus("error");
-      setDetail("No section selected");
+      setDetail(WRITING_STUDIO_NO_SECTION);
       setRoundTrip("n/a");
       return;
     }
@@ -599,6 +604,14 @@ export default function EditorSurface() {
               </li>
             ))}
           </ul>
+          {chapters.length === 0 ? (
+            <p
+              className="note writing-studio-empty"
+              data-testid="writing-studio-empty-chapters"
+            >
+              {WRITING_STUDIO_EMPTY_CHAPTERS}
+            </p>
+          ) : null}
           <div className="chapter-actions">
             <button type="button" onClick={onCreateChapter}>
               New
@@ -625,6 +638,24 @@ export default function EditorSurface() {
         </aside>
 
         <div className="editor-main">
+          {!studio.selectedSectionId ? (
+            <p
+              className="note writing-studio-empty"
+              data-testid="writing-studio-no-section"
+              role="status"
+            >
+              {WRITING_STUDIO_NO_SECTION}
+            </p>
+          ) : null}
+          {!editor ? (
+            <p
+              className="note writing-studio-empty"
+              data-testid="writing-studio-editor-unavailable"
+              role="status"
+            >
+              {WRITING_STUDIO_EDITOR_UNAVAILABLE}
+            </p>
+          ) : null}
           <WritingStudioToolbar
             toolbar={writingStudioToolbar}
             disabled={!editor}

@@ -107,7 +107,8 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0034 Slice 1 (contract)            [DONE — PR #124]
 ├── ADR-0034 Slice 2 (formatting chrome)   [DONE — PR #125]
 ├── ADR-0034 Slice 3 (word count/search)   [DONE — PR #126]
-├── ADR-0034 Slice 4 (image insertion)     [IN PROGRESS — this PR]
+├── ADR-0034 Slice 4 (image insertion)     [DONE — PR #128]
+├── ADR-0034 Slice 5 (hardening)           [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -198,7 +199,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the re
 
 ## Next architectural decision points
 
-Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio architecture is **Accepted** (ADR-0034; PR #123). Slices 1–3 are **done** (PRs #124–#126). Slice 4 (image insertion UI) is authorized on this follow-on; further slices remain **not** authorized — see `docs/adr-0034-slice-4-image-insertion.md`.
+Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio architecture is **Accepted** (ADR-0034; PR #123). Slices 1–4 are **done** (PRs #124–#128). Slice 5 (hardening) is authorized on this follow-on — see `docs/adr-0034-slice-5-hardening.md`.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 
