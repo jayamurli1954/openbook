@@ -1,6 +1,6 @@
 # ADR-0034 Slice 5: Writing Studio Hardening — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #129)
 - **Date:** 2026-09-27
 - **Parent architecture:** ADR-0034 — Phase 1 Writing Studio Architecture
 - **Scope:** Empty-state and failure copy; EN/KN authoring Save → Open; regression guard that TipTap is never the stored Book

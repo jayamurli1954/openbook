@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Writing Studio
 
-- **Status:** Selected by maintainer direction after ADR-0033 closure (2026-09-24)
+- **Status:** Selected and implemented — ADR-0034 Slices 1–5 done (PRs #124–#126, #128, #129); see `docs/adr-0034-closure-reconciliation.md`
 - **Date:** 2026-09-24
-- **Baseline:** `main` at `b9ad872` (PR #122 — ADR-0033 closure reconcile)
+- **Baseline:** `main` after ADR-0034 Slice 5 (PR #129)
 - **Prior record:** `docs/adr-0033-closure-reconciliation.md`
 - **Selected domain:** ROADMAP Phase 1 MVP — **Writing Studio** (§3.3)
-- **Architecture ADR:** ADR-0034 (Accepted on this follow-on; **implementation not authorized** by selection alone)
+- **Architecture ADR:** ADR-0034 (Accepted; implementation slices complete)
 
 ## 1. Why this domain
 
@@ -31,9 +31,10 @@ Optional leftovers (Structure Studio, Design Studio, Metadata Wizard, AI outline
 
 ## 4. Controlled sequence after ADR acceptance
 
-1. Merge this selection + ADR-0034 (Draft PR → CI/DCO → explicit merge authorization).
-2. Maintainer separately authorizes **implementation Slice 1** per ADR-0034 sequencing.
-3. Further slices only under explicit authorization.
+1. Merge this selection + ADR-0034 (Draft PR → CI/DCO → explicit merge authorization). **Done (PR #123).**
+2. Maintainer separately authorizes implementation slices. **Done — Slices 1–5 (PRs #124–#126, #128, #129).**
+3. Closure recorded in `docs/adr-0034-closure-reconciliation.md`.
+4. Next Phase 1 domain requires a new selection/ADR (Structure Studio is the natural candidate).
 
 ## 5. Candidates not selected
 

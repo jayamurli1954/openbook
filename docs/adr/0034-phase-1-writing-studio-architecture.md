@@ -1,13 +1,14 @@
 # ADR-0034: Phase 1 — Writing Studio Architecture
 
-- **Status:** Accepted; implementation requires separate explicit authorization
+- **Status:** Accepted; Slices 1–5 done
 - **Date:** 2026-09-24
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.3)
 - **Area:** Desktop / Product Surface / Writing Studio
 - **Depends on:** ADR-0006, ADR-0007, ADR-0008, ADR-0014, ADR-0015, ADR-0019, ADR-0020, ADR-0029, ADR-0030, ADR-0031, ADR-0033
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-WRITING-STUDIO-SELECTION.md`
-- **Implementation authorization:** Slices 1–5 authorized (contract + formatting chrome + word count/search + image insertion + hardening); further product work requires separate explicit authorization
+- **Closure record:** `docs/adr-0034-closure-reconciliation.md`
+- **Implementation authorization:** Slices 1–5 complete (PRs #124–#126, #128, #129); no further ADR-0034 slice authorized by this ADR alone
 
 ## 1. Context
 
@@ -109,7 +110,7 @@ When separately authorized, implementation should proceed in small slices, for e
 2. **Slice 2 — Formatting chrome:** complete heading/emphasis/list/quote/link toolbar bound to TipTap → adapter → BookSession; EN/KN smoke. **(done — PR #125)**
 3. **Slice 3 — Word count + document search:** Book-derived counts and find-in-book UI/ports; fail-closed empty query. **(done — PR #126)**
 4. **Slice 4 — Image insertion UI:** wire native/file pick → existing asset ingest/insert APIs; no parallel asset model. **(done — PR #128)**
-5. **Slice 5 — Hardening:** empty-state/failure UX, EN+KN authoring round-trips, regression guards that TipTap is never persisted. **(authorized — this PR)**
+5. **Slice 5 — Hardening:** empty-state/failure UX, EN+KN authoring round-trips, regression guards that TipTap is never persisted. **(done — PR #129)**
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization. A **tables** capability may only be added after a Book Model/SDM extension ADR is accepted and authorized.
 
