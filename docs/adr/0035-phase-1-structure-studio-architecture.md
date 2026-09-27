@@ -7,7 +7,7 @@
 - **Depends on:** ADR-0006, ADR-0014, ADR-0016, ADR-0019, ADR-0029, ADR-0031, ADR-0033, ADR-0034
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-STRUCTURE-STUDIO-SELECTION.md`
-- **Implementation authorization:** None. This ADR accepts architecture only.
+- **Implementation authorization:** Slice 1 authorized (structure contract); further slices require separate explicit authorization
 
 ## 1. Context
 
@@ -103,7 +103,7 @@ Structure Studio must not:
 
 When separately authorized, implementation should proceed in small slices, for example:
 
-1. **Slice 1 — Structure contract:** capability matrix + ports for list/add/rename/reorder/move/remove/role; fail-closed last-chapter and invalid-role results; tests; no chrome.
+1. **Slice 1 — Structure contract:** capability matrix + ports for list/add/rename/reorder/move/remove/role; fail-closed last-chapter and invalid-role results; tests; no chrome. **(authorized — this PR)**
 2. **Slice 2 — Matter rail:** front/main/back groups, add, rename, reorder within a matter.
 3. **Slice 3 — Move and role:** move between matters; role constrained to the target matter; last main chapter stays fail-closed.
 4. **Slice 4 — Navigation preview:** read-only order projection from the Book; no stored TOC.
