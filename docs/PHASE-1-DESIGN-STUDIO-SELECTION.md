@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Design Studio
 
-- **Status:** Selected by maintainer direction after ADR-0035 closure (2026-09-28)
+- **Status:** Selected; Slices 1–2 done (PRs #139–#140); Slice 3 not authorized
 - **Date:** 2026-09-28
 - **Baseline:** `main` at `aee88ca` (PR #137 — ADR-0035 closure reconcile)
 - **Prior record:** `docs/adr-0035-closure-reconciliation.md`
 - **Selected domain:** ROADMAP Phase 1 MVP — **Basic Design Studio** (§3.5)
-- **Architecture ADR:** ADR-0036 (Accepted on this follow-on; **implementation not authorized** by selection alone)
+- **Architecture ADR:** ADR-0036 (Accepted; Slices 1–2 done; Slice 3 not authorized). Selection alone did not authorize implementation.
 
 ## 1. Why this domain
 
@@ -32,9 +32,10 @@ Optional leftovers (Metadata Wizard, Cover Wizard, AI outline, tables, nested se
 
 ## 4. Controlled sequence after ADR acceptance
 
-1. Merge this selection + ADR-0036 (Draft PR → CI/DCO → explicit merge authorization).
-2. Maintainer separately authorizes **implementation Slice 1** per ADR-0036 sequencing. **Authorized on this follow-on** — see `docs/adr-0036-slice-1-design-contract.md`.
-3. Further slices only under explicit authorization.
+1. Selection + ADR-0036 merged (PR #138).
+2. Slice 1 design contract done (PR #139) — see `docs/adr-0036-slice-1-design-contract.md`.
+3. Slice 2 guided choices done (PR #140) — see `docs/adr-0036-slice-2-guided-choices.md`.
+4. Slice 3 hardening remains listed in ADR-0036 and is **not** authorized — see `docs/adr-0036-status-reconciliation.md`.
 
 ## 5. Candidates not selected
 

@@ -1,6 +1,6 @@
 # ADR-0036 Slice 2: Guided Choices — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #140)
 - **Date:** 2026-09-28
 - **Parent architecture:** ADR-0036 — Phase 1 Design Studio Architecture
 - **Scope:** Design chrome for theme, body typeface, heading typeface, body size, and line height

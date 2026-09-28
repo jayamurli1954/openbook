@@ -119,7 +119,9 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0035 closure reconcile             [DONE — PR #137]
 ├── Domain selection + ADR-0036            [DONE — PR #138]
 ├── ADR-0036 Slice 1 (design contract)     [DONE — PR #139]
-├── ADR-0036 Slice 2 (guided choices)      [IN PROGRESS — this PR]
+├── ADR-0036 Slice 2 (guided choices)      [DONE — PR #140]
+├── ADR-0036 Slice 3 (hardening)           [NOT AUTHORIZED]
+├── ADR-0036 status reconcile              [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -210,7 +212,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the re
 
 ## Next architectural decision points
 
-Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio (ADR-0034 Slices 1–5) is **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`. Phase 1 Structure Studio (ADR-0035 Slices 1–5) is **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`. Phase 1 Design Studio architecture is **Accepted** (ADR-0036; PR #138). Slice 1 is **done** (PR #139). Slice 2 (guided choices) is authorized on this follow-on; further slices remain **not** authorized — see `docs/adr-0036-slice-2-guided-choices.md`.
+Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio (ADR-0034 Slices 1–5) is **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`. Phase 1 Structure Studio (ADR-0035 Slices 1–5) is **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`. Phase 1 Design Studio architecture is **Accepted** (ADR-0036; PR #138). Slices 1–2 are **done** (PRs #139–#140). Slice 3 remains **not** authorized — see `docs/adr-0036-status-reconciliation.md`.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 
