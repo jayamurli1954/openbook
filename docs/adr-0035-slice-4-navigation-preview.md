@@ -1,6 +1,6 @@
 # ADR-0035 Slice 4: Navigation Preview — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #135)
 - **Date:** 2026-09-28
 - **Parent architecture:** ADR-0035 — Phase 1 Structure Studio Architecture
 - **Scope:** Read-only navigation preview of Book section order

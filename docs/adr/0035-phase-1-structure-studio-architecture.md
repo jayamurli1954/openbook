@@ -7,7 +7,7 @@
 - **Depends on:** ADR-0006, ADR-0014, ADR-0016, ADR-0019, ADR-0029, ADR-0031, ADR-0033, ADR-0034
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-STRUCTURE-STUDIO-SELECTION.md`
-- **Implementation authorization:** Slices 1–4 authorized (structure contract + matter rail + move/role + navigation preview); further slices require separate explicit authorization
+- **Implementation authorization:** Slices 1–5 authorized (structure contract through hardening); closure reconciliation remains a separate record
 
 ## 1. Context
 
@@ -106,8 +106,8 @@ When separately authorized, implementation should proceed in small slices, for e
 1. **Slice 1 — Structure contract:** capability matrix + ports for list/add/rename/reorder/move/remove/role; fail-closed last-chapter and invalid-role results; tests; no chrome. **(done — PR #132)**
 2. **Slice 2 — Matter rail:** front/main/back groups, add, rename, reorder within a matter. **(done — PR #133)**
 3. **Slice 3 — Move and role:** move between matters; role constrained to the target matter; last main chapter stays fail-closed. **(done — PR #134)**
-4. **Slice 4 — Navigation preview:** read-only order projection from the Book; no stored TOC. **(authorized — this PR)**
-5. **Slice 5 — Hardening:** empty-matter copy, EN+KN titles through package Save/Open, regression guard that no parallel outline is persisted.
+4. **Slice 4 — Navigation preview:** read-only order projection from the Book; no stored TOC. **(done — PR #135)**
+5. **Slice 5 — Hardening:** empty-matter copy, EN+KN titles through package Save/Open, regression guard that no parallel outline is persisted. **(authorized — this PR)**
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.
 

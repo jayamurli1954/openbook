@@ -1,13 +1,14 @@
 /**
  * SPDX-License-Identifier: Apache-2.0
  *
- * ADR-0035 Slice 3 — Structure Studio matter rail.
+ * ADR-0035 Slice 3–5 — Structure Studio matter rail.
  * Add, rename, and reorder within a matter. Move between matters and set a
  * role that is valid for the section's current matter. No remove control.
  */
 import { useState } from "react";
 import type { MatterKind } from "@openbook/book-model";
 import type { StructureStudioMatterRail } from "../workflow/domain/structureStudioMatterRail.js";
+import { structureStudioEmptyMatterCopy } from "../workflow/domain/structureStudioUx.js";
 
 const MATTER_LABEL: Record<MatterKind, string> = {
   front: "Front matter",
@@ -74,6 +75,14 @@ export default function StructureStudioRail({
           data-testid={`structure-studio-group-${group.matter}`}
         >
           <h4>{MATTER_LABEL[group.matter]}</h4>
+          {group.sections.length === 0 ? (
+            <p
+              className="note structure-studio-empty"
+              data-testid={`structure-studio-empty-${group.matter}`}
+            >
+              {structureStudioEmptyMatterCopy(group.matter)}
+            </p>
+          ) : null}
           <ul className="structure-studio-sections">
             {group.sections.map((section) => {
               const draft = renameDraft[section.id] ?? section.title;
