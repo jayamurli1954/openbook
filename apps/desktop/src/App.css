@@ -283,6 +283,10 @@ dd {
   font-size: 0.92rem;
 }
 
+.structure-studio-empty {
+  margin: 0.2rem 0 0.45rem;
+}
+
 .structure-studio-sections {
   list-style: none;
   margin: 0;
