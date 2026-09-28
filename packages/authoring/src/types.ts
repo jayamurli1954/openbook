@@ -7,6 +7,8 @@ import type {
   MatterKind,
   SectionRole,
   StructuralSection,
+  ThemeRef,
+  TypographySettings,
 } from "@openbook/book-model";
 
 export interface SessionState {
@@ -47,6 +49,8 @@ export interface IBookSession {
   updateSectionTitle(sectionId: string, title: string): void;
   updateSectionRole(sectionId: string, role: string): void;
   updateMetadata(metadata: Partial<BookMetadata>): void;
+  updateTheme(theme: ThemeRef): void;
+  updateTypography(typography: TypographySettings): void;
 
   setSectionBlocks(sectionId: string, blocks: readonly ContentBlock[]): void;
   insertBlock(

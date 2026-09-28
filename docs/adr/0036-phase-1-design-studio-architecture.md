@@ -7,7 +7,7 @@
 - **Depends on:** ADR-0006, ADR-0014, ADR-0019, ADR-0029, ADR-0031, ADR-0033, ADR-0034, ADR-0035
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-DESIGN-STUDIO-SELECTION.md`
-- **Implementation authorization:** None. This ADR accepts architecture only. Each implementation slice requires a separate explicit authorization.
+- **Implementation authorization:** Slice 1 authorized (design contract); further slices require separate explicit authorization
 
 ## 1. Context
 
@@ -107,7 +107,7 @@ Design Studio must not:
 
 When separately authorized, implementation should proceed in small slices, for example:
 
-1. **Slice 1 — Design contract:** capability matrix; read and set theme and typography; reject non-positive body size and line height; tests; no chrome.
+1. **Slice 1 — Design contract:** capability matrix; read and set theme and typography; reject non-positive body size and line height; tests; no chrome. **(authorized — this PR)**
 2. **Slice 2 — Guided choices:** theme, body typeface, heading typeface, body size, and line height.
 3. **Slice 3 — Hardening:** English and Kannada theme and font names through package Save/Open; regression guard that no stylesheet is persisted.
 

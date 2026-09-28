@@ -385,3 +385,39 @@ test("Kannada altText and image caption round-trip through BookSession", () => {
   session.removeAsset(added.id);
   assert.equal(session.getBook().assets.length, 0);
 });
+
+test("theme and typography updates keep a valid Book and reject bad measures", () => {
+  const session = new BookSession({ book: baseBook(), idSeed: "design" });
+  const before = JSON.stringify(session.getBook());
+  assert.throws(
+    () => session.updateTheme({ id: "  ", name: "ಕನ್ನಡ" }),
+    InvalidStructureOperationError,
+  );
+  assert.throws(
+    () =>
+      session.updateTypography({
+        bodyFontFamily: "Noto Sans",
+        headingFontFamily: "Noto Serif",
+        bodySizePt: 0,
+        lineHeight: 1.4,
+      }),
+    InvalidStructureOperationError,
+  );
+  assert.equal(JSON.stringify(session.getBook()), before);
+
+  session.updateTheme({ id: " kannada ", name: " ಕನ್ನಡ " });
+  session.updateTypography({
+    bodyFontFamily: " Noto Sans Kannada ",
+    headingFontFamily: "Noto Serif Kannada",
+    bodySizePt: 12,
+    lineHeight: 1.5,
+  });
+  const book = session.getBook();
+  assert.equal(book.theme.id, "kannada");
+  assert.equal(book.theme.name, "ಕನ್ನಡ");
+  assert.equal(book.typography.bodyFontFamily, "Noto Sans Kannada");
+  assert.equal(book.typography.bodySizePt, 12);
+  assert.equal(validateBook(book).filter((issue) => issue.severity === "error").length, 0);
+  assert.equal(session.undo(), true);
+  assert.equal(session.getBook().typography.bodySizePt, 11);
+});
