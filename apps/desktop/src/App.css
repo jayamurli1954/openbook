@@ -322,6 +322,36 @@ dd {
   cursor: default;
 }
 
+.structure-studio-nav {
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #ddd;
+}
+
+.structure-studio-nav h3 {
+  margin: 0.4rem 0 0.3rem;
+}
+
+.structure-studio-nav-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.structure-studio-nav-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: baseline;
+}
+
+.structure-studio-nav-matter,
+.structure-studio-nav-role {
+  color: #555;
+  font-size: 0.85rem;
+}
+
 .writing-studio-find {
   margin: 0.35rem 0 0.65rem;
   padding: 0.5rem 0.65rem;
