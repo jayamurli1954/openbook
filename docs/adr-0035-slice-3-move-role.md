@@ -1,6 +1,6 @@
 # ADR-0035 Slice 3: Move and Role — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #134)
 - **Date:** 2026-09-27
 - **Parent architecture:** ADR-0035 — Phase 1 Structure Studio Architecture
 - **Scope:** Move a section between front, main, and back matter; set a role valid for the current matter; last main chapter stays fail-closed

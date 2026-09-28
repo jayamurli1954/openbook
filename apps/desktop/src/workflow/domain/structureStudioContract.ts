@@ -50,7 +50,7 @@ export const STRUCTURE_STUDIO_CAPABILITIES: readonly StructureStudioCapability[]
     {
       id: "navigation-preview",
       status: "in-scope",
-      note: "Read-only projection of Book order. Chrome is a later slice. EPUB nav stays in the publishing engine.",
+      note: "Read-only projection of Book order. EPUB nav stays in the publishing engine.",
     },
     {
       id: "autosave",

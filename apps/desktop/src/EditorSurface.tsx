@@ -31,6 +31,7 @@ import GuidedStartWizard from "./ui/GuidedStartWizard";
 import WritingStudioToolbar from "./ui/WritingStudioToolbar";
 import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
 import WritingStudioImageButton from "./ui/WritingStudioImageButton";
+import StructureStudioNavPreview from "./ui/StructureStudioNavPreview";
 import StructureStudioRail from "./ui/StructureStudioRail";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
 import { createWritingStudioImagePickPort } from "./host/createWritingStudioImagePickPort";
@@ -38,6 +39,7 @@ import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStud
 import { createWritingStudioQueryAdapter } from "./workflow/domain/writingStudioQueryAdapter";
 import { createWritingStudioImageAdapter } from "./workflow/domain/writingStudioImageAdapter";
 import { createStructureStudioMatterRail } from "./workflow/domain/structureStudioMatterRail";
+import { projectBookNavigation } from "./workflow/domain/structureStudioNavPreview";
 import {
   WRITING_STUDIO_EDITOR_UNAVAILABLE,
   WRITING_STUDIO_EMPTY_CHAPTERS,
@@ -666,6 +668,9 @@ export default function EditorSurface() {
                 setDetail(message);
               }
             }}
+          />
+          <StructureStudioNavPreview
+            entries={projectBookNavigation(coordinator.getBook())}
           />
         </aside>
 
