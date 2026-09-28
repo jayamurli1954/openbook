@@ -1,6 +1,6 @@
 # ADR-0035 Slice 5: Structure Studio Hardening — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #136)
 - **Date:** 2026-09-28
 - **Parent architecture:** ADR-0035 — Phase 1 Structure Studio Architecture
 - **Scope:** Empty-matter copy; EN/KN structure titles through package Save/Open; regression guard that no parallel outline is stored

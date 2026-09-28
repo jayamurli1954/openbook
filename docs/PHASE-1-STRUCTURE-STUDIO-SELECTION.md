@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Structure Studio
 
-- **Status:** Selected by maintainer direction after ADR-0034 closure (2026-09-27)
+- **Status:** Selected and implemented — ADR-0035 Slices 1–5 done (PRs #132–#136); see `docs/adr-0035-closure-reconciliation.md`
 - **Date:** 2026-09-27
 - **Baseline:** `main` at `5f63414` (PR #130 — ADR-0034 closure reconcile)
 - **Prior record:** `docs/adr-0034-closure-reconciliation.md`
 - **Selected domain:** ROADMAP Phase 1 MVP — **Structure Studio** (§3.4)
-- **Architecture ADR:** ADR-0035 (Accepted on this follow-on; **implementation not authorized** by selection alone)
+- **Architecture ADR:** ADR-0035 (Accepted; Slices 1–5 done; sequencing closed)
 
 ## 1. Why this domain
 
@@ -34,7 +34,8 @@ Optional leftovers (Design Studio, Metadata Wizard, Cover Wizard, AI outline, ta
 
 1. Merge this selection + ADR-0035 (Draft PR → CI/DCO → explicit merge authorization). **Done (PR #131).**
 2. Maintainer separately authorizes **implementation Slice 1** per ADR-0035 sequencing. **Done (PR #132).**
-3. Further slices only under explicit authorization.
+3. Slices 2–5 under explicit authorization. **Done (PRs #133–#136).**
+4. Closure recorded in `docs/adr-0035-closure-reconciliation.md`.
 
 ## 5. Candidates not selected
 
