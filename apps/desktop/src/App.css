@@ -356,6 +356,43 @@ dd {
   font-size: 0.85rem;
 }
 
+.design-studio-choices {
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #ddd;
+}
+
+.design-studio-choices h3 {
+  margin: 0.4rem 0 0.3rem;
+}
+
+.design-studio-fields {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.design-studio-fields label {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+}
+
+.design-studio-fields input {
+  font: inherit;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid #bbb;
+  background: #fff;
+}
+
+.design-studio-fields button {
+  justify-self: start;
+  font: inherit;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid #bbb;
+  background: #fff;
+  cursor: pointer;
+}
+
 .writing-studio-find {
   margin: 0.35rem 0 0.65rem;
   padding: 0.5rem 0.65rem;

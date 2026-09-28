@@ -31,6 +31,7 @@ import GuidedStartWizard from "./ui/GuidedStartWizard";
 import WritingStudioToolbar from "./ui/WritingStudioToolbar";
 import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
 import WritingStudioImageButton from "./ui/WritingStudioImageButton";
+import DesignStudioChoices from "./ui/DesignStudioChoices";
 import StructureStudioNavPreview from "./ui/StructureStudioNavPreview";
 import StructureStudioRail from "./ui/StructureStudioRail";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
@@ -38,6 +39,7 @@ import { createWritingStudioImagePickPort } from "./host/createWritingStudioImag
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
 import { createWritingStudioQueryAdapter } from "./workflow/domain/writingStudioQueryAdapter";
 import { createWritingStudioImageAdapter } from "./workflow/domain/writingStudioImageAdapter";
+import { createDesignStudioChoices } from "./workflow/domain/designStudioChoices";
 import { createStructureStudioMatterRail } from "./workflow/domain/structureStudioMatterRail";
 import { projectBookNavigation } from "./workflow/domain/structureStudioNavPreview";
 import {
@@ -157,6 +159,14 @@ export default function EditorSurface() {
         session().moveSection(sectionId, targetMatter, targetIndex),
       updateSectionRole: (sectionId, role) =>
         session().updateSectionRole(sectionId, role),
+    });
+  });
+  const [designChoices] = useState(() => {
+    const session = () => coordinator.getSession();
+    return createDesignStudioChoices({
+      getBook: () => coordinator.getBook(),
+      updateTheme: (theme) => session().updateTheme(theme),
+      updateTypography: (typography) => session().updateTypography(typography),
     });
   });
 
@@ -671,6 +681,19 @@ export default function EditorSurface() {
           />
           <StructureStudioNavPreview
             entries={projectBookNavigation(coordinator.getBook())}
+          />
+          <DesignStudioChoices
+            choices={designChoices}
+            onChanged={() => {
+              refresh();
+            }}
+            onStatus={(message, kind) => {
+              setSessionNote(message);
+              if (kind === "error") {
+                setStatus("error");
+                setDetail(message);
+              }
+            }}
           />
         </aside>
 
