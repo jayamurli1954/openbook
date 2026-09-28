@@ -1,6 +1,6 @@
 # ADR-0036 Slice 1: Design Contract — Implementation Proposal
 
-- **Status:** Implemented on this branch (Draft PR)
+- **Status:** Implemented on main (PR #139)
 - **Date:** 2026-09-28
 - **Parent architecture:** ADR-0036 — Phase 1 Design Studio Architecture
 - **Scope:** Capability matrix and command port for theme and typography; no chrome
