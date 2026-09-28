@@ -1,13 +1,13 @@
 # ADR-0036: Phase 1 — Design Studio Architecture
 
-- **Status:** Accepted; implementation requires separate explicit authorization
+- **Status:** Accepted; Slices 1–2 done (PRs #139–#140); Slice 3 not authorized
 - **Date:** 2026-09-28
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.5)
 - **Area:** Desktop / Product Surface / Design Studio
 - **Depends on:** ADR-0006, ADR-0014, ADR-0019, ADR-0029, ADR-0031, ADR-0033, ADR-0034, ADR-0035
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-DESIGN-STUDIO-SELECTION.md`
-- **Implementation authorization:** Slices 1–2 authorized (design contract + guided choices); further slices require separate explicit authorization
+- **Implementation authorization:** Slices 1–2 complete (PRs #139–#140). Slice 3 and later slices require separate explicit authorization. The status reconciliation does not authorize Slice 3.
 
 ## 1. Context
 
@@ -108,8 +108,8 @@ Design Studio must not:
 When separately authorized, implementation should proceed in small slices, for example:
 
 1. **Slice 1 — Design contract:** capability matrix; read and set theme and typography; reject non-positive body size and line height; tests; no chrome. **(done — PR #139)**
-2. **Slice 2 — Guided choices:** theme, body typeface, heading typeface, body size, and line height. **(authorized — this PR)**
-3. **Slice 3 — Hardening:** English and Kannada theme and font names through package Save/Open; regression guard that no stylesheet is persisted.
+2. **Slice 2 — Guided choices:** theme, body typeface, heading typeface, body size, and line height. **(done — PR #140)**
+3. **Slice 3 — Hardening:** English and Kannada theme and font names through package Save/Open; regression guard that no stylesheet is persisted. **(not authorized)**
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.
 
