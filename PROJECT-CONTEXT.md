@@ -90,7 +90,7 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - **`FOUNDATION-READY` is declared** (2026-09-24) — see `docs/FOUNDATION-READY-DETERMINATION.md`. Gate 10 packaging reports still keep `foundationReady: false` by design.
 - ADR-0033 accepts Phase 1 Book Wizard / Guided Start architecture; Slices 1–5 are done on main (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`.
 - ADR-0034 accepts Phase 1 Writing Studio architecture; Slices 1–5 are done on main (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`.
-- ADR-0035 accepts Phase 1 Structure Studio architecture; Slices 1–4 are done (PRs #132–#135); Slice 5 (hardening) is authorized separately — see `docs/adr-0035-slice-5-hardening.md`.
+- ADR-0035 accepts Phase 1 Structure Studio architecture; Slices 1–5 are done on main (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -121,7 +121,7 @@ Other pending items:
 - Exact Temurin patch/build, SHA-256, and per-platform smoke-tested images (Temurin 21 LTS family and `jlink` default Accepted in ADR-0012; inventory pins exist; Gate 10 Windows packaging done)
 - Phase 1 Book Wizard / Guided Start — **ADR-0033 Accepted**; Slices 1–5 **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`
 - Phase 1 Writing Studio — **ADR-0034 Accepted**; Slices 1–5 **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`
-- Phase 1 Structure Studio — **ADR-0035 Accepted**; Slices 1–4 done (PRs #132–#135); Slice 5 (hardening) authorized — see `docs/adr-0035-slice-5-hardening.md`
+- Phase 1 Structure Studio — **ADR-0035 Accepted**; Slices 1–5 **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`
 - Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
 - AI/Ollama and DTP/page layout (future; must not displace the next Phase 1 domain selection)
 

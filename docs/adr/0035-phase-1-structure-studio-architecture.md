@@ -1,13 +1,14 @@
 # ADR-0035: Phase 1 — Structure Studio Architecture
 
-- **Status:** Accepted; implementation requires separate explicit authorization
+- **Status:** Accepted; Slices 1–5 done
 - **Date:** 2026-09-27
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.4)
 - **Area:** Desktop / Product Surface / Structure Studio
 - **Depends on:** ADR-0006, ADR-0014, ADR-0016, ADR-0019, ADR-0029, ADR-0031, ADR-0033, ADR-0034
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-STRUCTURE-STUDIO-SELECTION.md`
-- **Implementation authorization:** Slices 1–5 authorized (structure contract through hardening); closure reconciliation remains a separate record
+- **Closure record:** `docs/adr-0035-closure-reconciliation.md`
+- **Implementation authorization:** Slices 1–5 complete (PRs #132–#136); no further ADR-0035 slice authorized by this ADR alone
 
 ## 1. Context
 
@@ -107,7 +108,7 @@ When separately authorized, implementation should proceed in small slices, for e
 2. **Slice 2 — Matter rail:** front/main/back groups, add, rename, reorder within a matter. **(done — PR #133)**
 3. **Slice 3 — Move and role:** move between matters; role constrained to the target matter; last main chapter stays fail-closed. **(done — PR #134)**
 4. **Slice 4 — Navigation preview:** read-only order projection from the Book; no stored TOC. **(done — PR #135)**
-5. **Slice 5 — Hardening:** empty-matter copy, EN+KN titles through package Save/Open, regression guard that no parallel outline is persisted. **(authorized — this PR)**
+5. **Slice 5 — Hardening:** empty-matter copy, EN+KN titles through package Save/Open, regression guard that no parallel outline is persisted. **(done — PR #136)**
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.
 
