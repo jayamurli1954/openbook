@@ -33,7 +33,7 @@ Optional leftovers (Metadata Wizard, Cover Wizard, AI outline, tables, nested se
 ## 4. Controlled sequence after ADR acceptance
 
 1. Merge this selection + ADR-0036 (Draft PR → CI/DCO → explicit merge authorization).
-2. Maintainer separately authorizes **implementation Slice 1** per ADR-0036 sequencing.
+2. Maintainer separately authorizes **implementation Slice 1** per ADR-0036 sequencing. **Authorized on this follow-on** — see `docs/adr-0036-slice-1-design-contract.md`.
 3. Further slices only under explicit authorization.
 
 ## 5. Candidates not selected

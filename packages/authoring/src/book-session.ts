@@ -6,6 +6,8 @@ import type {
   ContentBlock,
   MatterKind,
   StructuralSection,
+  ThemeRef,
+  TypographySettings,
 } from "@openbook/book-model";
 import { serializeBook, validateBook } from "@openbook/book-model";
 import { cloneBook } from "./clone.js";
@@ -28,6 +30,14 @@ import { BLOCK_TYPES } from "./types.js";
 interface HistoryEntry {
   book: Book;
   selectedSectionId: string;
+}
+
+function requirePositiveMeasure(value: number, label: string): void {
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new InvalidStructureOperationError(
+      `${label} must be a finite number greater than zero.`,
+    );
+  }
 }
 
 function matterKey(matter: MatterKind): "frontMatter" | "chapters" | "backMatter" {
@@ -315,6 +325,32 @@ export class BookSession implements IBookSession {
         subjects: metadata.subjects
           ? [...metadata.subjects]
           : [...candidate.metadata.subjects],
+      };
+    });
+  }
+
+  updateTheme(theme: ThemeRef): void {
+    const id = theme.id.trim();
+    const name = theme.name.trim();
+    if (id.length === 0 || name.length === 0) {
+      throw new InvalidStructureOperationError("A theme id and name are required.");
+    }
+    this.#mutate((candidate) => {
+      candidate.theme = { id, name };
+    });
+  }
+
+  updateTypography(typography: TypographySettings): void {
+    requirePositiveMeasure(typography.bodySizePt, "Body size");
+    requirePositiveMeasure(typography.lineHeight, "Line height");
+    const bodyFontFamily = typography.bodyFontFamily.trim();
+    const headingFontFamily = typography.headingFontFamily.trim();
+    this.#mutate((candidate) => {
+      candidate.typography = {
+        bodyFontFamily,
+        headingFontFamily,
+        bodySizePt: typography.bodySizePt,
+        lineHeight: typography.lineHeight,
       };
     });
   }
