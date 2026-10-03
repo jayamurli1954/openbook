@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Design Studio
 
-- **Status:** Selected; Slices 1–2 done (PRs #139–#140); Slice 3 authorized on this PR
+- **Status:** Selected and implemented — ADR-0036 Slices 1–3 done (PRs #139–#140, #142); see `docs/adr-0036-closure-reconciliation.md`
 - **Date:** 2026-09-28
 - **Baseline:** `main` at `aee88ca` (PR #137 — ADR-0035 closure reconcile)
 - **Prior record:** `docs/adr-0035-closure-reconciliation.md`
 - **Selected domain:** ROADMAP Phase 1 MVP — **Basic Design Studio** (§3.5)
-- **Architecture ADR:** ADR-0036 (Accepted; Slices 1–2 done; Slice 3 authorized on this PR). Selection alone did not authorize implementation.
+- **Architecture ADR:** ADR-0036 (Accepted; Slices 1–3 done; sequencing closed)
 
 ## 1. Why this domain
 
@@ -35,7 +35,8 @@ Optional leftovers (Metadata Wizard, Cover Wizard, AI outline, tables, nested se
 1. Selection + ADR-0036 merged (PR #138).
 2. Slice 1 design contract done (PR #139) — see `docs/adr-0036-slice-1-design-contract.md`.
 3. Slice 2 guided choices done (PR #140) — see `docs/adr-0036-slice-2-guided-choices.md`.
-4. Slice 3 hardening is **authorized on this PR** — see `docs/adr-0036-slice-3-hardening.md`. Closure is not authorized.
+4. Slice 3 hardening done (PR #142) — see `docs/adr-0036-slice-3-hardening.md`.
+5. Closure recorded in `docs/adr-0036-closure-reconciliation.md`.
 
 ## 5. Candidates not selected
 
