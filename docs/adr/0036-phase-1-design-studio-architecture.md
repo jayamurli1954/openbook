@@ -1,13 +1,14 @@
 # ADR-0036: Phase 1 — Design Studio Architecture
 
-- **Status:** Accepted; Slices 1–2 done (PRs #139–#140); Slice 3 authorized on this PR
+- **Status:** Accepted; Slices 1–3 done
 - **Date:** 2026-09-28
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.5)
 - **Area:** Desktop / Product Surface / Design Studio
 - **Depends on:** ADR-0006, ADR-0014, ADR-0019, ADR-0029, ADR-0031, ADR-0033, ADR-0034, ADR-0035
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-DESIGN-STUDIO-SELECTION.md`
-- **Implementation authorization:** Slices 1–2 complete (PRs #139–#140). Slice 3 is authorized on this PR (`docs/adr-0036-slice-3-hardening.md`). Closure and later work still require separate explicit authorization.
+- **Closure record:** `docs/adr-0036-closure-reconciliation.md`
+- **Implementation authorization:** Slices 1–3 complete (PRs #139–#140, #142); no further ADR-0036 slice authorized by this ADR alone
 
 ## 1. Context
 
@@ -109,7 +110,7 @@ When separately authorized, implementation should proceed in small slices, for e
 
 1. **Slice 1 — Design contract:** capability matrix; read and set theme and typography; reject non-positive body size and line height; tests; no chrome. **(done — PR #139)**
 2. **Slice 2 — Guided choices:** theme, body typeface, heading typeface, body size, and line height. **(done — PR #140)**
-3. **Slice 3 — Hardening:** English and Kannada theme and font names through package Save/Open; regression guard that no stylesheet is persisted. **(authorized — this PR)**
+3. **Slice 3 — Hardening:** English and Kannada theme and font names through package Save/Open; regression guard that no stylesheet is persisted. **(done — PR #142)**
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.
 

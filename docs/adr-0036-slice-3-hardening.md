@@ -1,6 +1,6 @@
 # ADR-0036 Slice 3: Design Studio Hardening — Implementation Proposal
 
-- **Status:** Authorized; in progress on this PR
+- **Status:** Implemented on main (PR #142)
 - **Date:** 2026-10-03
 - **Parent architecture:** ADR-0036 — Phase 1 Design Studio Architecture
 - **Scope:** English and Kannada theme and font names through package Save/Open; regression guard that no stylesheet is stored
