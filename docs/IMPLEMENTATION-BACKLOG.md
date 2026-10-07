@@ -122,7 +122,8 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0036 Slice 2 (guided choices)      [DONE — PR #140]
 ├── ADR-0036 status reconcile              [DONE — PR #141]
 ├── ADR-0036 Slice 3 (hardening)           [DONE — PR #142]
-├── ADR-0036 closure reconcile             [IN PROGRESS — this PR]
+├── ADR-0036 closure reconcile             [DONE — PR #143]
+├── Domain selection + ADR-0037            [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -213,7 +214,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the re
 
 ## Next architectural decision points
 
-Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio (ADR-0034 Slices 1–5) is **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`. Phase 1 Structure Studio (ADR-0035 Slices 1–5) is **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`. Phase 1 Design Studio (ADR-0036 Slices 1–3) is **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`. The next Phase 1 domain is not selected by that record.
+Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio (ADR-0034 Slices 1–5) is **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`. Phase 1 Structure Studio (ADR-0035 Slices 1–5) is **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`. Phase 1 Design Studio (ADR-0036 Slices 1–3) is **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`. Phase 1 Metadata Wizard architecture is **Accepted** on this PR (ADR-0037). Implementation is not authorized — see `docs/PHASE-1-METADATA-WIZARD-SELECTION.md`.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 
