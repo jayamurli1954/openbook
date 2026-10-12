@@ -9,17 +9,24 @@ Read [`PROJECT-CONTEXT.md`](PROJECT-CONTEXT.md) first. Durable decisions live in
 
 ## Current state (`main`)
 
-Gates 1–8 are implemented in this repository:
+Phase 0 is complete. **`FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` are declared** (2026-09-24; [`docs/FOUNDATION-READY-DETERMINATION.md`](docs/FOUNDATION-READY-DETERMINATION.md)).
 
-- Canonical `@openbook/book-model` plus publishing engines for EPUB 3.3, HTML, and Typst PDF
-- Official EPUBCheck 5.3.0 + Temurin 21 packaging, Book Doctor, import, authoring session, and content-addressed assets
-- Desktop Studio (`apps/desktop`): Tauri 2.11.5 + React 19 editor, Save/Open via SQLite `ProjectPersistence`, and in-memory export APIs on `DesktopStudioCoordinator`
+- Canonical `@openbook/book-model` plus publishing engines for EPUB 3.3, HTML, and Typst PDF (Gates 1–6)
+- Official EPUBCheck 5.3.0 + Temurin 21 packaging, Book Doctor, import, authoring session, and content-addressed assets (Gates 5–7)
+- Desktop Studio (`apps/desktop`): Tauri 2.11.5 + React 19 editor (Gate 8)
+- Export UI and native Save As (Gate 9 / ADR-0030)
+- Filesystem project package (ADR-0029) with autosave and crash recovery (ADR-0031)
+- Windows-first desktop packaging and release readiness (Gate 10 / ADR-0032)
+
+Phase 1 (MVP: guided book creation) is in progress:
+
+- Done: Guided Start (ADR-0033), Writing Studio (ADR-0034), Structure Studio (ADR-0035), Design Studio (ADR-0036)
+- Next: Metadata Wizard (ADR-0037 Accepted; implementation not yet authorized)
+- Not started: Book Idea & Outline, Cover Wizard, Preview, and the `MVP-READY` gate
 
 Frozen desktop pins are in ADR-0007 (Tauri/React/TypeScript/SQLite) and ADR-0008 (Tiptap/ProseMirror). The PDF renderer is Typst **0.15.1** (ADR-0013). Do not silently upgrade Frozen pins.
 
-Not on `main` yet (still gated): export UI and native Save As dialogs, autosave, on-disk project-package implementation (ADR-0029 architecture is Accepted; Slice 1 is separately gated), AI/Ollama, and DTP/page layout.
-
-`FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` are **not** declared.
+Still gated for later phases: AI/Ollama, DTP/page layout, code signing, and multi-OS packaging.
 
 ## Build and test
 

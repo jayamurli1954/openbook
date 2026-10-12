@@ -125,7 +125,7 @@ Other pending items:
 - Phase 1 Writing Studio — **ADR-0034 Accepted**; Slices 1–5 **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`
 - Phase 1 Structure Studio — **ADR-0035 Accepted**; Slices 1–5 **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`
 - Phase 1 Design Studio — **ADR-0036 Accepted**; Slices 1–3 **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`
-- Phase 1 Metadata Wizard — **ADR-0037 Accepted** on this PR; implementation not authorized — see `docs/PHASE-1-METADATA-WIZARD-SELECTION.md`
+- Phase 1 Metadata Wizard — **ADR-0037 Accepted** (PR #144); implementation not authorized — see `docs/PHASE-1-METADATA-WIZARD-SELECTION.md`
 - Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
 - AI/Ollama and DTP/page layout (future; must not displace the next Phase 1 domain selection)
 
