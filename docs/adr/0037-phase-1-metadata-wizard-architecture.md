@@ -108,8 +108,8 @@ Metadata Wizard must not:
 When separately authorized, implementation should proceed in small slices, for example:
 
 1. **Slice 1 — Metadata contract:** read and set `Book.metadata`; reject a blank title and a blank language; tests; no chrome. **(done — PR #147)**
-2. **Slice 2 — Guided fields:** labeled fields for the in-scope metadata, including author, contributor, and subject lists. **(authorized — this PR)**
-3. **Slice 3 — Hardening:** English and Kannada metadata through package Save/Open; regression guard that no OPF or ONIX document is persisted.
+2. **Slice 2 — Guided fields:** labeled fields for the in-scope metadata, including author, contributor, and subject lists. **(done — PR #149)**
+3. **Slice 3 — Hardening:** English and Kannada metadata through package Save/Open; regression guard that no OPF or ONIX document is persisted. **(proposed — `docs/adr-0037-slice-3-hardening.md`)**
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.
 
