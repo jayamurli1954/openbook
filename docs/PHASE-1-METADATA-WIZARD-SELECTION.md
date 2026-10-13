@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Metadata Wizard
 
-- **Status:** Selected; ADR-0037 accepted on this PR; implementation not authorized
+- **Status:** Selected; ADR-0037 accepted (PR #144); implementation not authorized
 - **Date:** 2026-10-03
 - **Baseline:** `main` at `01f832d` (PR #143 — ADR-0036 closure reconcile)
 - **Prior record:** `docs/adr-0036-closure-reconciliation.md`
 - **Selected domain:** ROADMAP Phase 1 MVP — **Metadata Wizard** (§3.6)
-- **Architecture ADR:** ADR-0037 (Accepted on this PR; implementation not authorized). Selection alone does not authorize a slice.
+- **Architecture ADR:** ADR-0037 (Accepted in PR #144; implementation not authorized). Selection alone does not authorize a slice.
 
 ## 1. Why this domain
 
@@ -17,7 +17,7 @@ Optional leftovers (Cover Wizard, AI outline, tables, nested section trees, a de
 
 ## 2. What this selection authorizes
 
-1. Accept ADR-0037 Metadata Wizard architecture (this PR).
+1. Accept ADR-0037 Metadata Wizard architecture (PR #144).
 2. Record front-door reconciliation that Phase 1’s next product ADR is Metadata Wizard.
 3. Stamp ADR-0036 closure as done (PR #143).
 
