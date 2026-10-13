@@ -32,6 +32,7 @@ import WritingStudioToolbar from "./ui/WritingStudioToolbar";
 import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
 import WritingStudioImageButton from "./ui/WritingStudioImageButton";
 import DesignStudioChoices from "./ui/DesignStudioChoices";
+import MetadataWizardFields from "./ui/MetadataWizardFields";
 import StructureStudioNavPreview from "./ui/StructureStudioNavPreview";
 import StructureStudioRail from "./ui/StructureStudioRail";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
@@ -40,6 +41,7 @@ import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStud
 import { createWritingStudioQueryAdapter } from "./workflow/domain/writingStudioQueryAdapter";
 import { createWritingStudioImageAdapter } from "./workflow/domain/writingStudioImageAdapter";
 import { createDesignStudioChoices } from "./workflow/domain/designStudioChoices";
+import { createMetadataWizardFields } from "./workflow/domain/metadataWizardFields";
 import { createStructureStudioMatterRail } from "./workflow/domain/structureStudioMatterRail";
 import { projectBookNavigation } from "./workflow/domain/structureStudioNavPreview";
 import {
@@ -169,6 +171,12 @@ export default function EditorSurface() {
       updateTypography: (typography) => session().updateTypography(typography),
     });
   });
+  const [metadataFields] = useState(() =>
+    createMetadataWizardFields({
+      getBook: () => coordinator.getBook(),
+      updateMetadata: (metadata) => coordinator.getSession().updateMetadata(metadata),
+    }),
+  );
 
   useEffect(() => {
     void coordinator
@@ -684,6 +692,19 @@ export default function EditorSurface() {
           />
           <DesignStudioChoices
             choices={designChoices}
+            onChanged={() => {
+              refresh();
+            }}
+            onStatus={(message, kind) => {
+              setSessionNote(message);
+              if (kind === "error") {
+                setStatus("error");
+                setDetail(message);
+              }
+            }}
+          />
+          <MetadataWizardFields
+            fields={metadataFields}
             onChanged={() => {
               refresh();
             }}

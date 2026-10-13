@@ -21,7 +21,7 @@ Phase 0 is complete. **`FOUNDATION-READY` / `FOUNDATION-GOVERNANCE-READY` are de
 Phase 1 (MVP: guided book creation) is in progress:
 
 - Done: Guided Start (ADR-0033), Writing Studio (ADR-0034), Structure Studio (ADR-0035), Design Studio (ADR-0036)
-- In progress: Metadata Wizard (ADR-0037; Slice 1 metadata contract done, Slice 2 guided fields proposed)
+- In progress: Metadata Wizard (ADR-0037; Slice 1 metadata contract done, Slice 2 guided fields in progress)
 - Not started: Book Idea & Outline, Cover Wizard, Preview, and the `MVP-READY` gate
 
 Frozen desktop pins are in ADR-0007 (Tauri/React/TypeScript/SQLite) and ADR-0008 (Tiptap/ProseMirror). The PDF renderer is Typst **0.15.1** (ADR-0013). Do not silently upgrade Frozen pins.
