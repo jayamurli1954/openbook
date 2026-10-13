@@ -1,6 +1,6 @@
 # ADR-0037 Slice 2: Guided Fields — Implementation Proposal
 
-- **Status:** Implemented on this PR; awaiting merge
+- **Status:** Implemented on main (PR #149)
 - **Date:** 2026-10-13
 - **Parent architecture:** ADR-0037 — Phase 1 Metadata Wizard Architecture
 - **Depends on:** ADR-0037 Slice 1 metadata contract (PR #147)
