@@ -1,6 +1,6 @@
 # ADR-0037 Slice 1: Metadata Contract — Implementation Proposal
 
-- **Status:** Implemented on this PR; awaiting merge
+- **Status:** Implemented on main (PR #147)
 - **Date:** 2026-10-12
 - **Parent architecture:** ADR-0037 — Phase 1 Metadata Wizard Architecture
 - **Scope:** Capability matrix and command port for `Book.metadata`; no chrome

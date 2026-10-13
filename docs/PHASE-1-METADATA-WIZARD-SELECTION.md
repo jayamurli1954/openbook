@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Metadata Wizard
 
-- **Status:** Selected; ADR-0037 accepted (PR #144); Slice 1 authorized
+- **Status:** Selected; ADR-0037 accepted (PR #144); Slice 1 done (PR #147); Slice 2 proposed
 - **Date:** 2026-10-03
 - **Baseline:** `main` at `01f832d` (PR #143 — ADR-0036 closure reconcile)
 - **Prior record:** `docs/adr-0036-closure-reconciliation.md`
 - **Selected domain:** ROADMAP Phase 1 MVP — **Metadata Wizard** (§3.6)
-- **Architecture ADR:** ADR-0037 (Accepted in PR #144; implementation not authorized). Selection alone does not authorize a slice.
+- **Architecture ADR:** ADR-0037 (Accepted in PR #144). Selection alone does not authorize a slice.
 
 ## 1. Why this domain
 
@@ -35,8 +35,9 @@ Optional leftovers (Cover Wizard, AI outline, tables, nested section trees, a de
 ## 4. Controlled sequence after ADR acceptance
 
 1. Merge this selection + ADR-0037 (Draft PR → CI/DCO → explicit merge authorization).
-2. Maintainer separately authorizes implementation Slice 1 per ADR-0037 sequencing. **Authorized on this follow-on** — see `docs/adr-0037-slice-1-metadata-contract.md`.
-3. Later slices only under their own explicit authorization.
+2. Maintainer separately authorizes implementation Slice 1 per ADR-0037 sequencing. **Done** (PR #147) — see `docs/adr-0037-slice-1-metadata-contract.md`.
+3. Slice 2 (guided fields) proposed — see `docs/adr-0037-slice-2-guided-fields.md`. Needs explicit authorization.
+4. Later slices only under their own explicit authorization.
 4. Closure reconciliation only after the authorized slices land.
 
 ## 5. Candidates not selected
