@@ -1,13 +1,14 @@
 # ADR-0037: Phase 1 — Metadata Wizard Architecture
 
-- **Status:** Accepted; implementation not authorized
+- **Status:** Accepted; Slices 1–3 done
 - **Date:** 2026-10-03
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.6)
 - **Area:** Desktop / Product Surface / Metadata Wizard
 - **Depends on:** ADR-0006, ADR-0014, ADR-0019, ADR-0029, ADR-0031, ADR-0033, ADR-0036
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-METADATA-WIZARD-SELECTION.md`
-- **Implementation authorization:** None. This ADR does not authorize a slice.
+- **Closure record:** `docs/adr-0037-closure-reconciliation.md`
+- **Implementation authorization:** Slices 1–3 complete (PRs #147, #149, #151); no further ADR-0037 slice authorized by this ADR alone
 
 ## 1. Context
 
@@ -109,7 +110,7 @@ When separately authorized, implementation should proceed in small slices, for e
 
 1. **Slice 1 — Metadata contract:** read and set `Book.metadata`; reject a blank title and a blank language; tests; no chrome. **(done — PR #147)**
 2. **Slice 2 — Guided fields:** labeled fields for the in-scope metadata, including author, contributor, and subject lists. **(done — PR #149)**
-3. **Slice 3 — Hardening:** English and Kannada metadata through package Save/Open; regression guard that no OPF or ONIX document is persisted. **(authorized — this PR)**
+3. **Slice 3 — Hardening:** English and Kannada metadata through package Save/Open; regression guard that no OPF or ONIX document is persisted. **(done — PR #151)**
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.
 
