@@ -124,6 +124,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0036 Slice 3 (hardening)           [DONE — PR #142]
 ├── ADR-0036 closure reconcile             [DONE — PR #143]
 ├── Domain selection + ADR-0037            [DONE — PR #144]
+├── ADR-0037 Slice 1 (metadata contract)   [PROPOSED — awaiting authorization]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
