@@ -1,11 +1,11 @@
 # ADR-0037 Slice 2: Guided Fields — Implementation Proposal
 
-- **Status:** Proposed; awaiting maintainer authorization
+- **Status:** Implemented on this PR; awaiting merge
 - **Date:** 2026-10-13
 - **Parent architecture:** ADR-0037 — Phase 1 Metadata Wizard Architecture
 - **Depends on:** ADR-0037 Slice 1 metadata contract (PR #147)
 - **Scope:** Metadata chrome for the twelve in-scope `Book.metadata` fields
-- **Implementation authorization:** None yet. Requires an explicit maintainer authorization for this slice
+- **Implementation authorization:** Granted for this slice only (maintainer, 2026-10-13)
 
 ## 1. Purpose
 

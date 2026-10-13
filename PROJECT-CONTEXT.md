@@ -92,7 +92,7 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - ADR-0034 accepts Phase 1 Writing Studio architecture; Slices 1–5 are done on main (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`.
 - ADR-0035 accepts Phase 1 Structure Studio architecture; Slices 1–5 are done on main (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`.
 - ADR-0036 accepts Phase 1 Design Studio architecture; Slices 1–3 are done on main (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`.
-- ADR-0037 accepts Phase 1 Metadata Wizard architecture; Slice 1 (metadata contract) is done on main (PR #147); Slice 2 (guided fields) is proposed — see `docs/adr-0037-slice-2-guided-fields.md`.
+- ADR-0037 accepts Phase 1 Metadata Wizard architecture; Slice 1 (metadata contract) is done on main (PR #147); Slice 2 (guided fields) is authorized — see `docs/adr-0037-slice-2-guided-fields.md`.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -125,7 +125,7 @@ Other pending items:
 - Phase 1 Writing Studio — **ADR-0034 Accepted**; Slices 1–5 **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`
 - Phase 1 Structure Studio — **ADR-0035 Accepted**; Slices 1–5 **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`
 - Phase 1 Design Studio — **ADR-0036 Accepted**; Slices 1–3 **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`
-- Phase 1 Metadata Wizard — **ADR-0037 Accepted** (PR #144); Slice 1 done (PR #147); Slice 2 proposed — see `docs/PHASE-1-METADATA-WIZARD-SELECTION.md`
+- Phase 1 Metadata Wizard — **ADR-0037 Accepted** (PR #144); Slice 1 done (PR #147); Slice 2 authorized — see `docs/PHASE-1-METADATA-WIZARD-SELECTION.md`
 - Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
 - AI/Ollama and DTP/page layout (future; must not displace the next Phase 1 domain selection)
 
