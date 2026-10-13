@@ -46,7 +46,7 @@ Optional leftovers (Cover Wizard, AI outline, tables, nested section trees, a de
 
 | Candidate | Note |
 |---|---|
-| Cover Wizard (§3.7) | After metadata is editable on the Book |
+| Cover Wizard (§3.7) | After metadata is editable on the Book. Selected next — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md` |
 | Book Idea / AI outline (§3.2) | AI remains separately gated |
 | Paragraph spacing, image treatment, chapter opening, style properties | Still blocked on a Book Model ADR |
 | Nested section trees | Still blocked on a Book Model ADR |
