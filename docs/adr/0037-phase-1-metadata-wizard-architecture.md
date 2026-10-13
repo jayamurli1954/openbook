@@ -107,7 +107,7 @@ Metadata Wizard must not:
 
 When separately authorized, implementation should proceed in small slices, for example:
 
-1. **Slice 1 — Metadata contract:** read and set `Book.metadata`; reject a blank title and a blank language; tests; no chrome.
+1. **Slice 1 — Metadata contract:** read and set `Book.metadata`; reject a blank title and a blank language; tests; no chrome. **(authorized — this PR)**
 2. **Slice 2 — Guided fields:** labeled fields for the in-scope metadata, including author, contributor, and subject lists.
 3. **Slice 3 — Hardening:** English and Kannada metadata through package Save/Open; regression guard that no OPF or ONIX document is persisted.
 

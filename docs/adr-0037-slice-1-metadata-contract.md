@@ -1,16 +1,16 @@
 # ADR-0037 Slice 1: Metadata Contract — Implementation Proposal
 
-- **Status:** Proposed; awaiting maintainer authorization
+- **Status:** Implemented on this PR; awaiting merge
 - **Date:** 2026-10-12
 - **Parent architecture:** ADR-0037 — Phase 1 Metadata Wizard Architecture
 - **Scope:** Capability matrix and command port for `Book.metadata`; no chrome
-- **Implementation authorization:** None yet. Requires an explicit maintainer authorization for this slice
+- **Implementation authorization:** Granted for this slice only (maintainer, 2026-10-12)
 
 ## 1. Purpose
 
 Give Metadata Wizard a fail-closed port over the metadata the Book already stores. Guided fields and Save/Open hardening stay in later slices.
 
-`BookSession.updateMetadata` already exists and `validateBook` already rejects a blank title (`missing-title`) or language (`missing-language`). Slice 1 adds the product-facing contract on top: explicit checks before mutation, structured error codes, and normalized list fields. No authoring or Book Model change is expected.
+`BookSession.updateMetadata` already exists. `validateBook` rejects a blank language (`missing-language`, error) but only warns on a blank title (`missing-title`, warning), so the session accepts an empty title. Slice 1 adds the product-facing contract on top: its own blank-title and blank-language checks before mutation (the title check is what enforces ADR-0037 invariant 2), structured error codes, and normalized list fields. No authoring or Book Model change is expected.
 
 ## 2. Slice 1 objective
 
