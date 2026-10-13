@@ -1,11 +1,11 @@
 # ADR-0037 Slice 3: Metadata Wizard Hardening — Implementation Proposal
 
-- **Status:** Proposed; awaiting maintainer authorization
+- **Status:** Implemented on this PR; awaiting merge
 - **Date:** 2026-10-13
 - **Parent architecture:** ADR-0037 — Phase 1 Metadata Wizard Architecture
 - **Depends on:** Slice 1 metadata contract (PR #147); Slice 2 guided fields (PR #149)
 - **Scope:** English and Kannada metadata through package Save/Open; regression guard that no OPF or ONIX document is stored
-- **Implementation authorization:** None yet. Requires an explicit maintainer authorization for this slice
+- **Implementation authorization:** Granted for this slice only (maintainer, 2026-10-13)
 
 ## 1. Purpose
 
