@@ -17,7 +17,7 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [Phase 1 Writing Studio selection](PHASE-1-WRITING-STUDIO-SELECTION.md) | Writing Studio (ADR-0034; Slices 1–5 done) |
 | [Phase 1 Structure Studio selection](PHASE-1-STRUCTURE-STUDIO-SELECTION.md) | Structure Studio (ADR-0035; Slices 1–5 done) |
 | [Phase 1 Design Studio selection](PHASE-1-DESIGN-STUDIO-SELECTION.md) | Design Studio (ADR-0036; Slices 1–3 done) |
-| [Phase 1 Metadata Wizard selection](PHASE-1-METADATA-WIZARD-SELECTION.md) | Metadata Wizard (ADR-0037 accepted in PR #144; Slices 1–2 done; Slice 3 authorized) |
+| [Phase 1 Metadata Wizard selection](PHASE-1-METADATA-WIZARD-SELECTION.md) | Metadata Wizard (ADR-0037; Slices 1–3 done; closed) |
 | [Foundation closure (post–Gate 10)](FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md) | Historical bridge after Gates 9–10; superseded for Phase 0 outcome by the determination |
 | [Foundation evidence ops selection](FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md) | Evidence ops Slices 1–5 complete (PRs #110–#114) |
 | [Implementation backlog](IMPLEMENTATION-BACKLOG.md) | Future work; not an authorization to code |
