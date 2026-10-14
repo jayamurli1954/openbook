@@ -153,7 +153,10 @@ function assertNfc(metadata: BookMetadata): void {
 test("EN and KN metadata survive package Save → Open without a stored OPF or ONIX", async () => {
   await withTempRoot(async (parent) => {
     const projectRoot = path.join(parent, "metadata.obproj");
-    const coordinator = freshCoordinator("mw-harden-save");
+    // A fake clock keeps autosave from firing during the explicit Save
+    // (binding a dirty book schedules one), so only one writer touches the package.
+    const clock = new FakeClock();
+    const coordinator = freshCoordinator("mw-harden-save", clock);
     const fields = createMetadataWizardFields(coordinator.getSession());
 
     assert.equal(fields.apply(toMetadataFieldValues(ENGLISH)).ok, true);
@@ -162,7 +165,7 @@ test("EN and KN metadata survive package Save → Open without a stored OPF or O
     const storedEnglish = await assertNoStoredMetadataDocument(projectRoot);
     assert.deepEqual(storedEnglish.book.metadata, ENGLISH);
 
-    const openedEnglish = freshCoordinator("mw-harden-open-en");
+    const openedEnglish = freshCoordinator("mw-harden-open-en", clock);
     const opened = await openedEnglish.openFromProjectPackage(projectRoot);
     assert.equal(opened.projectRoot, projectRoot);
     assert.deepEqual(readBookMetadata(openedEnglish.getBook()), ENGLISH);
@@ -174,7 +177,7 @@ test("EN and KN metadata survive package Save → Open without a stored OPF or O
     const storedKannada = await assertNoStoredMetadataDocument(projectRoot);
     assert.deepEqual(storedKannada.book.metadata, KANNADA);
 
-    const reopened = freshCoordinator("mw-harden-open-kn");
+    const reopened = freshCoordinator("mw-harden-open-kn", clock);
     const again = await reopened.openFromProjectPackage(projectRoot);
     assert.equal(again.projectRoot, projectRoot);
     const metadata = readBookMetadata(reopened.getBook());
