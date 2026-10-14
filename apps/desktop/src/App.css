@@ -1,7 +1,34 @@
+/* ADR-0039 visual tokens. Components use these; change the look here. */
 :root {
-  color: #1a1a1a;
-  background: #f6f6f4;
-  font-family: "Segoe UI", system-ui, sans-serif;
+  --ob-ink: #1d1c1a;
+  --ob-ink-muted: #5e5b55;
+  --ob-ground: #f4f3ef;
+  --ob-surface: #ffffff;
+  --ob-surface-soft: #fbfaf8;
+  --ob-border: #ddd9d0;
+  --ob-border-strong: #cfcac0;
+  --ob-accent: #2f4aa0;
+  --ob-accent-strong: #1f3478;
+  --ob-accent-soft: #e8ecf8;
+  --ob-success: #2d5531;
+  --ob-success-soft: #dcebdd;
+  --ob-warning: #8a4b00;
+  --ob-warning-soft: #fff4e5;
+  --ob-danger: #9b1c1c;
+  --ob-radius: 8px;
+  --ob-radius-lg: 10px;
+  --ob-space-1: 4px;
+  --ob-space-2: 8px;
+  --ob-space-3: 12px;
+  --ob-space-4: 16px;
+  --ob-space-5: 24px;
+  --ob-font-ui: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --ob-font-book: Georgia, "Times New Roman", serif;
+  --ob-focus: 0 0 0 3px rgba(47, 74, 160, 0.35);
+
+  color: var(--ob-ink);
+  background: var(--ob-ground);
+  font-family: var(--ob-font-ui);
   line-height: 1.45;
 }
 
@@ -604,4 +631,273 @@ dd {
   border: 1px solid #bbb;
   background: #fff;
   cursor: pointer;
+}
+
+/* ADR-0039 Slice 2 — studio shell frame */
+.studio-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.studio-shell button:focus-visible,
+.studio-shell a:focus-visible,
+.studio-shell input:focus-visible,
+.studio-shell select:focus-visible,
+.studio-shell textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--ob-focus);
+}
+
+.studio-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ob-space-3);
+  padding: var(--ob-space-3) var(--ob-space-5);
+  background: var(--ob-surface);
+  border-bottom: 1px solid var(--ob-border);
+}
+
+.studio-topbar-book {
+  display: flex;
+  align-items: center;
+  gap: var(--ob-space-3);
+  min-width: 0;
+}
+
+.studio-brand {
+  font-weight: 600;
+  color: var(--ob-accent);
+}
+
+.studio-topbar-sep {
+  color: var(--ob-border-strong);
+}
+
+.studio-book-title {
+  font-family: var(--ob-font-book);
+  font-size: 1.15rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-save {
+  font-size: 0.85rem;
+  color: var(--ob-ink-muted);
+}
+
+.studio-save-saved {
+  color: var(--ob-success);
+}
+
+.studio-save-error {
+  color: var(--ob-danger);
+  font-weight: 600;
+}
+
+.studio-btn {
+  font: inherit;
+  font-size: 0.9rem;
+  min-height: 36px;
+  padding: var(--ob-space-2) 14px;
+  border-radius: var(--ob-radius);
+  border: 1px solid var(--ob-border-strong);
+  background: var(--ob-surface);
+  color: var(--ob-ink);
+  cursor: pointer;
+}
+
+.studio-btn:hover {
+  border-color: var(--ob-accent);
+}
+
+.studio-stepbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ob-space-3);
+  padding: var(--ob-space-2) var(--ob-space-5);
+  background: var(--ob-surface);
+  border-bottom: 1px solid var(--ob-border);
+}
+
+.studio-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ob-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex: 1 1 auto;
+}
+
+.studio-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: var(--ob-space-2) 14px;
+  border-radius: var(--ob-radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ob-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-step:hover {
+  background: var(--ob-ground);
+}
+
+.studio-step.is-current {
+  border-color: var(--ob-accent);
+  background: var(--ob-accent-soft);
+}
+
+.studio-step-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #ece9e2;
+  color: #3d3b37;
+}
+
+.studio-step.is-current .studio-step-mark {
+  background: var(--ob-accent);
+  color: #ffffff;
+}
+
+.studio-step-done .studio-step-mark {
+  background: var(--ob-success-soft);
+  color: var(--ob-success);
+}
+
+.studio-step-attention .studio-step-mark {
+  background: var(--ob-warning-soft);
+  color: var(--ob-warning);
+}
+
+.studio-step-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.studio-step-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.studio-step-status {
+  font-size: 0.75rem;
+  color: var(--ob-ink-muted);
+}
+
+.studio-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--ob-space-2);
+  font-size: 0.8rem;
+  color: var(--ob-ink-muted);
+}
+
+.studio-progress-track {
+  display: inline-block;
+  width: 120px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ece9e2;
+  overflow: hidden;
+}
+
+.studio-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--ob-accent);
+}
+
+.studio-progress-count {
+  font-weight: 600;
+  color: var(--ob-ink);
+}
+
+.studio-body {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.studio-outline {
+  flex: 0 0 240px;
+  box-sizing: border-box;
+  padding: 20px var(--ob-space-3);
+  background: var(--ob-surface-soft);
+  border-right: 1px solid var(--ob-border);
+}
+
+.studio-main {
+  flex: 999 1 520px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--ob-space-5) 28px 40px;
+}
+
+.studio-guide {
+  flex: 0 0 300px;
+  box-sizing: border-box;
+  padding: 22px 20px;
+  background: var(--ob-surface);
+  border-left: 1px solid var(--ob-border);
+}
+
+.studio-main .editor-section {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.studio-step-placeholder {
+  max-width: 40rem;
+  margin: var(--ob-space-5) auto;
+  padding: var(--ob-space-5);
+  background: var(--ob-surface);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-lg);
+}
+
+.studio-step-placeholder h2 {
+  margin-top: 0;
+}
+
+.studio-link {
+  font: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ob-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.studio-diagnostics {
+  margin: 0 var(--ob-space-5) var(--ob-space-5);
+  padding: var(--ob-space-4);
+  background: var(--ob-surface);
+  border: 1px dashed var(--ob-border-strong);
+  border-radius: var(--ob-radius-lg);
+  font-size: 0.85rem;
+}
+
+.studio-diagnostics .shell {
+  max-width: none;
+  padding: 0;
 }
