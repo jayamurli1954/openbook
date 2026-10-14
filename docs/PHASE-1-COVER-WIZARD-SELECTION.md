@@ -31,7 +31,7 @@ Cover directions, title and author text on the cover, cover typography, position
 
 ## 3. What this selection authorizes
 
-1. Accept ADR-0038 Cover Wizard architecture (this PR).
+1. Accept ADR-0038 Cover Wizard architecture (PR #153).
 2. Record front-door reconciliation that Phase 1's next product ADR is Cover Wizard.
 
 ## 4. What this selection does **not** authorize
