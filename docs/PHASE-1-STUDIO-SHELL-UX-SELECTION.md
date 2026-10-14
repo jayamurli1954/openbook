@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Studio Shell & Guided UX
 
-- **Status:** Selected; ADR-0039 proposed for acceptance on this PR; implementation not authorized
+- **Status:** Selected; ADR-0039 accepted (PR #154); Slice 1 authorized
 - **Date:** 2026-10-14
 - **Baseline:** `main` at `af4ca6e` (PR #153 — Cover Wizard selection and ADR-0038)
 - **Prior record:** `docs/PHASE-1-COVER-WIZARD-SELECTION.md`
 - **Selected domain:** Phase 1 MVP — **Studio shell and guided UX** (cross-cutting; serves ROADMAP Phase 1 objective and MVP gate)
-- **Architecture ADR:** ADR-0039 (Accepted on this PR; implementation not authorized). Selection alone does not authorize a slice.
+- **Architecture ADR:** ADR-0039 (Accepted in PR #154). Selection alone does not authorize a slice.
 
 ## 1. Why this domain, and why now
 
@@ -27,7 +27,7 @@ The maintainer decided:
 
 ## 2. What this selection authorizes
 
-1. Accept ADR-0039 Studio Shell & Guided UX architecture (this PR).
+1. Accept ADR-0039 Studio Shell & Guided UX architecture (PR #154).
 2. Record that ADR-0038 Cover Wizard implementation waits for ADR-0039's Cover step slot.
 
 ## 3. What this selection does **not** authorize
@@ -43,7 +43,7 @@ The maintainer decided:
 ## 4. Controlled sequence after ADR acceptance
 
 1. Merge this selection + ADR-0039 (Draft PR → CI/DCO → explicit merge authorization).
-2. Maintainer separately authorizes implementation Slice 1 per ADR-0039 sequencing.
+2. Maintainer separately authorizes implementation Slice 1 per ADR-0039 sequencing. **Authorized on this follow-on** — see `docs/adr-0039-slice-1-step-guide-contract.md`.
 3. Later slices only under their own explicit authorization.
 4. ADR-0038 Cover Wizard Slice 1 may proceed once the ADR-0039 Cover step slot exists (Slice 4), or earlier if the maintainer decides.
 5. Closure reconciliation only after the authorized slices land.

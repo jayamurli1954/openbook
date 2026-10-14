@@ -1,6 +1,6 @@
 # ADR-0039: Phase 1 — Studio Shell & Guided UX Architecture
 
-- **Status:** Accepted; implementation not authorized
+- **Status:** Accepted; Slice 1 authorized
 - **Date:** 2026-10-14
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (objective and MVP gate)
 - **Area:** Desktop / Product Surface / UX
@@ -8,7 +8,7 @@
 - **Supersedes:** None. Re-hosts the chrome of ADR-0033–ADR-0037 without changing their contracts
 - **Selection record:** `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`
 - **Design reference:** clickable mockup "OpenBook Studio UX Mockup" (maintainer's private artifact, https://claude.ai/artifact/12J6rfbTnfvLPeWgw3PGpx), accepted as the starting design on 2026-10-14
-- **Implementation authorization:** None. This ADR does not authorize a slice.
+- **Implementation authorization:** Slice 1 authorized (`docs/adr-0039-slice-1-step-guide-contract.md`); later slices need their own authorization.
 
 ## 1. Context
 
@@ -121,7 +121,7 @@ The shell must not:
 
 When separately authorized, implementation should proceed in small slices, for example:
 
-1. **Slice 1 — Step and guide contract:** step model and status derivation; guide content module for all six steps; plain-language guards; tests; no chrome.
+1. **Slice 1 — Step and guide contract:** step model and status derivation; guide content module for all six steps; plain-language guards; tests; no chrome. **(authorized — this PR)**
 2. **Slice 2 — Shell frame and visual tokens:** start screen vs book studio switch; top bar with save status; step bar; three-column layout; CSS tokens; diagnostics moved behind a toggle; existing panels mounted unchanged inside the Write step so nothing is lost.
 3. **Slice 3 — Outline and Write step:** one outline replacing the three lists; full-width editor; Focus mode.
 4. **Slice 4 — Studio steps:** Structure, Design (with live sample), Details (grouped), Publish (checks, then export cards), Cover placeholder.
