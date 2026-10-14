@@ -93,7 +93,8 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - ADR-0035 accepts Phase 1 Structure Studio architecture; Slices 1–5 are done on main (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`.
 - ADR-0036 accepts Phase 1 Design Studio architecture; Slices 1–3 are done on main (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`.
 - ADR-0037 accepts Phase 1 Metadata Wizard architecture; Slices 1–3 are done on main (PRs #147, #149, #151) — see `docs/adr-0037-closure-reconciliation.md`.
-- ADR-0038 accepts Phase 1 Cover Wizard architecture (image cover), with an optional `publishing.coverAssetId` Book Model field; implementation is not authorized — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md`.
+- ADR-0038 accepts Phase 1 Cover Wizard architecture (image cover), with an optional `publishing.coverAssetId` Book Model field; implementation waits for the ADR-0039 Cover step — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md`.
+- ADR-0039 accepts the Phase 1 studio shell and guided UX (start screen, six-step book studio, one outline, Guide panel with help at every step); presentation only; implementation is not authorized — see `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -127,7 +128,8 @@ Other pending items:
 - Phase 1 Structure Studio — **ADR-0035 Accepted**; Slices 1–5 **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`
 - Phase 1 Design Studio — **ADR-0036 Accepted**; Slices 1–3 **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`
 - Phase 1 Metadata Wizard — **ADR-0037 Accepted** (PR #144); Slices 1–3 **done** (PRs #147, #149, #151) — see `docs/adr-0037-closure-reconciliation.md`
-- Phase 1 Cover Wizard (image cover) — **ADR-0038 Accepted** on this PR; implementation not authorized — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md`
+- Phase 1 Cover Wizard (image cover) — **ADR-0038 Accepted** (PR #153); waits for the ADR-0039 Cover step — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md`
+- Phase 1 Studio Shell & Guided UX — **ADR-0039 Accepted** on this PR; implementation not authorized — see `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`
 - Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
 - AI/Ollama and DTP/page layout (future; must not displace the next Phase 1 domain selection)
 
@@ -151,6 +153,8 @@ Other pending items:
 - `docs/adr-0037-closure-reconciliation.md` (ADR-0037 Slices 1–3 closure)
 - `docs/PHASE-1-COVER-WIZARD-SELECTION.md` (selected Phase 1 Cover Wizard domain)
 - `docs/adr/0038-phase-1-cover-wizard-architecture.md`
+- `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md` (selected Phase 1 studio shell and guided UX)
+- `docs/adr/0039-phase-1-studio-shell-and-guided-ux-architecture.md`
 - `docs/adr-0036-closure-reconciliation.md` (ADR-0036 Slices 1–3 closure)
 - `docs/adr-0033-closure-reconciliation.md` (ADR-0033 Slices 1–5 closure)
 - `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (historical post–Gate 10 bridge; superseded for Phase 0 outcome)

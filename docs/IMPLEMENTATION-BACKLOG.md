@@ -2,7 +2,7 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-10-14
-- **Reconciled to:** `main` at `1ce98ec` after ADR-0037 closure (#152)
+- **Reconciled to:** `main` at `af4ca6e` after ADR-0038 acceptance (#153)
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`, `docs/adr/0029-project-package-filesystem-persistence-architecture.md`.
@@ -128,7 +128,8 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0037 Slice 2 (guided fields)       [DONE — PR #149]
 ├── ADR-0037 Slice 3 (hardening)           [DONE — PR #151]
 ├── ADR-0037 closure reconcile             [DONE — PR #152]
-├── Domain selection + ADR-0038            [IN PROGRESS — this PR]
+├── Domain selection + ADR-0038            [DONE — PR #153; slices wait for ADR-0039 Cover step]
+├── Domain selection + ADR-0039 (UX shell) [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -170,7 +171,7 @@ Status against the ordered list:
 23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slices 1–6 **DONE** (#82, #93, #94, #95, #96, #97).
 24. **ADR-0031 Autosave & Crash Recovery** — **Accepted**. Slices 1–5 **DONE** (#98–#102; Slice 5 merge `d51121d`). Sequencing closed. React recover chrome remains separately gated.
 25. **Gate 10 packaging / release readiness** — ADR-0032 **Accepted**. Slices 1–5 **DONE** (PRs #104–#108). `FOUNDATION-READY` declared separately (PR #115).
-26. **Phase 1 MVP studios** — Guided Start (ADR-0033), Writing Studio (ADR-0034), Structure Studio (ADR-0035), and Design Studio (ADR-0036) **DONE** (PRs #117–#143). Metadata Wizard (ADR-0037) **Accepted** (PR #144); Slices 1–3 **DONE** (PRs #147, #149, #151); sequence closed. Cover Wizard (ADR-0038, image cover) **Accepted** on this PR; no slice authorized.
+26. **Phase 1 MVP studios** — Guided Start (ADR-0033), Writing Studio (ADR-0034), Structure Studio (ADR-0035), and Design Studio (ADR-0036) **DONE** (PRs #117–#143). Metadata Wizard (ADR-0037) **Accepted** (PR #144); Slices 1–3 **DONE** (PRs #147, #149, #151); sequence closed. Cover Wizard (ADR-0038, image cover) **Accepted** (PR #153); slices wait for the ADR-0039 Cover step. Studio Shell & Guided UX (ADR-0039) **Accepted** on this PR; no slice authorized.
 
 **Current Test Suite State:**
 - **531 / 531 automated tests passing** (0 failures, 0 skipped) across all 12 monorepo packages at `002ecad` (`npm test`, 2026-10-12). Desktop accounts for 377; the remaining 154 are in the `packages/*` workspaces.
@@ -220,7 +221,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the re
 
 ## Next architectural decision points
 
-Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio (ADR-0034 Slices 1–5) is **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`. Phase 1 Structure Studio (ADR-0035 Slices 1–5) is **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`. Phase 1 Design Studio (ADR-0036 Slices 1–3) is **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`. Phase 1 Metadata Wizard architecture is **Accepted** (ADR-0037, PR #144). Slice 1 (metadata contract) is **done** (PR #147). Slice 2 (guided fields) is **done** (PR #149). Slices 1–3 are **done** (PRs #147, #149, #151) and the slice sequence is closed — see `docs/adr-0037-closure-reconciliation.md`. Phase 1 Cover Wizard architecture (image cover) is **Accepted** on this PR (ADR-0038). Implementation is not authorized — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md`.
+Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio (ADR-0034 Slices 1–5) is **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`. Phase 1 Structure Studio (ADR-0035 Slices 1–5) is **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`. Phase 1 Design Studio (ADR-0036 Slices 1–3) is **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`. Phase 1 Metadata Wizard architecture is **Accepted** (ADR-0037, PR #144). Slices 1–3 are **done** (PRs #147, #149, #151) and the slice sequence is closed — see `docs/adr-0037-closure-reconciliation.md`. Phase 1 Cover Wizard architecture (image cover) is **Accepted** (ADR-0038, PR #153); its slices wait for the ADR-0039 Cover step. Phase 1 Studio Shell & Guided UX is **Accepted** on this PR (ADR-0039). Implementation is not authorized — see `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 

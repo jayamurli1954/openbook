@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Cover Wizard
 
-- **Status:** Selected; ADR-0038 proposed for acceptance on this PR; implementation not authorized
+- **Status:** Selected; ADR-0038 accepted (PR #153); implementation not authorized; slices wait for the ADR-0039 Cover step (`docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`)
 - **Date:** 2026-10-14
 - **Baseline:** `main` at `1ce98ec` (PR #152 — ADR-0037 closure reconcile)
 - **Prior record:** `docs/adr-0037-closure-reconciliation.md`
 - **Selected domain:** ROADMAP Phase 1 MVP — **Cover Wizard** (§3.7), image cover scope
-- **Architecture ADR:** ADR-0038 (Accepted on this PR; implementation not authorized). Selection alone does not authorize a slice.
+- **Architecture ADR:** ADR-0038 (Accepted in PR #153; implementation not authorized). Selection alone does not authorize a slice.
 
 ## 1. Why this domain
 
@@ -31,7 +31,7 @@ Cover directions, title and author text on the cover, cover typography, position
 
 ## 3. What this selection authorizes
 
-1. Accept ADR-0038 Cover Wizard architecture (this PR).
+1. Accept ADR-0038 Cover Wizard architecture (PR #153).
 2. Record front-door reconciliation that Phase 1's next product ADR is Cover Wizard.
 
 ## 4. What this selection does **not** authorize
