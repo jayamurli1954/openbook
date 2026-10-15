@@ -37,6 +37,7 @@ import StructureStudioNavPreview from "./ui/StructureStudioNavPreview";
 import StructureStudioRail from "./ui/StructureStudioRail";
 import StudioShellFrame from "./ui/StudioShellFrame";
 import StudioOutline from "./ui/StudioOutline";
+import StudioGuidePanel from "./ui/StudioGuidePanel";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
 import { createWritingStudioImagePickPort } from "./host/createWritingStudioImagePickPort";
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
@@ -50,8 +51,10 @@ import {
   STUDIO_STEPS,
   deriveStudioProgress,
   deriveStudioStepStatuses,
+  nextStudioStep,
   type StudioStepId,
 } from "./workflow/domain/studioShellContract";
+import { STUDIO_GUIDE, evaluateStudioGuideChecklist } from "./workflow/domain/studioShellGuide";
 import {
   buildStudioShellSnapshot,
   describeSaveStatus,
@@ -99,6 +102,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   const [activeStep, setActiveStep] = useState<StudioStepId>("write");
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(true);
   const [exportController] = useState(
     () =>
       new DesktopExportController({
@@ -522,6 +526,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     shellBook,
     (sectionId) => writingStudioQuery.getWordCounts(sectionId).sectionWordCount,
   );
+  const nextStep = nextStudioStep(activeStep);
   const selectStep = (step: StudioStepId) => {
     setFocusMode(false);
     setActiveStep(step);
@@ -547,6 +552,21 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       activeStep={activeStep}
       onSelectStep={selectStep}
       onExport={() => selectStep("publish")}
+      guideOpen={guideOpen}
+      onToggleGuide={() => setGuideOpen((open) => !open)}
+      guide={
+        focusMode || !guideOpen ? undefined : (
+          <StudioGuidePanel
+            stepLabel={activeStepLabel}
+            guide={STUDIO_GUIDE[activeStep]}
+            checklist={evaluateStudioGuideChecklist(activeStep, shellSnapshot)}
+            nextLabel={nextStep ? nextStep.label : null}
+            onNext={() => {
+              if (nextStep) selectStep(nextStep.id);
+            }}
+          />
+        )
+      }
       outline={
         focusMode ? undefined : (
           <StudioOutline

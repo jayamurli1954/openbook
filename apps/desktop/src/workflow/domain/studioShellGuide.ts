@@ -143,7 +143,7 @@ export const STUDIO_GUIDE: Readonly<Record<StudioStepId, StudioGuide>> = {
     ],
     tips: [
       "Most novels and memoirs use a serif typeface. Guides often use a sans-serif one.",
-      "Writing in Kannada? Choose a Kannada typeface so every letter displays correctly.",
+      "Writing in Kannada? Choose the Kannada look so every letter displays correctly.",
     ],
     questions: [
       {
@@ -226,7 +226,7 @@ export const STUDIO_GUIDE: Readonly<Record<StudioStepId, StudioGuide>> = {
     checklist: [
       {
         id: "check-book",
-        text: "Run the book check",
+        text: "Press Check my book",
         isDone: (s) => s.validation !== null,
       },
       {
@@ -238,7 +238,7 @@ export const STUDIO_GUIDE: Readonly<Record<StudioStepId, StudioGuide>> = {
     ],
     tips: [
       "OpenBook checks your book before it exports, so you don’t send a broken file to a store.",
-      "Export again whenever you change the book.",
+      "Changed something? Check again, then export again.",
     ],
     questions: [
       {

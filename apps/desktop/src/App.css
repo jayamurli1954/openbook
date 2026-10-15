@@ -1308,3 +1308,144 @@ dd {
 .export-status-succeeded {
   color: var(--ob-success);
 }
+
+/* ADR-0039 Slice 5 — Guide panel */
+.studio-guide-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.studio-guide-kicker {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ob-accent);
+}
+
+.studio-guide-intro {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.studio-guide-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-2);
+}
+
+.studio-guide-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ob-space-2);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.studio-guide-count {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--ob-ink-muted);
+}
+
+.studio-guide-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.studio-guide-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.studio-guide-box {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 5px;
+  border: 1.5px solid #9a968d;
+  background: var(--ob-surface);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.studio-guide-item.is-done .studio-guide-box {
+  border-color: #a9cbac;
+  background: var(--ob-success-soft);
+  color: var(--ob-success);
+}
+
+.studio-guide-item.is-done .studio-guide-text {
+  color: var(--ob-ink-muted);
+  text-decoration: line-through;
+}
+
+.studio-guide-optional {
+  color: var(--ob-ink-muted);
+}
+
+.studio-guide-tips {
+  padding: 14px;
+  border-radius: var(--ob-radius-lg);
+  background: var(--ob-ground);
+}
+
+.studio-guide-tip {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #3d3b37;
+}
+
+.studio-guide-question {
+  border-bottom: 1px solid #ece9e2;
+}
+
+.studio-guide-question summary {
+  padding: var(--ob-space-2) 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.studio-guide-question p {
+  margin: 0 0 var(--ob-space-2);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #3d3b37;
+}
+
+.studio-guide-next {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: var(--ob-space-2);
+}
+
+.studio-guide-next-hint {
+  font-size: 0.8rem;
+  color: var(--ob-ink-muted);
+}
+
+@media (max-width: 1100px) {
+  .studio-guide {
+    flex: 1 1 100%;
+    border-left: 0;
+    border-top: 1px solid var(--ob-border);
+  }
+}

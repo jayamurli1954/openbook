@@ -1,6 +1,6 @@
 # ADR-0039: Phase 1 — Studio Shell & Guided UX Architecture
 
-- **Status:** Accepted; Slices 1–3 done; Slice 4 authorized
+- **Status:** Accepted; Slices 1–4 done; Slice 5 authorized
 - **Date:** 2026-10-14
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (objective and MVP gate)
 - **Area:** Desktop / Product Surface / UX
@@ -8,7 +8,7 @@
 - **Supersedes:** None. Re-hosts the chrome of ADR-0033–ADR-0037 without changing their contracts
 - **Selection record:** `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`
 - **Design reference:** clickable mockup "OpenBook Studio UX Mockup" (maintainer's private artifact, https://claude.ai/artifact/12J6rfbTnfvLPeWgw3PGpx), accepted as the starting design on 2026-10-14
-- **Implementation authorization:** Slices 1–3 done (PRs #155–#157); Slice 4 authorized (`docs/adr-0039-slice-4-studio-steps.md`); later slices need their own authorization.
+- **Implementation authorization:** Slices 1–4 done (PRs #155–#158); Slice 5 authorized (`docs/adr-0039-slice-5-guide-panel.md`); later slices need their own authorization.
 
 ## 1. Context
 
@@ -124,8 +124,8 @@ When separately authorized, implementation should proceed in small slices, for e
 1. **Slice 1 — Step and guide contract:** step model and status derivation; guide content module for all six steps; plain-language guards; tests; no chrome. **(done — PR #155)**
 2. **Slice 2 — Shell frame and visual tokens:** start screen vs book studio switch; top bar with save status; step bar; three-column layout; CSS tokens; diagnostics moved behind a toggle; existing panels mounted unchanged inside the Write step so nothing is lost. **(done — PR #156)**
 3. **Slice 3 — Outline and Write step:** one outline replacing the three lists; full-width editor; Focus mode. **(done — PR #157)**
-4. **Slice 4 — Studio steps:** Structure, Design (with live sample), Details (grouped), Publish (checks, then export cards), Cover placeholder. **(authorized — this PR; includes the ADR-0022 re-check amendment)**
-5. **Slice 5 — Guide panel:** render the Slice 1 guide; live checklist; questions; Next step; Help toggle.
+4. **Slice 4 — Studio steps:** Structure, Design (with live sample), Details (grouped), Publish (checks, then export cards), Cover placeholder. **(done — PR #158; includes the ADR-0022 re-check amendment)**
+5. **Slice 5 — Guide panel:** render the Slice 1 guide; live checklist; questions; Next step; Help toggle. **(authorized — this PR)**
 6. **Slice 6 — Start screen:** Guided Start as the start screen; book-type presets mapped to existing structure and theme choices; Import and recent books there.
 7. **Slice 7 — Hardening:** keyboard and focus order, contrast, English and Kannada books through the full flow, plain-language error mapping, source-shape guards re-pointed, one end-to-end walk through all six steps.
 
