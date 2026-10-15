@@ -156,7 +156,7 @@ test("default validationReport is null on new and opened projects", async () => 
   assert.equal(coordinator.getValidationReport(), null);
 });
 
-test("runValidation is refused outside VALIDATION", async () => {
+test("runValidation is refused before the VALIDATION stage", async () => {
   const coordinator = freshCoordinator("stage-guard");
   await assert.rejects(
     () => coordinator.runValidation(),
@@ -374,4 +374,25 @@ test("coordinator source stays headless and Slice 5 scoped", () => {
   assert.doesNotMatch(source, /from ["']react["']/);
   assert.doesNotMatch(source, /from ["']react-dom["']/);
   assert.doesNotMatch(source, /EditorBookSession/);
+});
+
+test("book can be re-checked after an edit in PREVIEW, and export needs the fresh check", async () => {
+  const coordinator = freshCoordinator("recheck-preview");
+  advanceTo(coordinator, "VALIDATION");
+  const first = await coordinator.runValidation();
+  assert.equal(first.summary.isClean, true);
+  coordinator.transitionStage("PREVIEW");
+
+  const chapter = coordinator.listChapters()[0]!;
+  coordinator.getSession().updateSectionTitle(chapter.id, "Edited after the check");
+  await assert.rejects(
+    () => coordinator.exportEpub(),
+    (err: unknown) =>
+      err instanceof DesktopStudioError && err.code === "PREPUBLISH_VALIDATION_FAILED",
+  );
+
+  const again = await coordinator.runValidation();
+  assert.equal(again.summary.isClean, true);
+  assert.equal(coordinator.getState().stage, "PREVIEW");
+  assert.notEqual(coordinator.getValidationReport(), null);
 });

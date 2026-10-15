@@ -282,3 +282,15 @@ This ADR does not authorize export UI work. Gate 8 Slice 5 publishing/export is 
 **Acceptance of this ADR does NOT authorize later slices.**
 
 This ADR is the accepted architecture decision for Gate 8 Slice 4. Slice 4 implementation is complete. Gate 8 Slice 5 (desktop publishing/export) is specified by ADR-0023.
+
+## Amendment (2026-10-15, ADR-0039 Slice 4)
+
+Workflow stages only move forward, and the book check could run only during `VALIDATION`. After advancing to `PREVIEW`, any edit cleared the report and no new check was possible, so export stayed blocked for the rest of the session.
+
+`DesktopStudioCoordinator.runValidation` is now permitted from `VALIDATION` onward (`VALIDATION`, `PREVIEW`, `PUBLISH`). Nothing else changes:
+
+- the `VALIDATION` → `PREVIEW` transition still requires a clean report;
+- export still requires a clean report for the current Book revision (`#assertPhase1Clean`);
+- stage transitions stay forward-only.
+
+Approved by the maintainer on 2026-10-15 ("Allow re-check, fix now").

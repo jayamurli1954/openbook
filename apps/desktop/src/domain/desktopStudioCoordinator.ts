@@ -506,10 +506,14 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   }
 
   async runValidation(options?: ValidationRunOptions): Promise<BookValidationReport> {
-    if (this.#workflow.getStage() !== "VALIDATION") {
+    // ADR-0022 as amended by ADR-0039 Slice 4: the book check may also run in
+    // PREVIEW and PUBLISH, so an author who edits after checking can check
+    // again. Export still requires a clean report for the current revision.
+    const stage = this.#workflow.getStage();
+    if (stage !== "VALIDATION" && stage !== "PREVIEW" && stage !== "PUBLISH") {
       throw new DesktopStudioError(
         "VALIDATION_NOT_PERMITTED",
-        "Validation is permitted only during the VALIDATION stage.",
+        "Validation is permitted only from the VALIDATION stage onward.",
       );
     }
 
