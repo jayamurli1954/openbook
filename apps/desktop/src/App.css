@@ -975,3 +975,336 @@ dd {
   margin: 0;
   color: var(--ob-ink-muted);
 }
+
+/* ADR-0039 Slice 4 — studio steps */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.studio-btn-primary {
+  background: var(--ob-accent);
+  border-color: var(--ob-accent);
+  color: #ffffff;
+}
+
+.studio-btn-primary:hover:not(:disabled) {
+  background: var(--ob-accent-strong);
+  border-color: var(--ob-accent-strong);
+}
+
+.studio-step-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+}
+
+.studio-step-panel .design-studio-choices,
+.studio-step-panel .metadata-wizard-fields {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-4);
+}
+
+/* Structure: the rail's groups read as cards */
+.studio-step-panel .structure-studio-rail,
+.studio-step-panel .structure-studio-nav {
+  margin: 0;
+  padding: var(--ob-space-4) 18px;
+  background: var(--ob-surface);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-lg);
+}
+
+.studio-step-panel .structure-studio-group {
+  padding: var(--ob-space-3) 0;
+  border-top: 1px solid #ece9e2;
+}
+
+.studio-step-panel .structure-studio-sections li {
+  padding: var(--ob-space-2) 10px;
+  border: 1px solid #ece9e2;
+  border-radius: var(--ob-radius);
+}
+
+/* Design */
+.design-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 14px;
+}
+
+.design-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 18px;
+  border-radius: var(--ob-radius-lg);
+  border: 2px solid var(--ob-border);
+  background: var(--ob-surface);
+  color: var(--ob-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.design-preset:hover {
+  border-color: var(--ob-border-strong);
+}
+
+.design-preset[aria-pressed="true"] {
+  border-color: var(--ob-accent);
+}
+
+.design-preset-sample {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.design-preset-name {
+  font-weight: 600;
+}
+
+.design-preset-description {
+  font-size: 0.85rem;
+  color: var(--ob-ink-muted);
+}
+
+.design-studio-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.studio-step-panel .design-studio-fields {
+  flex: 1 1 18rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-4);
+}
+
+.design-fieldset,
+.metadata-wizard-group {
+  margin: 0;
+  padding: var(--ob-space-4) 18px;
+  background: var(--ob-surface);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-3);
+}
+
+.design-fieldset legend,
+.metadata-wizard-group legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.design-fieldset label,
+.metadata-wizard-group label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.design-fieldset input,
+.metadata-wizard-group input,
+.metadata-wizard-group textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 9px 11px;
+  border: 1px solid var(--ob-border-strong);
+  border-radius: var(--ob-radius);
+  background: var(--ob-surface);
+  color: var(--ob-ink);
+}
+
+.design-fieldset .studio-btn {
+  align-self: flex-start;
+}
+
+.design-measures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ob-space-3);
+}
+
+.design-preview {
+  flex: 2 1 22rem;
+  margin: 0;
+  padding: 28px 36px;
+  background: var(--ob-surface);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-lg);
+}
+
+.design-preview figcaption {
+  margin-bottom: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ob-ink-muted);
+}
+
+.design-preview-heading {
+  margin: 0 0 12px;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.design-preview-body {
+  margin: 0;
+}
+
+.design-preview-note {
+  margin: 18px 0 0;
+  font-size: 0.8rem;
+  color: var(--ob-ink-muted);
+}
+
+/* Details */
+.studio-step-panel .metadata-wizard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ob-space-4);
+}
+
+.metadata-wizard-wide {
+  grid-column: 1 / -1;
+}
+
+.metadata-wizard-group small {
+  font-weight: 400;
+  color: var(--ob-ink-muted);
+}
+
+.metadata-wizard-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Publish */
+.book-check {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-3);
+  padding: 18px 20px;
+  background: var(--ob-surface);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-lg);
+}
+
+.book-check-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ob-space-3);
+}
+
+.book-check-headline {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.book-check-ready .book-check-headline,
+.book-check-warnings .book-check-headline {
+  color: var(--ob-success);
+}
+
+.book-check-blocked .book-check-headline {
+  color: var(--ob-warning);
+}
+
+.book-check-problem {
+  margin: 0;
+  color: var(--ob-danger);
+}
+
+.book-check-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.book-check-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--ob-radius);
+  background: var(--ob-ground);
+}
+
+.book-check-item.book-check-fix {
+  background: var(--ob-warning-soft);
+}
+
+.book-check-mark {
+  font-weight: 700;
+  color: var(--ob-warning);
+}
+
+.book-check-text {
+  flex: 1 1 16rem;
+}
+
+.book-check-suggestion {
+  color: var(--ob-ink-muted);
+}
+
+.export-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 14px;
+}
+
+.export-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-2);
+  padding: 18px;
+  background: var(--ob-surface);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-lg);
+}
+
+.export-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.export-card p {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ob-ink-muted);
+}
+
+.export-status {
+  margin: var(--ob-space-3) 0 0;
+}
+
+.export-status-failed {
+  color: var(--ob-danger);
+}
+
+.export-status-succeeded {
+  color: var(--ob-success);
+}

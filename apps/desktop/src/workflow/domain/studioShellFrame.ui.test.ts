@@ -32,7 +32,7 @@ test("editor surface hosts the shell and keeps every existing panel reachable", 
   assert.match(editor, /className="editor-section"\s+hidden=\{activeStep !== "write"\}/);
   for (const panel of [
     "<GuidedStartWizard",
-    "<ExportPanel",
+    "<PublishStep",
     "<StructureStudioRail",
     "<StructureStudioNavPreview",
     "<DesignStudioChoices",

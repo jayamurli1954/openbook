@@ -61,7 +61,7 @@ OpenBook integrates `@openbook/book-doctor` into `apps/desktop` via `DesktopStud
 5. **INV-5 (Hard Report Invalidation Contract):** Any structural, metadata, or content mutation on `BookSession` (`updateActiveSectionBlocks`, `applyActiveSectionTipTap`, `addSection`, `removeSection`, `reorderSections`, `updateMetadata`, `ingestAsset`, `insertImageBlock`, `importContent`, `newProject`, `openProject`) **must immediately and synchronously reset** `this.#validationReport = null`. Stale reports must never persist across edits.
 
 ### 3.2 Workflow & Job Invariants
-1. **INV-6 (Stage Permission):** `runValidation()` is permitted only during the `VALIDATION` workflow stage. Invocations in any other stage throw `DesktopStudioError("VALIDATION_NOT_PERMITTED")`.
+1. **INV-6 (Stage Permission):** `runValidation()` is permitted only during the `VALIDATION` workflow stage. *(Amended 2026-10-15: permitted from `VALIDATION` onward — see Amendment.)* Invocations in any other stage throw `DesktopStudioError("VALIDATION_NOT_PERMITTED")`.
 2. **INV-7 (Coordinated Operation with Job-State Reporting):** Validation is an in-process operation executed by the coordinator, with progress and concurrency tracked via `@openbook/workflow` job status:
    - `idle` → `running` with `jobId: "validation-<uuid>"`.
    - On completion: `running` → `succeeded` → `idle`.
