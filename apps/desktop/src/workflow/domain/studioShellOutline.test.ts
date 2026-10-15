@@ -93,7 +93,7 @@ test("Focus hides everything but the page and Esc brings it back", () => {
   assert.match(editor, /data-testid="studio-focus-toggle"/);
   assert.match(editor, /aria-pressed=\{focusMode\}/);
   assert.match(editor, /focusMode && event\.key === "Escape"/);
-  assert.match(editor, /\{!focusMode \? \(\s*<>\s*<GuidedStartWizard/);
+  assert.match(editor, /guide=\{\s*focusMode \|\| !guideOpen \? undefined/);
   const selectStep = editor.slice(editor.indexOf("const selectStep"), editor.indexOf("const reportStatus"));
   assert.match(selectStep, /setFocusMode\(false\)/);
 });

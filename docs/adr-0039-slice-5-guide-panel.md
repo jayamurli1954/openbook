@@ -1,6 +1,6 @@
 # ADR-0039 Slice 5: Guide Panel — Implementation Proposal
 
-- **Status:** Implemented on this PR; awaiting merge
+- **Status:** Implemented on main (PR #159)
 - **Date:** 2026-10-15
 - **Parent architecture:** ADR-0039 — Phase 1 Studio Shell & Guided UX
 - **Depends on:** Slice 1 guide content (PR #155); Slice 4 studio steps (PR #158)

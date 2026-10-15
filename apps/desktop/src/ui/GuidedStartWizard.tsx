@@ -33,16 +33,28 @@ import {
 } from "../workflow/domain/guidedStartUx.js";
 
 const PATH_LABELS: Record<GuidedStartPath, string> = {
-  "new-book": "New Book",
-  import: "Import Existing Book",
-  "open-recent": "Open Recent Book",
-  continue: "Continue Existing Project",
+  "new-book": "New book",
+  import: "Import a manuscript",
+  "open-recent": "Open a recent book",
+  continue: "Continue a saved book",
+};
+
+/** ADR-0039 Slice 6: one line under each start path. */
+const PATH_DESCRIPTIONS: Record<GuidedStartPath, string> = {
+  "new-book": "Answer a few questions and start writing.",
+  import: "Markdown or plain text. Headings become chapters.",
+  "open-recent": "Pick up a book you opened before.",
+  continue: "Open a book folder and carry on where you stopped.",
 };
 
 export interface GuidedStartWizardProps {
   readonly host: IGuidedStartHostAdapter;
   /** Called after a successful start path so the editor can refresh. */
-  readonly onStarted?: () => void;
+  readonly onStarted?: (path: GuidedStartPath) => void;
+  /** ADR-0039 Slice 6: open on a path, e.g. New book from a book type. */
+  readonly initialPath?: GuidedStartPath | null;
+  /** ADR-0039 Slice 6: pre-filled New book fields from a book type. */
+  readonly prefill?: { readonly bookType?: string; readonly language?: string };
 }
 
 function FieldHelp({ field }: { readonly field: GuidedStartFieldHelpKey }) {
@@ -56,8 +68,10 @@ function FieldHelp({ field }: { readonly field: GuidedStartFieldHelpKey }) {
 export default function GuidedStartWizard({
   host,
   onStarted,
+  initialPath = null,
+  prefill,
 }: GuidedStartWizardProps) {
-  const [path, setPath] = useState<GuidedStartPath | null>(null);
+  const [path, setPath] = useState<GuidedStartPath | null>(initialPath);
   const [busy, setBusy] = useState(false);
   const [statusKind, setStatusKind] = useState<GuidedStartStatusKind>("idle");
   const [status, setStatus] = useState(GUIDED_START_HUB_STATUS);
@@ -66,8 +80,8 @@ export default function GuidedStartWizard({
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [authors, setAuthors] = useState("");
-  const [language, setLanguage] = useState("en");
-  const [bookType, setBookType] = useState("");
+  const [language, setLanguage] = useState(prefill?.language ?? "en");
+  const [bookType, setBookType] = useState(prefill?.bookType ?? "");
   const [intendedAudience, setIntendedAudience] = useState("");
   const [approximateLength, setApproximateLength] = useState("");
   const [writingGoal, setWritingGoal] = useState("");
@@ -99,10 +113,11 @@ export default function GuidedStartWizard({
   };
 
   const finishOk = (message: string) => {
+    const finished = path ?? "new-book";
     setStatusKind("ok");
     setStatus(message);
     setPath(null);
-    onStarted?.();
+    onStarted?.(finished);
   };
 
   const startNewBook = async () => {
@@ -223,19 +238,15 @@ export default function GuidedStartWizard({
   };
 
   return (
-    <div className="project-bar guided-start-wizard" aria-label="Guided start">
-      <span className="project-binding">Guided Start (Phase 1)</span>
-      <p className="note">
-        Choose New Book, Import, Open Recent, or Continue. Execution goes through
-        the guided-start host adapter — not a parallel project model.
-      </p>
+    <div className="guided-start-wizard" aria-label="Start a book">
 
       {path === null ? (
-        <div className="project-actions" role="group" aria-label="Start paths">
+        <div className="guided-start-paths" role="group" aria-label="Start paths">
           {(Object.keys(PATH_LABELS) as GuidedStartPath[]).map((key) => (
             <button
               key={key}
               type="button"
+              className="guided-start-path"
               data-testid={`guided-start-path-${key}`}
               disabled={busy}
               onClick={() => {
@@ -243,7 +254,8 @@ export default function GuidedStartWizard({
                 showIdle(formatGuidedStartPathStatus(key));
               }}
             >
-              {PATH_LABELS[key]}
+              <span className="guided-start-path-label">{PATH_LABELS[key]}</span>
+              <span className="guided-start-path-description">{PATH_DESCRIPTIONS[key]}</span>
             </button>
           ))}
         </div>
