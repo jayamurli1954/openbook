@@ -179,73 +179,6 @@ dd {
   margin-top: 0.5rem;
 }
 
-.editor-layout {
-  display: grid;
-  grid-template-columns: 11rem 1fr;
-  gap: 0.75rem;
-  align-items: start;
-}
-
-.chapter-panel h3 {
-  margin: 0 0 0.4rem;
-  font-size: 0.95rem;
-}
-
-.chapter-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid #ccc;
-  background: #fff;
-  max-height: 16rem;
-  overflow: auto;
-}
-
-.chapter-list li {
-  margin: 0;
-  border-bottom: 1px solid #eee;
-}
-
-.chapter-list li:last-child {
-  border-bottom: none;
-}
-
-.chapter-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  font: inherit;
-  padding: 0.4rem 0.55rem;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.chapter-item-active {
-  background: #e8e8e4;
-  font-weight: 600;
-}
-
-.chapter-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 0.45rem 0 0;
-}
-
-.chapter-actions button {
-  font: inherit;
-  padding: 0.2rem 0.45rem;
-  border: 1px solid #bbb;
-  background: #fff;
-  cursor: pointer;
-}
-
-.chapter-actions button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 .editor-main {
   min-width: 0;
 }
@@ -900,4 +833,145 @@ dd {
 .studio-diagnostics .shell {
   max-width: none;
   padding: 0;
+}
+
+/* ADR-0039 Slice 3 — outline, Write step, step panels, Focus */
+.studio-outline-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.studio-outline-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.studio-outline-heading {
+  margin: 0;
+  padding: 0 10px 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ob-ink-muted);
+}
+
+.studio-outline-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.studio-outline-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ob-space-2);
+  width: 100%;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ob-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-outline-item:hover {
+  background: #ece9e2;
+}
+
+.studio-outline-item.is-current {
+  background: var(--ob-accent-soft);
+  font-weight: 600;
+}
+
+.studio-outline-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-outline-words {
+  flex: 0 0 auto;
+  font-weight: 400;
+  color: var(--ob-ink-muted);
+}
+
+.studio-outline-empty {
+  margin: 0;
+  padding: 0 10px;
+  font-size: 0.85rem;
+  color: var(--ob-ink-muted);
+}
+
+.studio-outline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 10px 0;
+}
+
+.studio-outline-actions .studio-btn {
+  font-size: 0.85rem;
+  padding: 6px 10px;
+}
+
+.studio-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.studio-write {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-3);
+  max-width: 54rem;
+  margin: 0 auto;
+}
+
+.studio-write-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ob-space-3);
+}
+
+.studio-session-note {
+  margin: 0;
+  min-height: 1.2em;
+}
+
+.studio-write .tiptap-surface {
+  min-height: 28rem;
+  padding: 48px 64px;
+  background: var(--ob-surface);
+  border: 1px solid var(--ob-border);
+  border-radius: var(--ob-radius-lg);
+  font-family: var(--ob-font-book);
+  font-size: 1.15rem;
+  line-height: 1.65;
+}
+
+.studio-step-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-4);
+  max-width: 54rem;
+  margin: 0 auto;
+}
+
+.studio-step-panel h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.studio-step-lede {
+  margin: 0;
+  color: var(--ob-ink-muted);
 }

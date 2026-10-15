@@ -1,6 +1,6 @@
 # ADR-0039 Slice 2: Shell Frame and Visual Tokens — Implementation Proposal
 
-- **Status:** Implemented on this PR; awaiting merge
+- **Status:** Implemented on main (PR #156)
 - **Date:** 2026-10-14
 - **Parent architecture:** ADR-0039 — Phase 1 Studio Shell & Guided UX
 - **Depends on:** Slice 1 step and guide contract (PR #155)
