@@ -1,6 +1,6 @@
 # ADR-0039 Slice 3: Outline and Write Step — Implementation Proposal
 
-- **Status:** Implemented on this PR; awaiting merge
+- **Status:** Implemented on main (PR #157)
 - **Date:** 2026-10-15
 - **Parent architecture:** ADR-0039 — Phase 1 Studio Shell & Guided UX
 - **Depends on:** Slice 2 shell frame (PR #156)

@@ -19,6 +19,8 @@ export interface StudioShellFrameProps {
   readonly progress: { readonly done: number; readonly total: number };
   readonly activeStep: StudioStepId;
   readonly onSelectStep: (id: StudioStepId) => void;
+  /** Opens the Publish step. */
+  readonly onExport?: () => void;
   readonly diagnosticsOpen: boolean;
   readonly onToggleDiagnostics: () => void;
   readonly diagnostics: ReactNode;
@@ -42,6 +44,7 @@ export default function StudioShellFrame({
   progress,
   activeStep,
   onSelectStep,
+  onExport,
   diagnosticsOpen,
   onToggleDiagnostics,
   diagnostics,
@@ -70,6 +73,16 @@ export default function StudioShellFrame({
           </span>
         </div>
         <div className="studio-topbar-actions">
+          {onExport ? (
+            <button
+              type="button"
+              className="studio-btn studio-btn-primary"
+              onClick={onExport}
+              data-testid="studio-export"
+            >
+              Export…
+            </button>
+          ) : null}
           <button
             type="button"
             className="studio-btn"

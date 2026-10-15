@@ -26,7 +26,7 @@ import type { ProjectSummary } from "./persistence/types";
 import { DesktopExportController } from "./host/desktopExportController";
 import { createTauriExportSaveHost } from "./host/createTauriExportSaveHost";
 import { createGuidedStartHost } from "./host/createGuidedStartHost";
-import ExportPanel from "./ui/ExportPanel";
+import PublishStep from "./ui/PublishStep";
 import GuidedStartWizard from "./ui/GuidedStartWizard";
 import WritingStudioToolbar from "./ui/WritingStudioToolbar";
 import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
@@ -58,6 +58,7 @@ import {
   shellBookTitle,
 } from "./workflow/domain/studioShellStatus";
 import { buildStudioOutline, isOutlineChapter } from "./workflow/domain/studioShellOutline";
+import { stagesToReachBookCheck, summarizeBookCheck } from "./workflow/domain/studioShellPublish";
 import {
   WRITING_STUDIO_EDITOR_UNAVAILABLE,
   WRITING_STUDIO_EMPTY_CHAPTERS,
@@ -445,12 +446,22 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     }
   };
 
-  const onRunValidation = async () => {
+  /** ADR-0039 Slice 4: move forward to the check, run it, and unlock export when clean. */
+  const onCheckBook = async () => {
     if (!flushEditorIntoSession()) {
-      throw new Error("Cannot validate: editor content could not be applied.");
+      throw new Error("Cannot check the book: editor content could not be applied.");
     }
-    await coordinator.runValidation();
-    refresh();
+    try {
+      for (const stage of stagesToReachBookCheck(coordinator.getState().stage)) {
+        coordinator.transitionStage(stage);
+      }
+      const report = await coordinator.runValidation();
+      if (report.summary.isClean && coordinator.getState().stage === "VALIDATION") {
+        coordinator.transitionStage("PREVIEW");
+      }
+    } finally {
+      refresh();
+    }
   };
 
   const onPickImportFile = (file: File | undefined) => {
@@ -535,6 +546,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       progress={deriveStudioProgress(shellSteps)}
       activeStep={activeStep}
       onSelectStep={selectStep}
+      onExport={() => selectStep("publish")}
       outline={
         focusMode ? undefined : (
           <StudioOutline
@@ -560,6 +572,33 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       diagnostics={
         <>
           <section className="editor-diagnostics">
+        <div className="project-bar" aria-label="Workflow stage">
+          <span className="project-binding" data-testid="workflow-stage">
+            Stage: {studio.stage} ({studio.jobStatus}
+            {studio.activeJobId ? ` / ${studio.activeJobId}` : ""})
+          </span>
+          <ol className="workflow-stages">
+            {WORKFLOW_STAGES.map((stage) => (
+              <li
+                key={stage}
+                className={
+                  stage === studio.stage ? "workflow-stage workflow-stage-active" : "workflow-stage"
+                }
+              >
+                {stage}
+              </li>
+            ))}
+          </ol>
+          <div className="project-actions">
+            <button
+              type="button"
+              onClick={onAdvanceStage}
+              disabled={!nextStage(studio.stage)}
+            >
+              Next stage
+            </button>
+          </div>
+        </div>
             <h2>Editor (Tiptap)</h2>
             <p className="note">
               Path: Tiptap → EditorAdapter → BookSession.getBook() → ProjectPersistence →
@@ -601,22 +640,22 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
           <MetadataWizardFields fields={metadataFields} onChanged={refresh} onStatus={reportStatus} />
         </section>
       ) : null}
-      {activeStep === "cover" || activeStep === "publish" ? (
+      {activeStep === "cover" ? (
         <section className="studio-step-placeholder" data-testid="studio-step-placeholder">
           <h2>{activeStepLabel}</h2>
-          {activeStep === "cover" ? (
-            <p>Adding a cover image is coming soon. You can still publish without one.</p>
-          ) : (
-            <p>
-              This step is moving here in an upcoming update. For now, export from the Export panel
-              under{" "}
-              <button type="button" className="studio-link" onClick={() => selectStep("write")}>
-                Write
-              </button>
-              .
-            </p>
-          )}
+          <p>Adding a cover image is coming soon. You can still publish without one.</p>
         </section>
+      ) : null}
+      {activeStep === "publish" ? (
+        <PublishStep
+          summary={summarizeBookCheck(validationReport)}
+          exportController={exportController}
+          onCheck={onCheckBook}
+          onOpenSection={(sectionId) => {
+            selectStep("write");
+            onSelectChapter(sectionId);
+          }}
+        />
       ) : null}
       <section
         className="editor-section"
@@ -637,34 +676,6 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
                 setPersistStatus("Persistence: ready (guided start)");
               }}
             />
-
-            <div className="project-bar" aria-label="Workflow stage">
-              <span className="project-binding" data-testid="workflow-stage">
-                Stage: {studio.stage} ({studio.jobStatus}
-                {studio.activeJobId ? ` / ${studio.activeJobId}` : ""})
-              </span>
-              <ol className="workflow-stages">
-                {WORKFLOW_STAGES.map((stage) => (
-                  <li
-                    key={stage}
-                    className={
-                      stage === studio.stage ? "workflow-stage workflow-stage-active" : "workflow-stage"
-                    }
-                  >
-                    {stage}
-                  </li>
-                ))}
-              </ol>
-              <div className="project-actions">
-                <button
-                  type="button"
-                  onClick={onAdvanceStage}
-                  disabled={!nextStage(studio.stage)}
-                >
-                  Next stage
-                </button>
-              </div>
-            </div>
 
             <div className="project-bar import-panel" aria-label="Import manuscript">
               <span className="project-binding">Import (Markdown / plain text)</span>
@@ -729,15 +740,6 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
               </p>
             </div>
 
-            <ExportPanel
-              controller={exportController}
-              stage={studio.stage}
-              jobStatus={studio.jobStatus}
-              validationClean={
-                validationReport ? validationReport.summary.isClean : null
-              }
-              onRunValidation={onRunValidation}
-            />
 
             <div className="project-bar" aria-label="Project">
               <span className="project-binding" data-testid="project-binding">

@@ -7,6 +7,7 @@
  */
 import type { BookDesign, DesignStudioResult, DesignStudioSessionPort } from "./designStudioContract.js";
 import { executeDesignCommand, readBookDesign } from "./designStudioContract.js";
+import type { DesignPreset } from "./designStudioPresets.js";
 
 export interface DesignStudioChoices {
   read(): BookDesign;
@@ -17,6 +18,8 @@ export interface DesignStudioChoices {
     bodySizePt: number;
     lineHeight: number;
   }): DesignStudioResult;
+  /** ADR-0039 Slice 4: apply a ready-made look (theme, then typography). */
+  applyPreset(preset: DesignPreset): DesignStudioResult;
 }
 
 export function createDesignStudioChoices(
@@ -31,6 +34,15 @@ export function createDesignStudioChoices(
     },
     setTypography(input): DesignStudioResult {
       return executeDesignCommand(session, { type: "set-typography", ...input });
+    },
+    applyPreset(preset: DesignPreset): DesignStudioResult {
+      const theme = executeDesignCommand(session, {
+        type: "set-theme",
+        id: preset.theme.id,
+        name: preset.theme.name,
+      });
+      if (!theme.ok) return theme;
+      return executeDesignCommand(session, { type: "set-typography", ...preset.typography });
     },
   };
 }

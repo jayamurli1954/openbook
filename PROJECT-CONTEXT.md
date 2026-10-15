@@ -94,7 +94,7 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - ADR-0036 accepts Phase 1 Design Studio architecture; Slices 1–3 are done on main (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`.
 - ADR-0037 accepts Phase 1 Metadata Wizard architecture; Slices 1–3 are done on main (PRs #147, #149, #151) — see `docs/adr-0037-closure-reconciliation.md`.
 - ADR-0038 accepts Phase 1 Cover Wizard architecture (image cover), with an optional `publishing.coverAssetId` Book Model field; implementation waits for the ADR-0039 Cover step — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md`.
-- ADR-0039 accepts the Phase 1 studio shell and guided UX (start screen, six-step book studio, one outline, Guide panel with help at every step); presentation only; Slices 1–2 are done (PRs #155, #156); Slice 3 (outline and Write step) is authorized — see `docs/adr-0039-slice-3-outline-write.md`.
+- ADR-0039 accepts the Phase 1 studio shell and guided UX (start screen, six-step book studio, one outline, Guide panel with help at every step); presentation only; Slices 1–3 are done (PRs #155–#157); Slice 4 (studio steps) is authorized and amends ADR-0022 so the book can be re-checked after PREVIEW — see `docs/adr-0039-slice-4-studio-steps.md`.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -129,7 +129,7 @@ Other pending items:
 - Phase 1 Design Studio — **ADR-0036 Accepted**; Slices 1–3 **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`
 - Phase 1 Metadata Wizard — **ADR-0037 Accepted** (PR #144); Slices 1–3 **done** (PRs #147, #149, #151) — see `docs/adr-0037-closure-reconciliation.md`
 - Phase 1 Cover Wizard (image cover) — **ADR-0038 Accepted** (PR #153); waits for the ADR-0039 Cover step — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md`
-- Phase 1 Studio Shell & Guided UX — **ADR-0039 Accepted** (PR #154); Slices 1–2 done (PRs #155, #156); Slice 3 authorized — see `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`
+- Phase 1 Studio Shell & Guided UX — **ADR-0039 Accepted** (PR #154); Slices 1–3 done (PRs #155–#157); Slice 4 authorized — see `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`
 - Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
 - AI/Ollama and DTP/page layout (future; must not displace the next Phase 1 domain selection)
 
