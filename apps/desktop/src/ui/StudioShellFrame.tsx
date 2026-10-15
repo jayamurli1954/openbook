@@ -21,6 +21,9 @@ export interface StudioShellFrameProps {
   readonly onSelectStep: (id: StudioStepId) => void;
   /** Opens the Publish step. */
   readonly onExport?: () => void;
+  /** Guide panel visibility; the Help button shows when a toggle is given. */
+  readonly guideOpen?: boolean;
+  readonly onToggleGuide?: () => void;
   readonly diagnosticsOpen: boolean;
   readonly onToggleDiagnostics: () => void;
   readonly diagnostics: ReactNode;
@@ -45,6 +48,8 @@ export default function StudioShellFrame({
   activeStep,
   onSelectStep,
   onExport,
+  guideOpen,
+  onToggleGuide,
   diagnosticsOpen,
   onToggleDiagnostics,
   diagnostics,
@@ -73,6 +78,17 @@ export default function StudioShellFrame({
           </span>
         </div>
         <div className="studio-topbar-actions">
+          {onToggleGuide ? (
+            <button
+              type="button"
+              className="studio-btn"
+              aria-pressed={guideOpen === true}
+              onClick={onToggleGuide}
+              data-testid="studio-guide-toggle"
+            >
+              {guideOpen ? "Hide guide" : "Help"}
+            </button>
+          ) : null}
           {onExport ? (
             <button
               type="button"
