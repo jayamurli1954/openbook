@@ -1,6 +1,6 @@
 # ADR-0039 Slice 1: Step and Guide Contract — Implementation Proposal
 
-- **Status:** Implemented on this PR; awaiting merge
+- **Status:** Implemented on main (PR #155)
 - **Date:** 2026-10-14
 - **Parent architecture:** ADR-0039 — Phase 1 Studio Shell & Guided UX
 - **Scope:** Step model, step status, book progress, and Guide content for all six steps; no chrome

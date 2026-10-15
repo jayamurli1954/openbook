@@ -8,7 +8,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { bookToSemanticDocument } from "@openbook/semantic-document";
 import { nextStage, WORKFLOW_STAGES } from "@openbook/workflow";
 import type { ImportSource } from "@openbook/importer";
@@ -35,6 +35,7 @@ import DesignStudioChoices from "./ui/DesignStudioChoices";
 import MetadataWizardFields from "./ui/MetadataWizardFields";
 import StructureStudioNavPreview from "./ui/StructureStudioNavPreview";
 import StructureStudioRail from "./ui/StructureStudioRail";
+import StudioShellFrame from "./ui/StudioShellFrame";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
 import { createWritingStudioImagePickPort } from "./host/createWritingStudioImagePickPort";
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
@@ -44,6 +45,17 @@ import { createDesignStudioChoices } from "./workflow/domain/designStudioChoices
 import { createMetadataWizardFields } from "./workflow/domain/metadataWizardFields";
 import { createStructureStudioMatterRail } from "./workflow/domain/structureStudioMatterRail";
 import { projectBookNavigation } from "./workflow/domain/structureStudioNavPreview";
+import {
+  STUDIO_STEPS,
+  deriveStudioProgress,
+  deriveStudioStepStatuses,
+  type StudioStepId,
+} from "./workflow/domain/studioShellContract";
+import {
+  buildStudioShellSnapshot,
+  describeSaveStatus,
+  shellBookTitle,
+} from "./workflow/domain/studioShellStatus";
 import {
   WRITING_STUDIO_EDITOR_UNAVAILABLE,
   WRITING_STUDIO_EMPTY_CHAPTERS,
@@ -74,8 +86,15 @@ function createUiCoordinator(): DesktopStudioCoordinator {
   return coordinator;
 }
 
-export default function EditorSurface() {
+export interface EditorSurfaceProps {
+  /** App-level diagnostics shown in the shell's Diagnostics drawer. */
+  readonly diagnostics?: ReactNode;
+}
+
+export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) {
   const [coordinator] = useState(() => createUiCoordinator());
+  const [activeStep, setActiveStep] = useState<StudioStepId>("write");
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [exportController] = useState(
     () =>
       new DesktopExportController({
@@ -91,7 +110,7 @@ export default function EditorSurface() {
   const [status, setStatus] = useState<ProjectionStatus>("idle");
   const [detail, setDetail] = useState("Edit to project through BookSession → Book");
   const [roundTrip, setRoundTrip] = useState("Not checked");
-  const [sessionNote, setSessionNote] = useState("Canonical BookSession (Gate 8 Slice 2)");
+  const [sessionNote, setSessionNote] = useState("");
   const [persistStatus, setPersistStatus] = useState("Persistence: not initialized");
   const [projectList, setProjectList] = useState<ProjectSummary[]>([]);
   const [importText, setImportText] = useState("");
@@ -476,278 +495,274 @@ export default function EditorSurface() {
   const validationReport = coordinator.getValidationReport();
   const binding = studio.binding;
 
+  const shellBook = coordinator.getBook();
+  const shellSnapshot = buildStudioShellSnapshot({
+    book: shellBook,
+    bookWordCount: writingStudioQuery.getWordCounts().bookWordCount,
+    validationReport,
+    cover: "unavailable",
+  });
+  const shellSteps = deriveStudioStepStatuses(shellSnapshot);
+  const activeStepLabel =
+    STUDIO_STEPS.find((step) => step.id === activeStep)?.label ?? "This step";
+
   return (
-    <section className="editor-section">
-      <h2>Editor (Tiptap)</h2>
-      <p className="note">
-        Path: Tiptap → EditorAdapter → BookSession.getBook() → ProjectPersistence →
-        SQLite. Tiptap JSON is never saved. Pipeline state is @openbook/workflow.
-      </p>
+    <StudioShellFrame
+      title={shellBookTitle(shellBook)}
+      saveStatus={describeSaveStatus({
+        hasSaveLocation: binding !== null || studio.packageRoot !== null,
+        isDirty: studio.isDirty,
+        autosave: studio.autosave,
+      })}
+      steps={shellSteps}
+      progress={deriveStudioProgress(shellSteps)}
+      activeStep={activeStep}
+      onSelectStep={setActiveStep}
+      diagnosticsOpen={diagnosticsOpen}
+      onToggleDiagnostics={() => setDiagnosticsOpen((open) => !open)}
+      diagnostics={
+        <>
+          <section className="editor-diagnostics">
+            <h2>Editor (Tiptap)</h2>
+            <p className="note">
+              Path: Tiptap → EditorAdapter → BookSession.getBook() → ProjectPersistence →
+              SQLite. Tiptap JSON is never saved. Pipeline state is @openbook/workflow.
+            </p>
+            <p className={`status status-${status}`} data-testid="editor-projection-status">
+              {status}
+            </p>
+            <p className="detail">{detail}</p>
+            <p className="detail" data-testid="editor-roundtrip">
+              {roundTrip}
+            </p>
+          </section>
+          {diagnostics}
+        </>
+      }
+    >
+      {activeStep !== "write" ? (
+        <section className="studio-step-placeholder" data-testid="studio-step-placeholder">
+          <h2>{activeStepLabel}</h2>
+          <p>
+            This step is moving here in an upcoming update. For now, everything is under{" "}
+            <button type="button" className="studio-link" onClick={() => setActiveStep("write")}>
+              Write
+            </button>
+            .
+          </p>
+        </section>
+      ) : null}
+      <section className="editor-section" hidden={activeStep !== "write"}>
 
-      <GuidedStartWizard
-        host={guidedStartHost}
-        onStarted={() => {
-          refresh();
-          loadSectionIntoEditor();
-          setSessionNote("Guided start completed through host adapter");
-          setPersistStatus("Persistence: ready (guided start)");
-        }}
-      />
-
-      <div className="project-bar" aria-label="Workflow stage">
-        <span className="project-binding" data-testid="workflow-stage">
-          Stage: {studio.stage} ({studio.jobStatus}
-          {studio.activeJobId ? ` / ${studio.activeJobId}` : ""})
-        </span>
-        <ol className="workflow-stages">
-          {WORKFLOW_STAGES.map((stage) => (
-            <li
-              key={stage}
-              className={
-                stage === studio.stage ? "workflow-stage workflow-stage-active" : "workflow-stage"
-              }
-            >
-              {stage}
-            </li>
-          ))}
-        </ol>
-        <div className="project-actions">
-          <button
-            type="button"
-            onClick={onAdvanceStage}
-            disabled={!nextStage(studio.stage)}
-          >
-            Next stage
-          </button>
-        </div>
-      </div>
-
-      <div className="project-bar import-panel" aria-label="Import manuscript">
-        <span className="project-binding">Import (Markdown / plain text)</span>
-        <p className="note">
-          Coordinator receives pre-decoded Unicode only. Import stays in memory until Save.
-        </p>
-        <label className="import-file">
-          File
-          <input
-            type="file"
-            accept=".md,.markdown,.txt,text/markdown,text/plain"
-            data-testid="import-file"
-            onChange={(event) => onPickImportFile(event.target.files?.[0])}
-          />
-        </label>
-        <label className="import-file">
-          Format
-          <select
-            value={importFormat}
-            data-testid="import-format"
-            onChange={(event) =>
-              setImportFormat(event.target.value === "text" ? "text" : "markdown")
-            }
-          >
-            <option value="markdown">Markdown</option>
-            <option value="text">Plain text</option>
-          </select>
-        </label>
-        <textarea
-          className="import-source"
-          data-testid="import-source"
-          rows={6}
-          spellCheck={false}
-          value={importText}
-          placeholder="# Chapter title&#10;&#10;Paste manuscript text…"
-          onChange={(event) => setImportText(event.target.value)}
+        <GuidedStartWizard
+          host={guidedStartHost}
+          onStarted={() => {
+            refresh();
+            loadSectionIntoEditor();
+            setSessionNote("Guided start completed through host adapter");
+            setPersistStatus("Persistence: ready (guided start)");
+          }}
         />
-        <div className="project-actions">
-          <button
-            type="button"
-            data-testid="import-new-project"
-            onClick={() => void runImport("new-project")}
-            disabled={studio.stage !== "IMPORT"}
-            title={
-              studio.stage !== "IMPORT"
-                ? "New-project import is only allowed during IMPORT"
-                : "Replace the in-memory session from this source"
-            }
-          >
-            Import as new project
-          </button>
-          <button
-            type="button"
-            data-testid="import-append"
-            onClick={() => void runImport("append-sections")}
-          >
-            Append sections
-          </button>
-        </div>
-        <p className="detail" data-testid="import-status">
-          {importNote}
-        </p>
-      </div>
 
-      <ExportPanel
-        controller={exportController}
-        stage={studio.stage}
-        jobStatus={studio.jobStatus}
-        validationClean={
-          validationReport ? validationReport.summary.isClean : null
-        }
-        onRunValidation={onRunValidation}
-      />
-
-      <div className="project-bar" aria-label="Project">
-        <span className="project-binding" data-testid="project-binding">
-          {binding
-            ? `Project: ${binding.projectName}`
-            : "Project: (unsaved — not selected)"}
-        </span>
-        <div className="project-actions">
-          <button type="button" onClick={onNewBook}>
-            New book
-          </button>
-          <button type="button" onClick={() => void onSaveProject()}>
-            Save
-          </button>
-          <button type="button" onClick={() => void onOpenProject()}>
-            Open
-          </button>
-        </div>
-        <p className="detail" data-testid="persist-status">
-          {persistStatus}
-        </p>
-        {projectList.length > 0 ? (
-          <p className="note">Saved projects in DB: {projectList.length}</p>
-        ) : null}
-      </div>
-
-      <div className="editor-layout">
-        <aside className="chapter-panel" aria-label="Chapters">
-          <h3>Chapters</h3>
-          <ul className="chapter-list" data-testid="chapter-list">
-            {chapters.map((chapter) => (
-              <li key={chapter.id}>
-                <button
-                  type="button"
-                  className={
-                    chapter.id === studio.selectedSectionId
-                      ? "chapter-item chapter-item-active"
-                      : "chapter-item"
-                  }
-                  data-testid={`chapter-${chapter.id}`}
-                  onClick={() => onSelectChapter(chapter.id)}
-                >
-                  {chapter.title}
-                </button>
+        <div className="project-bar" aria-label="Workflow stage">
+          <span className="project-binding" data-testid="workflow-stage">
+            Stage: {studio.stage} ({studio.jobStatus}
+            {studio.activeJobId ? ` / ${studio.activeJobId}` : ""})
+          </span>
+          <ol className="workflow-stages">
+            {WORKFLOW_STAGES.map((stage) => (
+              <li
+                key={stage}
+                className={
+                  stage === studio.stage ? "workflow-stage workflow-stage-active" : "workflow-stage"
+                }
+              >
+                {stage}
               </li>
             ))}
-          </ul>
-          {chapters.length === 0 ? (
-            <p
-              className="note writing-studio-empty"
-              data-testid="writing-studio-empty-chapters"
+          </ol>
+          <div className="project-actions">
+            <button
+              type="button"
+              onClick={onAdvanceStage}
+              disabled={!nextStage(studio.stage)}
             >
-              {WRITING_STUDIO_EMPTY_CHAPTERS}
-            </p>
-          ) : null}
-          <div className="chapter-actions">
-            <button type="button" onClick={onCreateChapter}>
-              New
+              Next stage
             </button>
-            <button type="button" onClick={onRenameChapter} disabled={!selected}>
-              Rename
+          </div>
+        </div>
+
+        <div className="project-bar import-panel" aria-label="Import manuscript">
+          <span className="project-binding">Import (Markdown / plain text)</span>
+          <p className="note">
+            Coordinator receives pre-decoded Unicode only. Import stays in memory until Save.
+          </p>
+          <label className="import-file">
+            File
+            <input
+              type="file"
+              accept=".md,.markdown,.txt,text/markdown,text/plain"
+              data-testid="import-file"
+              onChange={(event) => onPickImportFile(event.target.files?.[0])}
+            />
+          </label>
+          <label className="import-file">
+            Format
+            <select
+              value={importFormat}
+              data-testid="import-format"
+              onChange={(event) =>
+                setImportFormat(event.target.value === "text" ? "text" : "markdown")
+              }
+            >
+              <option value="markdown">Markdown</option>
+              <option value="text">Plain text</option>
+            </select>
+          </label>
+          <textarea
+            className="import-source"
+            data-testid="import-source"
+            rows={6}
+            spellCheck={false}
+            value={importText}
+            placeholder="# Chapter title&#10;&#10;Paste manuscript text…"
+            onChange={(event) => setImportText(event.target.value)}
+          />
+          <div className="project-actions">
+            <button
+              type="button"
+              data-testid="import-new-project"
+              onClick={() => void runImport("new-project")}
+              disabled={studio.stage !== "IMPORT"}
+              title={
+                studio.stage !== "IMPORT"
+                  ? "New-project import is only allowed during IMPORT"
+                  : "Replace the in-memory session from this source"
+              }
+            >
+              Import as new project
             </button>
             <button
               type="button"
-              onClick={onDeleteChapter}
-              disabled={chapters.length <= 1}
-              title={
-                chapters.length <= 1
-                  ? "Cannot delete the last chapter"
-                  : "Delete selected chapter"
-              }
+              data-testid="import-append"
+              onClick={() => void runImport("append-sections")}
             >
-              Delete
+              Append sections
             </button>
           </div>
-          <p className="detail" data-testid="chapter-session-note">
-            {sessionNote}
+          <p className="detail" data-testid="import-status">
+            {importNote}
           </p>
-          <StructureStudioRail
-            rail={structureRail}
-            onSelectSection={onSelectChapter}
-            onChanged={() => {
-              refresh();
-              loadSectionIntoEditor();
-            }}
-            onStatus={(message, kind) => {
-              setSessionNote(message);
-              if (kind === "error") {
-                setStatus("error");
-                setDetail(message);
-              }
-            }}
-          />
-          <StructureStudioNavPreview
-            entries={projectBookNavigation(coordinator.getBook())}
-          />
-          <DesignStudioChoices
-            choices={designChoices}
-            onChanged={() => {
-              refresh();
-            }}
-            onStatus={(message, kind) => {
-              setSessionNote(message);
-              if (kind === "error") {
-                setStatus("error");
-                setDetail(message);
-              }
-            }}
-          />
-          <MetadataWizardFields
-            fields={metadataFields}
-            onChanged={() => {
-              refresh();
-            }}
-            onStatus={(message, kind) => {
-              setSessionNote(message);
-              if (kind === "error") {
-                setStatus("error");
-                setDetail(message);
-              }
-            }}
-          />
-        </aside>
+        </div>
 
-        <div className="editor-main">
-          {!studio.selectedSectionId ? (
-            <p
-              className="note writing-studio-empty"
-              data-testid="writing-studio-no-section"
-              role="status"
-            >
-              {WRITING_STUDIO_NO_SECTION}
-            </p>
+        <ExportPanel
+          controller={exportController}
+          stage={studio.stage}
+          jobStatus={studio.jobStatus}
+          validationClean={
+            validationReport ? validationReport.summary.isClean : null
+          }
+          onRunValidation={onRunValidation}
+        />
+
+        <div className="project-bar" aria-label="Project">
+          <span className="project-binding" data-testid="project-binding">
+            {binding
+              ? `Project: ${binding.projectName}`
+              : "Project: (unsaved — not selected)"}
+          </span>
+          <div className="project-actions">
+            <button type="button" onClick={onNewBook}>
+              New book
+            </button>
+            <button type="button" onClick={() => void onSaveProject()}>
+              Save
+            </button>
+            <button type="button" onClick={() => void onOpenProject()}>
+              Open
+            </button>
+          </div>
+          <p className="detail" data-testid="persist-status">
+            {persistStatus}
+          </p>
+          {projectList.length > 0 ? (
+            <p className="note">Saved projects in DB: {projectList.length}</p>
           ) : null}
-          {!editor ? (
-            <p
-              className="note writing-studio-empty"
-              data-testid="writing-studio-editor-unavailable"
-              role="status"
-            >
-              {WRITING_STUDIO_EDITOR_UNAVAILABLE}
+        </div>
+
+        <div className="editor-layout">
+          <aside className="chapter-panel" aria-label="Chapters">
+            <h3>Chapters</h3>
+            <ul className="chapter-list" data-testid="chapter-list">
+              {chapters.map((chapter) => (
+                <li key={chapter.id}>
+                  <button
+                    type="button"
+                    className={
+                      chapter.id === studio.selectedSectionId
+                        ? "chapter-item chapter-item-active"
+                        : "chapter-item"
+                    }
+                    data-testid={`chapter-${chapter.id}`}
+                    onClick={() => onSelectChapter(chapter.id)}
+                  >
+                    {chapter.title}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {chapters.length === 0 ? (
+              <p
+                className="note writing-studio-empty"
+                data-testid="writing-studio-empty-chapters"
+              >
+                {WRITING_STUDIO_EMPTY_CHAPTERS}
+              </p>
+            ) : null}
+            <div className="chapter-actions">
+              <button type="button" onClick={onCreateChapter}>
+                New
+              </button>
+              <button type="button" onClick={onRenameChapter} disabled={!selected}>
+                Rename
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteChapter}
+                disabled={chapters.length <= 1}
+                title={
+                  chapters.length <= 1
+                    ? "Cannot delete the last chapter"
+                    : "Delete selected chapter"
+                }
+              >
+                Delete
+              </button>
+            </div>
+            <p className="detail" data-testid="chapter-session-note">
+              {sessionNote}
             </p>
-          ) : null}
-          <WritingStudioToolbar
-            toolbar={writingStudioToolbar}
-            disabled={!editor}
-          />
-          <div className="writing-studio-media-row">
-            <WritingStudioImageButton
-              imageAdapter={writingStudioImage}
-              sectionId={studio.selectedSectionId}
-              disabled={!editor}
-              onInserted={() => {
+            <StructureStudioRail
+              rail={structureRail}
+              onSelectSection={onSelectChapter}
+              onChanged={() => {
+                refresh();
                 loadSectionIntoEditor();
+              }}
+              onStatus={(message, kind) => {
+                setSessionNote(message);
+                if (kind === "error") {
+                  setStatus("error");
+                  setDetail(message);
+                }
+              }}
+            />
+            <StructureStudioNavPreview
+              entries={projectBookNavigation(coordinator.getBook())}
+            />
+            <DesignStudioChoices
+              choices={designChoices}
+              onChanged={() => {
                 refresh();
               }}
               onStatus={(message, kind) => {
@@ -758,23 +773,77 @@ export default function EditorSurface() {
                 }
               }}
             />
-          </div>
-          <WritingStudioFindPanel
-            queryAdapter={writingStudioQuery}
-            sectionId={studio.selectedSectionId}
-            onSelectHit={(hit) => onSelectChapter(hit.sectionId)}
-          />
-          <EditorContent editor={editor} />
-        </div>
-      </div>
+            <MetadataWizardFields
+              fields={metadataFields}
+              onChanged={() => {
+                refresh();
+              }}
+              onStatus={(message, kind) => {
+                setSessionNote(message);
+                if (kind === "error") {
+                  setStatus("error");
+                  setDetail(message);
+                }
+              }}
+            />
+          </aside>
 
-      <p className={`status status-${status}`} data-testid="editor-projection-status">
-        {status}
-      </p>
-      <p className="detail">{detail}</p>
-      <p className="detail" data-testid="editor-roundtrip">
-        {roundTrip}
-      </p>
-    </section>
+          <div className="editor-main">
+            {!studio.selectedSectionId ? (
+              <p
+                className="note writing-studio-empty"
+                data-testid="writing-studio-no-section"
+                role="status"
+              >
+                {WRITING_STUDIO_NO_SECTION}
+              </p>
+            ) : null}
+            {!editor ? (
+              <p
+                className="note writing-studio-empty"
+                data-testid="writing-studio-editor-unavailable"
+                role="status"
+              >
+                {WRITING_STUDIO_EDITOR_UNAVAILABLE}
+              </p>
+            ) : null}
+            <WritingStudioToolbar
+              toolbar={writingStudioToolbar}
+              disabled={!editor}
+            />
+            <div className="writing-studio-media-row">
+              <WritingStudioImageButton
+                imageAdapter={writingStudioImage}
+                sectionId={studio.selectedSectionId}
+                disabled={!editor}
+                onInserted={() => {
+                  loadSectionIntoEditor();
+                  refresh();
+                }}
+                onStatus={(message, kind) => {
+                  setSessionNote(message);
+                  if (kind === "error") {
+                    setStatus("error");
+                    setDetail(message);
+                  }
+                }}
+              />
+            </div>
+            <WritingStudioFindPanel
+              queryAdapter={writingStudioQuery}
+              sectionId={studio.selectedSectionId}
+              onSelectHit={(hit) => onSelectChapter(hit.sectionId)}
+            />
+            <EditorContent editor={editor} />
+          </div>
+        </div>
+
+        {status === "error" ? (
+          <p className="detail" role="alert">
+            {detail}
+          </p>
+        ) : null}
+      </section>
+    </StudioShellFrame>
   );
 }

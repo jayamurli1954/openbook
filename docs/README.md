@@ -19,7 +19,7 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [Phase 1 Design Studio selection](PHASE-1-DESIGN-STUDIO-SELECTION.md) | Design Studio (ADR-0036; Slices 1–3 done) |
 | [Phase 1 Metadata Wizard selection](PHASE-1-METADATA-WIZARD-SELECTION.md) | Metadata Wizard (ADR-0037; Slices 1–3 done; closed) |
 | [Phase 1 Cover Wizard selection](PHASE-1-COVER-WIZARD-SELECTION.md) | Cover Wizard, image cover (ADR-0038 accepted; waits for the ADR-0039 Cover step) |
-| [Phase 1 Studio Shell & UX selection](PHASE-1-STUDIO-SHELL-UX-SELECTION.md) | Studio shell and guided UX (ADR-0039 accepted; Slice 1 authorized) |
+| [Phase 1 Studio Shell & UX selection](PHASE-1-STUDIO-SHELL-UX-SELECTION.md) | Studio shell and guided UX (ADR-0039 accepted; Slice 1 done; Slice 2 authorized) |
 | [Foundation closure (post–Gate 10)](FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md) | Historical bridge after Gates 9–10; superseded for Phase 0 outcome by the determination |
 | [Foundation evidence ops selection](FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md) | Evidence ops Slices 1–5 complete (PRs #110–#114) |
 | [Implementation backlog](IMPLEMENTATION-BACKLOG.md) | Future work; not an authorization to code |
