@@ -23,13 +23,13 @@ test("shell frame is presentation only", () => {
   );
 });
 
-test("editor surface hosts the shell and keeps every existing panel in Write", () => {
+test("editor surface hosts the shell and keeps every existing panel reachable", () => {
   const editor = read("EditorSurface.tsx");
   assert.match(editor, /<StudioShellFrame/);
   assert.match(editor, /useState<StudioStepId>\("write"\)/);
   assert.match(editor, /useState\(false\)[^\n]*\n?/);
   assert.match(editor, /const \[diagnosticsOpen, setDiagnosticsOpen\] = useState\(false\)/);
-  assert.match(editor, /<section className="editor-section" hidden=\{activeStep !== "write"\}>/);
+  assert.match(editor, /className="editor-section"\s+hidden=\{activeStep !== "write"\}/);
   for (const panel of [
     "<GuidedStartWizard",
     "<ExportPanel",
@@ -55,7 +55,7 @@ test("developer details live in the diagnostics drawer, not the page", () => {
 
   const editor = read("EditorSurface.tsx");
   const diagnosticsStart = editor.indexOf("diagnostics={");
-  const childrenStart = editor.indexOf('{activeStep !== "write" ? (');
+  const childrenStart = editor.indexOf('{activeStep === "structure" ? (');
   assert.ok(diagnosticsStart > 0 && childrenStart > diagnosticsStart);
   const drawer = editor.slice(diagnosticsStart, childrenStart);
   assert.match(drawer, /<h2>Editor \(Tiptap\)<\/h2>/);
