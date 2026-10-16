@@ -17,10 +17,7 @@ import {
   semanticDocumentToTipTapJson,
   type TipTapDocJSON,
 } from "./domain/editorAdapter";
-import {
-  DesktopStudioCoordinator,
-  DesktopStudioError,
-} from "./domain/desktopStudioCoordinator";
+import { DesktopStudioCoordinator } from "./domain/desktopStudioCoordinator";
 import { SqliteProjectPersistence } from "./persistence/sqlitePersistence";
 import type { ProjectSummary } from "./persistence/types";
 import { DesktopExportController } from "./host/desktopExportController";
@@ -61,6 +58,12 @@ import {
   findDesignPresetForBookType,
   type StudioBookType,
 } from "./workflow/domain/studioShellStart";
+import {
+  isAuthorSafeText,
+  toAuthorError,
+  toAuthorMessage,
+  type StudioErrorContext,
+} from "./workflow/domain/studioShellErrors";
 import type { GuidedStartPath } from "./workflow/domain/guidedStartContract";
 import {
   buildStudioShellSnapshot,
@@ -129,7 +132,14 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   const [detail, setDetail] = useState("Edit to project through BookSession → Book");
   const [roundTrip, setRoundTrip] = useState("Not checked");
   const [sessionNote, setSessionNote] = useState("");
-  const [persistStatus, setPersistStatus] = useState("Persistence: not initialized");
+  const [persistStatus, setPersistStatus] = useState("");
+  /** ADR-0039 Slice 7: original text of the last problem, for Diagnostics only. */
+  const [lastProblem, setLastProblem] = useState<string | null>(null);
+  const noteError = (err: unknown, context: StudioErrorContext): string => {
+    const { message, detail } = toAuthorError(err, context);
+    setLastProblem(detail);
+    return message;
+  };
   const [projectList, setProjectList] = useState<ProjectSummary[]>([]);
   const [importText, setImportText] = useState("");
   const [importFormat, setImportFormat] = useState<ImportSource["format"]>("markdown");
@@ -219,10 +229,10 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       .listProjects()
       .then((listed) => {
         setProjectList(listed);
-        setPersistStatus("Persistence: ready (SQLite ProjectPersistence)");
+        setPersistStatus("");
       })
       .catch((err: unknown) => {
-        setPersistStatus(err instanceof Error ? err.message : String(err));
+        setPersistStatus(noteError(err, "save"));
       });
     return () => {
       void coordinator.close();
@@ -276,7 +286,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
         projectFromBook(warnings.length);
       } catch (err) {
         setStatus("error");
-        setDetail(err instanceof Error ? err.message : String(err));
+        setDetail(noteError(err, "edit"));
       }
     };
 
@@ -294,7 +304,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       refresh();
       return true;
     } catch (err) {
-      setSessionNote(err instanceof Error ? err.message : String(err));
+      setSessionNote(noteError(err, "edit"));
       return false;
     }
   };
@@ -326,7 +336,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       );
       loadSectionIntoEditor();
     } catch (err) {
-      setSessionNote(err instanceof Error ? err.message : String(err));
+      setSessionNote(noteError(err, "edit"));
     }
   };
 
@@ -338,7 +348,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       setSessionNote(`Created “Chapter ${n}”`);
       loadSectionIntoEditor();
     } catch (err) {
-      setSessionNote(err instanceof Error ? err.message : String(err));
+      setSessionNote(noteError(err, "edit"));
     }
   };
 
@@ -356,7 +366,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       projectFromBook(0);
       refresh();
     } catch (err) {
-      setSessionNote(err instanceof Error ? err.message : String(err));
+      setSessionNote(noteError(err, "edit"));
     }
   };
 
@@ -369,7 +379,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       setSessionNote("Chapter deleted");
       loadSectionIntoEditor();
     } catch (err) {
-      setSessionNote(err instanceof Error ? err.message : String(err));
+      setSessionNote(noteError(err, "edit"));
     }
   };
 
@@ -377,7 +387,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     void coordinator.newProject("Desktop editor draft").then(() => {
       seedDraft(coordinator, englishFixture as TipTapDocJSON);
       setSessionNote("Started a new unsaved book session");
-      setPersistStatus("Persistence: ready (unsaved new book)");
+      setPersistStatus("New book ready. Use Save when you want to keep it.");
       loadSectionIntoEditor();
     });
   };
@@ -399,12 +409,12 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       const binding = coordinator.getState().binding;
       setPersistStatus(
         binding
-          ? `Saved project “${binding.projectName}” (${binding.projectId}).`
-          : "Saved project.",
+          ? `Saved “${binding.projectName}”.`
+          : "Saved.",
       );
       await refreshProjectList();
     } catch (err) {
-      setPersistStatus(err instanceof Error ? err.message : String(err));
+      setPersistStatus(noteError(err, "save"));
     }
   };
 
@@ -439,13 +449,13 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       const opened = coordinator.getState().binding;
       setPersistStatus(
         opened
-          ? `Opened project “${opened.projectName}”.`
-          : "Opened project.",
+          ? `Opened “${opened.projectName}”.`
+          : "Opened your book.",
       );
       setSessionNote(opened ? `Opened “${opened.projectName}”` : "Opened project");
       loadSectionIntoEditor();
     } catch (err) {
-      setPersistStatus(err instanceof Error ? err.message : String(err));
+      setPersistStatus(noteError(err, "open"));
     }
   };
 
@@ -456,7 +466,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       coordinator.transitionStage(to);
       refresh();
     } catch (err) {
-      setSessionNote(err instanceof Error ? err.message : String(err));
+      setSessionNote(noteError(err, "edit"));
     }
   };
 
@@ -498,7 +508,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   const runImport = async (mode: "new-project" | "append-sections") => {
     const content = importText.replace(/^\uFEFF/, "");
     if (!content.trim()) {
-      setImportNote("Import source is empty.");
+      setImportNote("Choose a file or paste some text first.");
       return;
     }
     try {
@@ -507,14 +517,15 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
         { mode },
       );
       setImportNote(
-        `Imported ${result.sectionCount} sections (${result.mode}); job ${coordinator.getState().jobStatus}. Save explicitly to persist.`,
+        result.sectionCount === 1
+          ? "Added 1 chapter. Use Save to keep it."
+          : `Added ${result.sectionCount} chapters. Use Save to keep them.`,
       );
       setSessionNote(`Imported “${coordinator.getBook().metadata.title}”`);
       loadSectionIntoEditor();
       refresh();
     } catch (err) {
-      const message = err instanceof DesktopStudioError ? err.message : err instanceof Error ? err.message : String(err);
-      setImportNote(message);
+      setImportNote(noteError(err, "import"));
       refresh();
     }
   };
@@ -549,7 +560,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     refresh();
     loadSectionIntoEditor();
     setSessionNote("Your book is ready.");
-    setPersistStatus("Ready.");
+    setPersistStatus("");
     if (path === "new-book" && pickedBookType) {
       const applied = designChoices.applyPreset(findDesignPresetForBookType(pickedBookType));
       if (!applied.ok) setSessionNote(applied.message);
@@ -684,6 +695,9 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       diagnostics={
         <>
           <section className="editor-diagnostics">
+            <p className="detail" data-testid="last-problem">
+              Last problem: {lastProblem ?? "none"}
+            </p>
         <div className="project-bar" aria-label="Workflow stage">
           <span className="project-binding" data-testid="workflow-stage">
             Stage: {studio.stage} ({studio.jobStatus}
@@ -905,7 +919,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
 
         {status === "error" ? (
           <p className="detail" role="alert">
-            {detail}
+            {isAuthorSafeText(detail) ? detail : toAuthorMessage(detail, "edit")}
           </p>
         ) : null}
       </section>

@@ -8,6 +8,7 @@
  */
 import { useState } from "react";
 import type { ExportFormat } from "../workflow/domain/exportHostAdapter.js";
+import { toAuthorMessage } from "../workflow/domain/studioShellErrors.js";
 import {
   DesktopExportController,
   type ExportUiStatus,
@@ -78,7 +79,7 @@ export default function ExportPanel({ controller, ready }: ExportPanelProps) {
           role="status"
           data-testid="export-status"
         >
-          {status.message}
+          {status.phase === "failed" ? toAuthorMessage(status.message, "export") : status.message}
         </p>
       ) : null}
     </section>
