@@ -1,6 +1,6 @@
 # ADR-0039 Slice 6: Start Screen — Implementation Proposal
 
-- **Status:** Implemented on this PR; awaiting merge
+- **Status:** Implemented on main (PR #160)
 - **Date:** 2026-10-15
 - **Parent architecture:** ADR-0039 — Phase 1 Studio Shell & Guided UX
 - **Depends on:** Slice 5 Guide panel (PR #159)

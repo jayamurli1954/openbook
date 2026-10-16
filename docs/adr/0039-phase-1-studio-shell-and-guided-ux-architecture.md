@@ -1,14 +1,15 @@
 # ADR-0039: Phase 1 — Studio Shell & Guided UX Architecture
 
-- **Status:** Accepted; Slices 1–5 done; Slice 6 authorized
+- **Status:** Accepted; Slices 1–7 done (sequencing closed on merge)
 - **Date:** 2026-10-14
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (objective and MVP gate)
 - **Area:** Desktop / Product Surface / UX
 - **Depends on:** ADR-0007, ADR-0019, ADR-0030, ADR-0031, ADR-0033, ADR-0034, ADR-0035, ADR-0036, ADR-0037, ADR-0038
 - **Supersedes:** None. Re-hosts the chrome of ADR-0033–ADR-0037 without changing their contracts
 - **Selection record:** `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`
+- **Closure record:** `docs/adr-0039-closure-reconciliation.md`
 - **Design reference:** clickable mockup "OpenBook Studio UX Mockup" (maintainer's private artifact, https://claude.ai/artifact/12J6rfbTnfvLPeWgw3PGpx), accepted as the starting design on 2026-10-14
-- **Implementation authorization:** Slices 1–5 done (PRs #155–#159); Slice 6 authorized (`docs/adr-0039-slice-6-start-screen.md`); later slices need their own authorization.
+- **Implementation authorization:** Slices 1–6 done (PRs #155–#160); Slice 7 on the closing PR. No further ADR-0039 slice is authorized.
 
 ## 1. Context
 
@@ -126,8 +127,8 @@ When separately authorized, implementation should proceed in small slices, for e
 3. **Slice 3 — Outline and Write step:** one outline replacing the three lists; full-width editor; Focus mode. **(done — PR #157)**
 4. **Slice 4 — Studio steps:** Structure, Design (with live sample), Details (grouped), Publish (checks, then export cards), Cover placeholder. **(done — PR #158; includes the ADR-0022 re-check amendment)**
 5. **Slice 5 — Guide panel:** render the Slice 1 guide; live checklist; questions; Next step; Help toggle. **(done — PR #159)**
-6. **Slice 6 — Start screen:** Guided Start as the start screen; book-type presets mapped to existing structure and theme choices; Import and recent books there. **(authorized — this PR; book types set language and look, not structure)**
-7. **Slice 7 — Hardening:** keyboard and focus order, contrast, English and Kannada books through the full flow, plain-language error mapping, source-shape guards re-pointed, one end-to-end walk through all six steps.
+6. **Slice 6 — Start screen:** Guided Start as the start screen; book-type presets mapped to existing structure and theme choices; Import and recent books there. **(done — PR #160; book types set language and look, not structure)**
+7. **Slice 7 — Hardening:** keyboard and focus order, contrast, English and Kannada books through the full flow, plain-language error mapping, source-shape guards re-pointed, one end-to-end walk through all six steps. **(done — closing PR)**
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.
 

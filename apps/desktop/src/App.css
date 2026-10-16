@@ -1629,3 +1629,28 @@ dd {
   border: 0;
   background: none;
 }
+
+/* ADR-0039 Slice 7 — keyboard */
+.studio-skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  z-index: 10;
+  padding: 8px 14px;
+  border-radius: var(--ob-radius);
+  background: var(--ob-accent);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.studio-skip-link:focus {
+  top: 12px;
+}
+
+.studio-main:focus {
+  outline: none;
+}
+
+.studio-main:focus-visible {
+  box-shadow: inset var(--ob-focus);
+}

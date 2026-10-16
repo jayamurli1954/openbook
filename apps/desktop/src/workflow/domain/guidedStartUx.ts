@@ -4,6 +4,7 @@
  * Keeps user-facing messages out of React so they stay unit-testable.
  */
 import type { GuidedStartHostErrorCode } from "./guidedStartHostAdapter.js";
+import { isAuthorSafeText, toAuthorMessage } from "./studioShellErrors.js";
 import type { GuidedStartPath } from "./guidedStartContract.js";
 
 export type GuidedStartStatusKind = "idle" | "ok" | "error" | "busy";
@@ -44,6 +45,11 @@ export function formatGuidedStartFailure(
       : "Could not complete that start step.";
   const trimmed = detail?.trim();
   if (!trimmed || trimmed === base) return base;
+  // ADR-0039 Slice 7: never show raw technical text to authors.
+  if (!isAuthorSafeText(trimmed)) {
+    const mapped = toAuthorMessage(trimmed, "start");
+    return mapped.includes("desktop app") ? mapped : base;
+  }
   // Keep structured codes out of the primary sentence; append detail when useful.
   if (code === "CONTINUE_UNAVAILABLE" || code === "COORDINATOR_FAILED") {
     return `${base} (${trimmed})`;

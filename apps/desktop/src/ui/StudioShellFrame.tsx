@@ -5,7 +5,7 @@
  * Top bar, step bar, and layout regions (outline, main, guide). Content is
  * passed in; this component holds no book state and calls no services.
  */
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type {
   StudioStepId,
   StudioStepStatus,
@@ -64,8 +64,22 @@ export default function StudioShellFrame({
   children,
 }: StudioShellFrameProps) {
   const percent = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+  // ADR-0039 Slice 7: after a step change, move focus to the step so keyboard
+  // and screen-reader users land on it. Skipped on first render.
+  const mainRef = useRef<HTMLElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    mainRef.current?.focus();
+  }, [activeStep]);
   return (
     <div className="studio-shell" data-testid="studio-shell">
+      <a className="studio-skip-link" href="#studio-main">
+        Skip to your book
+      </a>
       <header className="studio-topbar">
         <div className="studio-topbar-book">
           {onHome ? (
@@ -177,7 +191,15 @@ export default function StudioShellFrame({
             {outline}
           </aside>
         ) : null}
-        <main className="studio-main">{children}</main>
+        <main
+          id="studio-main"
+          className="studio-main"
+          ref={mainRef}
+          tabIndex={-1}
+          aria-label={steps.find((step) => step.id === activeStep)?.label ?? "Book"}
+        >
+          {children}
+        </main>
         {guide ? (
           <aside className="studio-guide" aria-label="Guide">
             {guide}

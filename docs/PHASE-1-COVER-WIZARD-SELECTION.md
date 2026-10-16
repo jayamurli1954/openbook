@@ -1,6 +1,6 @@
 # Phase 1 — Next Domain Selection: Cover Wizard
 
-- **Status:** Selected; ADR-0038 accepted (PR #153); implementation not authorized; slices wait for the ADR-0039 Cover step (`docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`)
+- **Status:** Selected; ADR-0038 accepted (PR #153); implementation not authorized; **unblocked** — the ADR-0039 shell has its Cover step (`docs/adr-0039-closure-reconciliation.md`)
 - **Date:** 2026-10-14
 - **Baseline:** `main` at `1ce98ec` (PR #152 — ADR-0037 closure reconcile)
 - **Prior record:** `docs/adr-0037-closure-reconciliation.md`
