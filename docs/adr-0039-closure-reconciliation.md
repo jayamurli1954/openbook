@@ -38,7 +38,7 @@ This record does not authorize Cover Wizard slices, Preview, AI help, UI transla
 ## 4. Explicitly still open (not ADR-0039 failures)
 
 - **Manual check in the Tauri app:** create a book from a book type (for example Kannada book) and confirm the Design step shows the matching look. The browser preview cannot create books (SQLite needs Tauri); the path is covered by the Slice 7 domain walk.
-- **Explicit Save vs autosave race** (found during Slice 1; separate task, needs its own authorization).
+- **Explicit Save vs autosave race** (found during Slice 1) — fixed after closure; see the ADR-0031 amendment (2026-10-16).
 - **Gate 6 font downloads from a moving branch** (CI reliability; separate task).
 - “Export your ebook” cannot tick until the app records exports.
 - Help/Focus preferences are not remembered between sessions (needs a preferences ADR).
