@@ -25,7 +25,7 @@ test("GuidedStartWizard stays free of coordinator, Tauri, and filesystem calls",
   assert.match(wizard, /guided-start-path-\$\{key\}/);
   assert.match(wizard, /"new-book"/);
   assert.match(wizard, /"open-recent"/);
-  assert.match(wizard, /Continue Existing Project/);
+  assert.match(wizard, /Continue a saved book/);
   assert.doesNotMatch(wizard, /DesktopStudioCoordinator|newProject\(|writeFile|plugin-dialog|plugin-fs|child_process/);
   assert.doesNotMatch(wizard, /\bOllama\b/);
 

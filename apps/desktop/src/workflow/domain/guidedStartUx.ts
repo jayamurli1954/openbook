@@ -9,29 +9,29 @@ import type { GuidedStartPath } from "./guidedStartContract.js";
 export type GuidedStartStatusKind = "idle" | "ok" | "error" | "busy";
 
 export const GUIDED_START_HUB_STATUS =
-  "Choose how you want to start — New Book, Import, Open Recent, or Continue.";
+  "Choose how you want to start.";
 
 export const GUIDED_START_EMPTY_RECENT =
-  "No recent packages yet. Open a package root below to add one to this list.";
+  "No recent books yet. Open a book folder below to add one to this list.";
 
 export const GUIDED_START_CONTINUE_HINT =
-  "Continue opens the last package you successfully opened. If that package is missing but one backup exists, OpenBook restores it through the existing recovery path — it will not invent a new project.";
+  "Continue opens the last book you opened. If that book is missing but a backup exists, OpenBook restores the backup. It never starts a new book in its place.";
 
 export const GUIDED_START_IMPORT_EMPTY =
   "Paste manuscript text before importing. Markdown and plain text are supported.";
 
 export const GUIDED_START_OPEN_ROOT_EMPTY =
-  "Enter a package folder path, or choose a recent package above.";
+  "Enter a book folder, or choose a recent book above.";
 
 const FAILURE_COPY: Record<GuidedStartHostErrorCode, string> = {
   TITLE_REQUIRED: "Enter a book title to continue.",
   LANGUAGE_REQUIRED: "Enter a language code (for example, en or kn).",
-  PROJECT_ROOT_REQUIRED: "Enter a package folder path to open.",
+  PROJECT_ROOT_REQUIRED: "Enter the book folder to open.",
   CONTINUE_UNAVAILABLE:
-    "Nothing to continue yet. Open a package first, or fix recovery before retrying.",
+    "Nothing to continue yet. Open a book first.",
   CANCELLED: "Start was cancelled. No project changes were made.",
   COORDINATOR_FAILED:
-    "Could not complete that start step. The project was not silently replaced.",
+    "Could not complete that step. Your current book was not replaced.",
 };
 
 export function formatGuidedStartFailure(
@@ -77,13 +77,13 @@ export function formatGuidedStartOpenSuccess(
 export function formatGuidedStartPathStatus(path: GuidedStartPath): string {
   switch (path) {
     case "new-book":
-      return "New Book — title and language are required. Other fields are optional.";
+      return "New book — a title and language are all you need. Everything else is optional.";
     case "import":
-      return "Import — paste Markdown or plain text. Existing importer contracts are reused.";
+      return "Import — choose a Markdown or text file, or paste the text. Headings become chapters.";
     case "open-recent":
-      return "Open Recent — pick a remembered package or enter a package folder path.";
+      return "Open a recent book — pick one from the list, or enter its folder.";
     case "continue":
-      return "Continue — resume the last opened package through recovery discovery.";
+      return "Continue — opens the last book you worked on.";
   }
 }
 

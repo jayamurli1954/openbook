@@ -38,6 +38,7 @@ import StructureStudioRail from "./ui/StructureStudioRail";
 import StudioShellFrame from "./ui/StudioShellFrame";
 import StudioOutline from "./ui/StudioOutline";
 import StudioGuidePanel from "./ui/StudioGuidePanel";
+import StudioStartScreen from "./ui/StudioStartScreen";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
 import { createWritingStudioImagePickPort } from "./host/createWritingStudioImagePickPort";
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
@@ -55,6 +56,12 @@ import {
   type StudioStepId,
 } from "./workflow/domain/studioShellContract";
 import { STUDIO_GUIDE, evaluateStudioGuideChecklist } from "./workflow/domain/studioShellGuide";
+import {
+  STUDIO_BOOK_TYPES,
+  findDesignPresetForBookType,
+  type StudioBookType,
+} from "./workflow/domain/studioShellStart";
+import type { GuidedStartPath } from "./workflow/domain/guidedStartContract";
 import {
   buildStudioShellSnapshot,
   describeSaveStatus,
@@ -103,6 +110,9 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [guideOpen, setGuideOpen] = useState(true);
+  /** ADR-0039 Slice 6: the app opens on the start screen. */
+  const [view, setView] = useState<"start" | "studio">("start");
+  const [pickedBookType, setPickedBookType] = useState<StudioBookType | null>(null);
   const [exportController] = useState(
     () =>
       new DesktopExportController({
@@ -124,7 +134,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   const [importText, setImportText] = useState("");
   const [importFormat, setImportFormat] = useState<ImportSource["format"]>("markdown");
   const [importFilename, setImportFilename] = useState("manuscript.md");
-  const [importNote, setImportNote] = useState("Paste Markdown or plain text, then import. Nothing is saved until Save.");
+  const [importNote, setImportNote] = useState("Choose a file or paste text, then add it to your book.");
   const switchingRef = useRef(false);
 
   const chapters = coordinator.listChapters();
@@ -531,6 +541,33 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     setFocusMode(false);
     setActiveStep(step);
   };
+  const openStudio = () => {
+    setView("studio");
+    selectStep("write");
+  };
+  const onGuidedStarted = (path: GuidedStartPath) => {
+    refresh();
+    loadSectionIntoEditor();
+    setSessionNote("Your book is ready.");
+    setPersistStatus("Ready.");
+    if (path === "new-book" && pickedBookType) {
+      const applied = designChoices.applyPreset(findDesignPresetForBookType(pickedBookType));
+      if (!applied.ok) setSessionNote(applied.message);
+      refresh();
+    }
+    setPickedBookType(null);
+    openStudio();
+  };
+  const openFromLibrary = async () => {
+    const before = coordinator.getState().binding?.projectId;
+    await onOpenProject();
+    const after = coordinator.getState().binding?.projectId;
+    if (after && after !== before) openStudio();
+  };
+  const startBlankBook = () => {
+    onNewBook();
+    openStudio();
+  };
   const reportStatus = (message: string, kind: "ok" | "error") => {
     setSessionNote(message);
     if (kind === "error") {
@@ -540,6 +577,59 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   };
 
   return (
+    <>
+    {view === "start" ? (
+      <StudioStartScreen
+        currentBookTitle={shellBookTitle(shellBook)}
+        onContinue={openStudio}
+        bookTypes={STUDIO_BOOK_TYPES}
+        selectedBookTypeId={pickedBookType?.id ?? null}
+        onPickBookType={(type) =>
+          setPickedBookType((current) => (current?.id === type.id ? null : type))
+        }
+        start={
+          <GuidedStartWizard
+            key={pickedBookType?.id ?? "hub"}
+            host={guidedStartHost}
+            initialPath={pickedBookType ? "new-book" : null}
+            prefill={
+              pickedBookType
+                ? { bookType: pickedBookType.bookType, language: pickedBookType.language }
+                : undefined
+            }
+            onStarted={onGuidedStarted}
+          />
+        }
+        library={
+          <div className="studio-library">
+            <div className="project-bar" aria-label="Project">
+              <span className="project-binding" data-testid="project-binding">
+                {binding
+                  ? `Current book: ${binding.projectName}`
+                  : "The current book isn’t saved yet. Use Save in the book’s top bar."}
+              </span>
+              <div className="project-actions">
+                <button type="button" className="studio-btn" onClick={startBlankBook}>
+                  New blank book
+                </button>
+                <button type="button" className="studio-btn" onClick={() => void openFromLibrary()}>
+                  Open a saved book…
+                </button>
+              </div>
+              <p className="detail" data-testid="persist-status">
+                {persistStatus}
+              </p>
+              {projectList.length > 0 ? (
+                <p className="note">
+                  {projectList.length === 1 ? "1 saved book" : `${projectList.length} saved books`}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        }
+      />
+    ) : null}
+    <div className="studio-view" hidden={view !== "studio"}>
     <StudioShellFrame
       title={shellBookTitle(shellBook)}
       saveStatus={describeSaveStatus({
@@ -552,6 +642,8 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
       activeStep={activeStep}
       onSelectStep={selectStep}
       onExport={() => selectStep("publish")}
+      onHome={() => setView("start")}
+      onSave={() => void onSaveProject()}
       guideOpen={guideOpen}
       onToggleGuide={() => setGuideOpen((open) => !open)}
       guide={
@@ -648,6 +740,58 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
             onStatus={reportStatus}
           />
           <StructureStudioNavPreview entries={projectBookNavigation(coordinator.getBook())} />
+          <section className="studio-import" aria-label="Add chapters from a file">
+            <h3>Add chapters from a file</h3>
+            <div className="project-bar import-panel" aria-label="Import manuscript">
+              <p className="note">
+                Choose a Markdown or text file, or paste the text. Each heading becomes a new chapter
+                at the end of your book.
+              </p>
+              <label className="import-file">
+                File
+                <input
+                  type="file"
+                  accept=".md,.markdown,.txt,text/markdown,text/plain"
+                  data-testid="import-file"
+                  onChange={(event) => onPickImportFile(event.target.files?.[0])}
+                />
+              </label>
+              <label className="import-file">
+                Format
+                <select
+                  value={importFormat}
+                  data-testid="import-format"
+                  onChange={(event) =>
+                    setImportFormat(event.target.value === "text" ? "text" : "markdown")
+                  }
+                >
+                  <option value="markdown">Markdown</option>
+                  <option value="text">Plain text</option>
+                </select>
+              </label>
+              <textarea
+                className="import-source"
+                data-testid="import-source"
+                rows={6}
+                spellCheck={false}
+                value={importText}
+                placeholder="# Chapter title&#10;&#10;Paste manuscript text…"
+                onChange={(event) => setImportText(event.target.value)}
+              />
+              <div className="project-actions">
+                <button
+                  type="button"
+                  data-testid="import-append"
+                  onClick={() => void runImport("append-sections")}
+                >
+                  Add as new chapters
+                </button>
+              </div>
+              <p className="detail" data-testid="import-status">
+                {importNote}
+              </p>
+            </div>
+          </section>
         </section>
       ) : null}
       {activeStep === "design" ? (
@@ -684,110 +828,6 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
           if (focusMode && event.key === "Escape") setFocusMode(false);
         }}
       >
-        {!focusMode ? (
-          <>
-
-            <GuidedStartWizard
-              host={guidedStartHost}
-              onStarted={() => {
-                refresh();
-                loadSectionIntoEditor();
-                setSessionNote("Guided start completed through host adapter");
-                setPersistStatus("Persistence: ready (guided start)");
-              }}
-            />
-
-            <div className="project-bar import-panel" aria-label="Import manuscript">
-              <span className="project-binding">Import (Markdown / plain text)</span>
-              <p className="note">
-                Coordinator receives pre-decoded Unicode only. Import stays in memory until Save.
-              </p>
-              <label className="import-file">
-                File
-                <input
-                  type="file"
-                  accept=".md,.markdown,.txt,text/markdown,text/plain"
-                  data-testid="import-file"
-                  onChange={(event) => onPickImportFile(event.target.files?.[0])}
-                />
-              </label>
-              <label className="import-file">
-                Format
-                <select
-                  value={importFormat}
-                  data-testid="import-format"
-                  onChange={(event) =>
-                    setImportFormat(event.target.value === "text" ? "text" : "markdown")
-                  }
-                >
-                  <option value="markdown">Markdown</option>
-                  <option value="text">Plain text</option>
-                </select>
-              </label>
-              <textarea
-                className="import-source"
-                data-testid="import-source"
-                rows={6}
-                spellCheck={false}
-                value={importText}
-                placeholder="# Chapter title&#10;&#10;Paste manuscript text…"
-                onChange={(event) => setImportText(event.target.value)}
-              />
-              <div className="project-actions">
-                <button
-                  type="button"
-                  data-testid="import-new-project"
-                  onClick={() => void runImport("new-project")}
-                  disabled={studio.stage !== "IMPORT"}
-                  title={
-                    studio.stage !== "IMPORT"
-                      ? "New-project import is only allowed during IMPORT"
-                      : "Replace the in-memory session from this source"
-                  }
-                >
-                  Import as new project
-                </button>
-                <button
-                  type="button"
-                  data-testid="import-append"
-                  onClick={() => void runImport("append-sections")}
-                >
-                  Append sections
-                </button>
-              </div>
-              <p className="detail" data-testid="import-status">
-                {importNote}
-              </p>
-            </div>
-
-
-            <div className="project-bar" aria-label="Project">
-              <span className="project-binding" data-testid="project-binding">
-                {binding
-                  ? `Project: ${binding.projectName}`
-                  : "Project: (unsaved — not selected)"}
-              </span>
-              <div className="project-actions">
-                <button type="button" onClick={onNewBook}>
-                  New book
-                </button>
-                <button type="button" onClick={() => void onSaveProject()}>
-                  Save
-                </button>
-                <button type="button" onClick={() => void onOpenProject()}>
-                  Open
-                </button>
-              </div>
-              <p className="detail" data-testid="persist-status">
-                {persistStatus}
-              </p>
-              {projectList.length > 0 ? (
-                <p className="note">Saved projects in DB: {projectList.length}</p>
-              ) : null}
-            </div>
-
-          </>
-        ) : null}
 
         <div className="studio-write">
           <div className="studio-write-bar">
@@ -870,5 +910,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
         ) : null}
       </section>
     </StudioShellFrame>
+    </div>
+    </>
   );
 }
