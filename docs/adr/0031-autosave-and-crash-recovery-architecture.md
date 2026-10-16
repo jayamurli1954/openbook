@@ -91,3 +91,14 @@ Architecture acceptance confirms that this ADR:
 ## 5. Governance
 
 Normal branch → Draft PR → CI/DCO → review → explicit Ready → explicit merge authorization.
+
+## Amendment (2026-10-16): one writer at a time
+
+A test during ADR-0039 Slice 1 showed that an explicit Save and an autosave could write the same project package at the same time: binding a book with unsaved edits schedules an autosave, and the explicit Save cleared that timer only after it finished. Overlapping writes could make one save fail, and two saves in the same millisecond could share a staging directory.
+
+Fix (maintainer-approved 2026-10-16):
+
+- `DesktopStudioCoordinator` routes every package write — explicit Save and autosave — through one queue (`#writePackage`). A write starts only after the previous one finishes, successful or not. Each caller reads the Book before queueing, so the last write holds the newest content.
+- `saveProjectPackage` adds a random suffix to its staging and backup directory names. Crash recovery still matches the `.openbook-backup-` prefix.
+
+Autosave semantics are otherwise unchanged. Covered by `desktopStudioCoordinator.save-race.test.ts`, which fails without the queue.
