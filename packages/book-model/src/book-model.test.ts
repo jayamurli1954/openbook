@@ -179,3 +179,64 @@ test("duplicate section or block ids are domain errors", () => {
   const issues = validateBook(cloned);
   assert.equal(issues.filter((i) => i.code === "duplicate-id").length >= 2, true);
 });
+
+function bookWithCoverAsset(overrides: Partial<Book["assets"][number]> = {}): Book {
+  const book = createBook({ language: "kn", title: "ಮುಖಪುಟ", withOpeningChapter: false });
+  book.assets = [
+    {
+      id: "asset-cover",
+      kind: "image",
+      fileName: "cover.jpg",
+      mediaType: "image/jpeg",
+      altText: "ಪುಸ್ತಕದ ಮುಖಪುಟ",
+      licence: "CC-BY-4.0",
+      ...overrides,
+    },
+  ];
+  book.publishing.coverAssetId = "asset-cover";
+  return book;
+}
+
+const coverCodes = (book: Book): string[] =>
+  validateBook(book)
+    .filter((i) => i.code.startsWith("cover-"))
+    .map((i) => `${i.code}:${i.severity}`);
+
+test("a Book without coverAssetId has no cover issues", () => {
+  const book = createBook({ language: "en", title: "No cover" });
+  assert.equal("coverAssetId" in book.publishing, false);
+  assert.deepEqual(coverCodes(book), []);
+});
+
+test("a JPEG or PNG cover with alt text is valid and round-trips", () => {
+  for (const mediaType of ["image/jpeg", "image/png"]) {
+    const book = bookWithCoverAsset({ mediaType });
+    assert.deepEqual(coverCodes(book), []);
+    const parsed = parseBook(serializeBook(book));
+    assert.equal(parsed.publishing.coverAssetId, "asset-cover");
+    assert.equal(parsed.assets[0]?.altText, "ಪುಸ್ತಕದ ಮುಖಪುಟ");
+  }
+});
+
+test("a cover naming no asset is a domain error", () => {
+  const book = bookWithCoverAsset();
+  book.assets = [];
+  assert.deepEqual(coverCodes(book), ["cover-asset-missing:error"]);
+});
+
+test("a cover that is not a JPEG or PNG image is a domain error", () => {
+  for (const overrides of [
+    { kind: "font" as const, mediaType: "font/woff" },
+    { mediaType: "image/svg+xml" },
+    { mediaType: "image/webp" },
+    { mediaType: "image/gif" },
+  ]) {
+    assert.deepEqual(coverCodes(bookWithCoverAsset(overrides)), ["cover-asset-not-image:error"]);
+  }
+});
+
+test("a cover with blank alt text is a domain error", () => {
+  assert.deepEqual(coverCodes(bookWithCoverAsset({ altText: "  " })), [
+    "cover-alt-text-missing:error",
+  ]);
+});
