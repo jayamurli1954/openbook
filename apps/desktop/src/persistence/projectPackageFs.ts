@@ -12,6 +12,7 @@ import {
   type IAssetStore,
 } from "@openbook/assets";
 import type { Book } from "@openbook/book-model";
+import { randomUUID } from "node:crypto";
 import { access, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -178,7 +179,9 @@ export async function saveProjectPackage(
   const projectRoot = path.resolve(input.projectRoot);
   const parent = path.dirname(projectRoot);
   const base = path.basename(projectRoot);
-  const stamp = `${process.pid}-${Date.now()}`;
+  // A random suffix keeps two saves in the same millisecond from sharing a
+  // staging or backup directory.
+  const stamp = `${process.pid}-${Date.now()}-${randomUUID().slice(0, 8)}`;
   const stagingRoot = path.join(parent, `${base}.openbook-staging-${stamp}`);
   const backupRoot = path.join(parent, `${base}.openbook-backup-${stamp}`);
 

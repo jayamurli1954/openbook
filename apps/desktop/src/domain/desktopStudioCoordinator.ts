@@ -426,6 +426,11 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   #packageRoot: string | null;
   readonly #autosave: AutosaveController;
   readonly #packageSave: PackageAutosaveSaveFn;
+  /**
+   * Serializes every write to the bound package (explicit Save and autosave),
+   * so two writers never swap the package directory at the same time.
+   */
+  #packageWriteTail: Promise<unknown> = Promise.resolve();
   #packageProjectId: string;
 
   constructor(options: DesktopStudioCoordinatorOptions) {
@@ -451,7 +456,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         binding: {
           resolveSaveInput: () => this.#resolvePackageSaveInput(),
         },
-        save: this.#packageSave,
+        save: (input) => this.#writePackage(input),
       }),
     });
     const book = options.book ?? createDesktopDraftBook({ title: "Untitled Project" });
@@ -1501,7 +1506,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     }
     let result;
     try {
-      result = await this.#packageSave(input);
+      result = await this.#writePackage(input);
     } catch (err: unknown) {
       throw new DesktopStudioError(
         "PACKAGE_SAVE_FAILED",
@@ -1512,6 +1517,22 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       throw new DesktopStudioError("PACKAGE_SAVE_FAILED", result.error.message);
     }
     this.#autosave.markClean();
+  }
+
+  /**
+   * Queue one package write behind any write already in progress. Callers
+   * resolve their save input before queueing, so writes land in the order the
+   * Book was read and the last write holds the newest content.
+   */
+  #writePackage(
+    input: Parameters<PackageAutosaveSaveFn>[0],
+  ): ReturnType<PackageAutosaveSaveFn> {
+    const run = this.#packageWriteTail.then(
+      () => this.#packageSave(input),
+      () => this.#packageSave(input),
+    );
+    this.#packageWriteTail = run.catch(() => undefined);
+    return run;
   }
 
   #clearValidationReport(): void {
