@@ -78,6 +78,8 @@ export function validateBook(book: Book): DomainIssue[] {
     noteId(asset.id, `assets[${String(index)}].id`);
   }
 
+  issues.push(...validateCover(book));
+
   const record = book as unknown as Record<string, unknown>;
   for (const key of EPUB_AUTHORING_LEAK_KEYS) {
     if (Object.prototype.hasOwnProperty.call(record, key)) {
@@ -90,5 +92,49 @@ export function validateBook(book: Book): DomainIssue[] {
     }
   }
 
+  return issues;
+}
+
+// ADR-0038 §2.1: a cover, when set, is an existing JPEG or PNG image asset
+// with non-empty alt text.
+const COVER_MEDIA_TYPES = ["image/jpeg", "image/png"] as const;
+
+function validateCover(book: Book): DomainIssue[] {
+  const coverAssetId = book.publishing.coverAssetId;
+  if (coverAssetId === undefined) {
+    return [];
+  }
+  const path = "publishing.coverAssetId";
+  const asset = book.assets.find((candidate) => candidate.id === coverAssetId);
+  if (!asset) {
+    return [
+      {
+        code: "cover-asset-missing",
+        severity: "error",
+        message: `Cover asset ${String(coverAssetId)} is not on this Book.`,
+        path,
+      },
+    ];
+  }
+  const issues: DomainIssue[] = [];
+  if (
+    asset.kind !== "image" ||
+    !(COVER_MEDIA_TYPES as readonly string[]).includes(asset.mediaType)
+  ) {
+    issues.push({
+      code: "cover-asset-not-image",
+      severity: "error",
+      message: `Cover asset ${asset.id} must be a JPEG or PNG image.`,
+      path,
+    });
+  }
+  if (typeof asset.altText !== "string" || !asset.altText.trim()) {
+    issues.push({
+      code: "cover-alt-text-missing",
+      severity: "error",
+      message: `Cover asset ${asset.id} needs alt text.`,
+      path,
+    });
+  }
   return issues;
 }
