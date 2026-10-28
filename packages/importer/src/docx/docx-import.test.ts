@@ -5,6 +5,7 @@ import * as assert from "node:assert/strict";
 import { strToU8, zipSync, type Zippable } from "fflate";
 import { validateBook, type Book, type ContentBlock, type InlineSpan } from "@openbook/book-model";
 import { IMPORTED_IMAGE_PLACEHOLDER_PREFIX, ImportService, type ImportOptions, type ImportResult } from "../index.js";
+import { contentsLineKeys, stripTitleNumbering } from "./structure.js";
 
 // --- document builder ----------------------------------------------------------------------
 
@@ -701,7 +702,11 @@ test("leaves Word's automatic descriptions out of the alt text", async () => {
     p(pictureRun({ rid: "rId21", alt: "A drawing of a cow Description automatically generated with medium confidence", title: "Nandi the cow" }));
   const { result } = await importBook({ body });
   assert.deepEqual(result.images?.map((image) => image.altText), ["", "Nandi the cow"]);
-  assert.ok(codes(result).includes("DOCX_AUTOMATIC_ALT_TEXT_REMOVED"));
+  // One warning about pictures without a description, which mentions Word's automatic ones.
+  const warnings = result.issues.filter((issue) => issue.code === "DOCX_PICTURES_WITHOUT_ALT_TEXT");
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0]!.message, /^1 picture has no description/);
+  assert.match(warnings[0]!.message, /written automatically|automatically; OpenBook did not use/);
 });
 
 test("warns when a reused picture has different descriptions", async () => {
@@ -727,6 +732,116 @@ test("shows picture file names without percent-encoding", async () => {
   const body = t("Chapter", { style: "Heading1" }) + p(pictureRun({ rid: "rId25" }));
   const { result } = await importBook({ body });
   assert.equal(result.images?.[0]?.sourceName, "my drawing.png");
+});
+
+// --- Slice 5: shapes found in the maintainer's manuscript ----------------------------------------
+
+test("removes a contents page whose lines are worded differently from the headings", async () => {
+  const body = [
+    t("Table of Contents", { style: "Heading1" }),
+    t("1. The Chariot Lesson - Responsibility & Courage"),
+    t("2. Doing Homework Like Arjuna - Duty & Honesty"),
+    t("3. The Calm Lake - Inner Peace"),
+    t("Story 1: The Chariot Lesson", { style: "Heading1" }),
+    t("Arjuna stood still."),
+    t("Story 2: Doing Homework Like Arjuna", { style: "Heading1" }),
+    t("Homework time."),
+    t("Story 3: The Calm Lake", { style: "Heading1" }),
+    t("The lake was calm."),
+  ].join("");
+  const { book, result } = await importBook({ body });
+  assert.deepEqual(book.chapters.map((s) => s.title), [
+    "Story 1: The Chariot Lesson",
+    "Story 2: Doing Homework Like Arjuna",
+    "Story 3: The Calm Lake",
+  ]);
+  assert.ok(!allText(book).includes("Responsibility & Courage"));
+  assert.ok(codes(result).includes("DOCX_TOC_REMOVED"));
+});
+
+test("finds chapters from a differently worded contents page when there are no heading styles", async () => {
+  const body = [
+    p(r("Contents", { b: true })),
+    t("1. The Butter Thief - Honesty ........ 3"),
+    t("2. The Serpent - Courage ........ 9"),
+    p(r("Story 1: The Butter Thief", { b: true }), { pageBreakBefore: true }),
+    t("Story text."),
+    p(r("Story 2: The Serpent", { b: true }), { pageBreakBefore: true }),
+    t("Story text."),
+  ].join("");
+  const { book } = await importBook({ body });
+  assert.deepEqual(book.chapters.map((s) => s.title), ["Story 1: The Butter Thief", "Story 2: The Serpent"]);
+});
+
+test("says when pictures have no description, since the book check does not review them", async () => {
+  const body = t("Chapter", { style: "Heading1" }) + p(pictureRun()) + p(pictureRun({ rid: "rId21", alt: "Yashoda" }));
+  const { result } = await importBook({ body });
+  const issue = result.issues.find((i) => i.code === "DOCX_PICTURES_WITHOUT_ALT_TEXT");
+  assert.ok(issue && issue.severity === "warning");
+  assert.match(issue.message, /^1 picture has no description/);
+
+  const described = await importBook({ body: t("Chapter", { style: "Heading1" }) + p(pictureRun({ alt: "Krishna" })) });
+  assert.ok(!codes(described.result).includes("DOCX_PICTURES_WITHOUT_ALT_TEXT"));
+});
+
+test("a one-line contents page is removed only when its line names a later heading", async () => {
+  const named = await importBook({
+    body: t("Contents", { style: "Heading1" }) + t("1. The Golden Rule - Kindness") + t("Story 6: The Golden Rule", { style: "Heading1" }) + t("Text."),
+  });
+  assert.deepEqual(named.book.chapters.map((s) => s.title), ["Story 6: The Golden Rule"]);
+  const unrelated = await importBook({
+    body: t("Contents") + t("What is inside the box") + t("Chapter", { style: "Heading1" }) + t("Text."),
+  });
+  assert.ok(allText(unrelated.book).includes("What is inside the box"), "an ordinary line after the word Contents stays");
+});
+
+test("headings that share a lead-in stay separate chapters when matched from contents", async () => {
+  const body = [
+    p(r("Contents", { b: true })),
+    t("1. Lesson - Honesty ........ 3"),
+    t("2. Lesson - Courage ........ 9"),
+    p(r("Lesson - Honesty", { b: true }), { pageBreakBefore: true }),
+    t("Story text."),
+    p(r("Lesson - Courage", { b: true }), { pageBreakBefore: true }),
+    t("Story text."),
+  ].join("");
+  const { book } = await importBook({ body });
+  assert.deepEqual(book.chapters.map((s) => s.title), ["Lesson - Honesty", "Lesson - Courage"]);
+});
+
+test("only real numbering is removed when matching titles", () => {
+  const cases: Array<[string, string]> = [
+    ["Story 1: The Chariot Lesson", "The Chariot Lesson"],
+    ["1. The Chariot Lesson", "The Chariot Lesson"],
+    ["II. The Second", "The Second"],
+    ["Chapter IV – Rain", "Rain"],
+    ["ಕಥೆ ೧: ಬೆಣ್ಣೆ", "ಬೆಣ್ಣೆ"],
+    ["Civil-minded Children", "Civil-minded Children"],
+    ["Lil: The Calf", "Lil: The Calf"],
+    ["Ill-timed Rain", "Ill-timed Rain"],
+    ["1.5 Times", "1.5 Times"],
+    ["1945 was a year", "1945 was a year"],
+  ];
+  for (const [input, expected] of cases) assert.equal(stripTitleNumbering(input), expected, input);
+  assert.deepEqual(contentsLineKeys("1. A - B - C"), ["a - b - c", "a - b", "a"]);
+});
+
+test("a program name in the file's properties is not taken as the author", async () => {
+  const body = t("Chapter", { style: "Heading1" }) + t("Text.");
+  const generated = await importBook({ body, core: { creator: "python-docx" } });
+  assert.deepEqual(generated.book.metadata.authors, []);
+  assert.ok(codes(generated.result).includes("DOCX_AUTHOR_NOT_SET"));
+  assert.ok(!codes(generated.result).includes("DOCX_AUTHOR_FROM_PROPERTIES"));
+
+  const mixed = await importBook({ body, core: { creator: "Muralidhar Rao; Microsoft Office User" } });
+  assert.deepEqual(mixed.book.metadata.authors, ["Muralidhar Rao"]);
+
+  for (const placeholder of ["Unknown Author", "Author Name", "User1", "Microsoft Word", "python-docx 1.1.0", "Aspose.Words for .NET"]) {
+    const imported = await importBook({ body, core: { creator: placeholder } });
+    assert.deepEqual(imported.book.metadata.authors, [], placeholder);
+  }
+  const person = await importBook({ body, core: { creator: "Usha Rani" } });
+  assert.deepEqual(person.book.metadata.authors, ["Usha Rani"], "a real name starting like a placeholder is kept");
 });
 
 // --- review regressions -----------------------------------------------------------------------

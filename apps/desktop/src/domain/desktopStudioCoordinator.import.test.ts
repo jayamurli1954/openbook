@@ -12,7 +12,7 @@ import {
   DesktopStudioError,
 } from "./desktopStudioCoordinator.js";
 import { InMemorySqliteConnection } from "../persistence/sqliteDriver.js";
-import { PICTURE_BOOK, PNG_BYTES } from "./wordDocxTestFixture.js";
+import { PICTURE_BOOK, PNG_BYTES, chapter, para, wordDocx, wordPicture } from "./wordDocxTestFixture.js";
 import { SqliteProjectPersistence } from "../persistence/sqlitePersistence.js";
 
 const KANNADA_MARKDOWN = `---
@@ -142,6 +142,21 @@ test("imports a Word file with pictures through the asset pipeline (new project)
 
   const bytes = await coordinator.getAssetResolver().resolve(asset);
   assert.deepEqual([...bytes], [...PNG_BYTES]);
+});
+
+test("pictures refused by the asset pipeline are not counted as missing a description", async () => {
+  const coordinator = freshCoordinator("docx-alt-recount");
+  const result = await coordinator.importContent({
+    format: "docx",
+    bytes: wordDocx(
+      chapter("Story") + para(wordPicture("rId20", "Krishna")) + para(wordPicture("rId21", "")) + para(`<w:r><w:t>Text.</w:t></w:r>`),
+    ),
+  });
+  assert.ok(result.issues.some((issue) => issue.code === "DOCX_PICTURES_REJECTED"));
+  assert.ok(
+    !result.issues.some((issue) => issue.code === "DOCX_PICTURES_WITHOUT_ALT_TEXT"),
+    "the only picture without a description was the refused EMF",
+  );
 });
 
 test("appends a Word file's chapters and pictures, keeping existing assets", async () => {

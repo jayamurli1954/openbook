@@ -42,6 +42,22 @@ const FRONT_MATTER_TITLES: ReadonlyArray<readonly [SectionRole, readonly string[
 const CONTENTS_TITLES = new Set(["contents", "table of contents", "ಪರಿವಿಡಿ"]);
 const TOC_MATCH_RATIO = 0.6;
 
+/**
+ * dc:creator values that name the program that made the file, or a placeholder account,
+ * rather than a person (ADR-0040 §4.1).
+ */
+const NOT_AN_AUTHOR = new RegExp(
+  [
+    // Programs that write .docx files, with or without a version or product suffix.
+    "(python-docx|docx4j|apache poi|aspose|openxml|phpword|mammoth|pandoc|libreoffice|openoffice|google docs|microsoft (office )?word|wps office)\\b.*",
+    // Placeholder accounts and template text.
+    "(microsoft office user|windows user|unknown( author)?|author( name)?|your name|owner|admin(istrator)?|user\\s*\\d*|default)",
+  ]
+    .map((part) => `^${part}$`)
+    .join("|"),
+  "i",
+);
+
 /** Word fills dc:title with these when the author never set a title. */
 const DEFAULT_WORD_TITLE = /^(document|doc|untitled)\s*\d*$/i;
 
@@ -114,7 +130,15 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
   items = items.filter((p) => p !== titleItem && p !== subtitleItem);
 
   if (input.coreCreator) {
-    const authors = input.coreCreator.split(";").map((name) => name.trim()).filter(Boolean);
+    const named = input.coreCreator.split(";").map((name) => name.trim()).filter(Boolean);
+    const authors = named.filter((name) => !NOT_AN_AUTHOR.test(name));
+    if (authors.length < named.length) {
+      issues.push({
+        code: "DOCX_AUTHOR_NOT_SET",
+        severity: "info",
+        message: `The Word file's properties name “${named.filter((name) => NOT_AN_AUTHOR.test(name)).join(", ")}” as the author, which is a program or a placeholder, not a person. Add the author's name in Details.`,
+      });
+    }
     if (authors.length > 0) {
       metadata.authors = authors;
       issues.push({
@@ -552,22 +576,28 @@ function findTypedToc(items: readonly DocxParagraph[]): TypedToc | undefined {
       entries.push(entry.text);
       end += 1;
     }
-    if (entries.length < 2) continue;
+    if (entries.length === 0) continue;
 
-    const later = new Set(items.slice(end).map((p) => normalizeTitle(p.text)));
+    const laterItems = items.slice(end);
+    const later = new Set(laterItems.map((p) => normalizeTitle(p.text)));
+    const laterKeys = new Set(laterItems.map((p) => headingKey(p.text)).filter((key) => key !== ""));
     const titles = new Set<string>();
     let matched = 0;
     let lastMatch = -1;
     entries.forEach((entry, index) => {
       const raw = normalizeTitle(entry);
       const stripped = normalizeTitle(entry.replace(PAGE_NUMBER_TAIL, ""));
-      const hit = later.has(raw) ? raw : later.has(stripped) ? stripped : undefined;
+      // Contents lines are often worded differently from their headings
+      // (“1. The Chariot Lesson - Courage” for “Story 1: The Chariot Lesson”).
+      const key = contentsLineKeys(entry.replace(PAGE_NUMBER_TAIL, "")).find((candidate) => laterKeys.has(candidate));
+      const hit = later.has(raw) ? raw : later.has(stripped) ? stripped : key;
       if (hit) {
         matched += 1;
         titles.add(hit);
         lastMatch = index;
       }
     });
+    // With a single line, the ratio means that line must name a later heading.
     if (matched / entries.length < TOC_MATCH_RATIO || lastMatch === -1) continue;
     // The contents page runs through its last entry that names a later paragraph, plus any
     // following lines that still look like entries (text then a page number), such as
@@ -579,6 +609,53 @@ function findTypedToc(items: readonly DocxParagraph[]): TypedToc | undefined {
   return undefined;
 }
 
+const NUMBERING_WORD = /^(?:story|chapter|chap\.?|part|tale|ಕಥೆ|ಅಧ್ಯಾಯ)\s*/iu;
+const NUMBERING = /^([0-9\u0CE6-\u0CEF]+|[ivxlc]+)\s*([.:)\-\u2013\u2014])?(?:\s+|$)/iu;
+const ROMAN = /^(?:x{0,3})(?:ix|iv|v?i{0,3})$/i;
+/** “ - subtitle” or “ : subtitle”: a separator with spaces on both sides. */
+const SUBTITLE_SEPARATOR = /\s+[-\u2013\u2014:]\s+/gu;
+
+/**
+ * Removes leading numbering — “1.”, “Story 1:”, “Chapter IV –”, “ಕಥೆ ೧:”, “II.” — and nothing
+ * else. Bare numbers need a separator; bare Roman numerals must be valid and end in “.” or “)”,
+ * so words such as “Civil-minded” or “Lil:” are left alone.
+ */
+export function stripTitleNumbering(text: string): string {
+  const trimmed = text.trim();
+  const word = NUMBERING_WORD.exec(trimmed);
+  const rest = word ? trimmed.slice(word[0].length) : trimmed;
+  const match = NUMBERING.exec(rest);
+  if (!match) return trimmed;
+  const [whole, number, separator] = match;
+  const isRoman = /^[ivxlc]+$/i.test(number!);
+  if (!word) {
+    if (!separator) return trimmed;
+    if (isRoman && (!ROMAN.test(number!) || (separator !== "." && separator !== ")"))) return trimmed;
+  }
+  const remainder = rest.slice(whole.length);
+  return remainder === "" ? trimmed : remainder;
+}
+
+/** A heading's matching key: numbering removed; its own wording otherwise kept. */
+export function headingKey(text: string): string {
+  return normalizeTitle(stripTitleNumbering(text));
+}
+
+/**
+ * Keys a contents line may match a heading by: the whole line, the line without its last
+ * “ - subtitle”, and without everything after the first separator. Numbering is removed first.
+ */
+export function contentsLineKeys(text: string): string[] {
+  const line = stripTitleNumbering(text);
+  const separators = [...line.matchAll(SUBTITLE_SEPARATOR)];
+  const candidates = [line];
+  if (separators.length > 0) {
+    candidates.push(line.slice(0, separators[separators.length - 1]!.index));
+    candidates.push(line.slice(0, separators[0]!.index));
+  }
+  return [...new Set(candidates.map(normalizeTitle).filter((key) => key !== ""))];
+}
+
 function chaptersFromToc(
   items: readonly DocxParagraph[],
   titles: ReadonlySet<string>,
@@ -588,8 +665,9 @@ function chaptersFromToc(
   const seen = new Set<string>();
   for (const p of items.slice(from)) {
     if (p.list || p.inTable || wordCount(p.text) > 20) continue;
-    const key = normalizeTitle(p.text);
-    if (titles.has(key) && !seen.has(key)) {
+    const normalized = normalizeTitle(p.text);
+    const key = titles.has(normalized) ? normalized : headingKey(p.text);
+    if (key !== "" && titles.has(key) && !seen.has(key)) {
       seen.add(key);
       promoted.add(p);
     }
