@@ -28,4 +28,4 @@ After ADR-0040 was accepted (PR #164) and its status reconciled (PR #165), the m
 
 ## Outcomes
 
-- Branch `feat/adr-0040-slice-1-docx-container`.
+- Branch `feat/adr-0040-slice-1-docx-container`; merged as PR #166 after a review pass (10 findings fixed).
