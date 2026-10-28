@@ -16,11 +16,11 @@ All in `packages/importer/src/docx/`:
 
 | Module | Role |
 |---|---|
-| `limits.ts` | `DEFAULT_DOCX_LIMITS` (ADR-0040 §5 values) and `resolveDocxLimits` for test overrides |
+| `limits.ts` | `DEFAULT_DOCX_LIMITS` (ADR-0040 §5 values) and `resolveDocxLimits` for overrides; an `undefined` override keeps the default, and a non-positive or non-finite one is a programming error, so no override can switch a limit off |
 | `errors.ts` | `DocxReadError` with codes and plain-language messages; `docxReadErrorToIssue` → fatal `ImportIssue` |
-| `zip.ts` | Read-only ZIP layer. Parses the end-of-central-directory record and the central directory itself; checks every limit **before** inflating; inflates with `fflate`'s streaming `Inflate` in 4 KB chunks into a buffer of the declared size and stops the moment output passes it; checks CRC-32 |
+| `zip.ts` | Read-only ZIP layer. Parses the end-of-central-directory record (trailing padding after it is tolerated) and the central directory itself; checks every limit **before** inflating; inflates with `fflate`'s streaming `Inflate` in 4 KB chunks into a buffer of the declared size and stops the moment output passes it; checks CRC-32. Each part counts toward the total once, however often it is read |
 | `xml.ts` | Restricted XML reader: no DOCTYPE, only the five predefined entities and valid numeric references, depth ≤ 256, ≤ 64 attributes, UTF-8/UTF-16 only, namespaces resolved |
-| `package.ts` | `openDocxPackage(bytes, limits?)`: reads `[Content_Types].xml` and `_rels/.rels`, finds the main document by relationship, rejects macro-enabled files and templates, refuses external or escaping targets, and blocks macro and embedded-object parts from ever being read |
+| `package.ts` | `openDocxPackage(bytes, limits?)`: reads `[Content_Types].xml` and `_rels/.rels`, finds the main document by relationship (targets kept percent-encoded, as ZIP names are), rejects macro-enabled main documents and templates, refuses external or escaping targets, and blocks macro, OLE, ActiveX, and embedded-package parts by content type and by conventional path. Parsed XML parts are cached; XML is recognised by extension or content type and capped at 32 MB either way |
 
 `types.ts` gains `DocxImportSource` (`format: "docx"`, `bytes`, `filename?`). The new API is exported from `@openbook/importer`.
 
@@ -34,8 +34,8 @@ All in `packages/importer/src/docx/`:
 6. Per entry: not encrypted; method stored or deflate; stored sizes agree; name is valid UTF-8; no duplicate names (case-insensitive, as OPC requires); XML parts ≤ 32 MB, other parts ≤ 50 MB; compression ratio ≤ 1,000 : 1 above 1 MB; running total ≤ 512 MB.
 7. Local header matches the central directory; no two entries overlap; no data runs into the central directory.
 8. On read: actual inflated bytes never pass the declared size; the inflated total never passes 512 MB; CRC-32 matches.
-9. Package: content types present; no `macroEnabled` content type; main document found through the `officeDocument` relationship, internal, inside the package, and of the Word document type (templates get their own message).
-10. `vbaProject.bin`, `vbaData.xml`, `word/embeddings/*`, and `word/activeX/*` can never be read.
+9. Package: content types present; the main document's content type is not `macroEnabled` (an embedded macro-enabled object does not reject the file; it is simply never read); main document found through the `officeDocument` relationship, internal, inside the package, and of the Word document type (templates get their own message).
+10. Macro, OLE, ActiveX, and embedded-package parts can never be read, whether found by content type or by the conventional paths (`vbaProject.bin`, `vbaData.xml`, `word/embeddings/*`, `word/activeX/*`).
 
 ## 3. Boundary adjustment (recorded per ADR-0040 §8)
 
@@ -82,7 +82,7 @@ No real Word manuscripts were measured in this slice: none are in the repository
 ## 8. Acceptance criteria
 
 - Every ADR-0040 §5 limit has a test that a crafted file cannot pass.
-- Decompression never allocates more than the declared size of the entry, which is itself capped.
+- Decompression writes into a buffer of the entry's declared size, which is itself capped. Inside `fflate`, one 4 KB push can expand to at most about 4 MB (4 KB × DEFLATE's ~1,032 : 1 maximum) before the size check rejects it, so peak memory per read is the declared size plus about 4 MB.
 - No macro, OLE, or ActiveX part can be read, and no external target is followed.
 - Importer, full repository `npm test`, and desktop build pass; CI and DCO pass.
 - Closure inventory unchanged.

@@ -23,12 +23,22 @@ const OFFICE_DOCUMENT_REL_TYPES = new Set([
   "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",
 ]);
 
-/** Parts that are never read, whatever a later slice asks for (ADR-0040 §5). */
-const BLOCKED_PARTS = [
+/**
+ * Parts that are never read, whatever a later slice asks for (ADR-0040 §5).
+ * OPC lets these parts live at any name, so they are blocked by content type;
+ * the conventional paths are blocked as well, in case a type is missing.
+ */
+const BLOCKED_PATHS = [
   /(^|\/)vbaProject\.bin$/i,
   /(^|\/)vbaData\.xml$/i,
   /^word\/embeddings\//i,
   /^word\/activeX\//i,
+];
+const BLOCKED_TYPES = [
+  /vbaProject|vbaData|activeX|oleObject|macroEnabled/i,
+  // Whole embedded Office packages (an embedded .docx, .xlsx, .pptx), not their +xml parts.
+  /officedocument\.[a-z]+ml\.(document|sheet|presentation|template|slideshow)$/i,
+  /officedocument\.package$/i,
 ];
 
 export interface DocxPackage {
@@ -59,40 +69,62 @@ export function openDocxPackage(bytes: Uint8Array, limits?: Partial<DocxLimits>)
 
 function openOrThrow(bytes: Uint8Array, limits: DocxLimits): DocxPackage {
   const archive = ZipArchive.open(bytes, limits);
+  let contentTypes: ContentTypes | undefined;
+  const xmlCache = new Map<string, XmlElement>();
 
   const readPart = (name: string): Uint8Array => {
     const normalized = normalizePartName(name);
-    if (BLOCKED_PARTS.some((pattern) => pattern.test(normalized))) {
+    const type = contentTypes ? contentTypeOf(normalized, contentTypes) : undefined;
+    if (
+      BLOCKED_PATHS.some((pattern) => pattern.test(normalized)) ||
+      (type !== undefined && BLOCKED_TYPES.some((pattern) => pattern.test(type)))
+    ) {
       throw new DocxReadError("DOCX_PART_BLOCKED", "OpenBook does not read macros or embedded objects.", normalized);
     }
     return archive.read(normalized);
   };
   const readXmlPart = (name: string): XmlElement => {
     const normalized = normalizePartName(name);
-    if (!isXmlPart(normalized)) {
+    const key = normalized.toLowerCase();
+    const cached = xmlCache.get(key);
+    if (cached) return cached;
+
+    const type = contentTypes ? contentTypeOf(normalized, contentTypes) : undefined;
+    const isXml = isXmlPart(normalized) || (type !== undefined && /[/+]xml$/i.test(type));
+    if (!isXml) {
       throw new DocxReadError("DOCX_XML_INVALID", "This Word file is damaged: an expected XML part is not XML.", normalized);
     }
-    return parseXmlPart(readPart(normalized), limits, normalized);
+    const raw = readPart(normalized);
+    // The ZIP layer sizes parts by extension; XML found by content type gets the XML cap here.
+    if (raw.length > limits.maxXmlPartBytes) {
+      throw new DocxReadError(
+        "DOCX_ENTRY_TOO_LARGE",
+        "One part of this file is larger than OpenBook allows.",
+        normalized,
+      );
+    }
+    const element = parseXmlPart(raw, limits, normalized);
+    xmlCache.set(key, element);
+    return element;
   };
 
   if (!archive.find("[Content_Types].xml")) {
     throw notWord();
   }
-  const contentTypes = readContentTypes(readXmlPart("[Content_Types].xml"));
-  for (const type of [...contentTypes.defaults.values(), ...contentTypes.overrides.values()]) {
-    if (/macroenabled/i.test(type)) {
-      throw new DocxReadError(
-        "DOCX_MACRO_ENABLED",
-        "This document contains macros. Save it as a regular .docx (Word Document) and try again.",
-      );
-    }
-  }
+  contentTypes = readContentTypes(readXmlPart("[Content_Types].xml"));
 
   if (!archive.find("_rels/.rels")) {
     throw notWord();
   }
   const mainDocumentPart = findMainDocument(readXmlPart("_rels/.rels"));
   const mainType = contentTypeOf(mainDocumentPart, contentTypes);
+  // Only the main document decides .docm/.dotm. An embedded macro-enabled object is never read.
+  if (mainType !== undefined && /macroenabled/i.test(mainType)) {
+    throw new DocxReadError(
+      "DOCX_MACRO_ENABLED",
+      "This document contains macros. Save it as a regular .docx (Word Document) and try again.",
+    );
+  }
   if (mainType === WORD_TEMPLATE_CONTENT_TYPE) {
     throw new DocxReadError(
       "DOCX_NOT_WORD_DOCUMENT",
@@ -164,7 +196,10 @@ function findMainDocument(root: XmlElement): string {
   throw notWord();
 }
 
-/** Resolves a relationship target from the package root; refuses anything that leaves it. */
+/**
+ * Resolves a relationship target from the package root; refuses anything that leaves it.
+ * Targets stay percent-encoded: OPC stores ZIP item names in the same encoded form.
+ */
 function resolvePackageTarget(target: string): string {
   if (/^[a-z][a-z0-9+.-]*:/i.test(target) || target.includes("\\")) {
     throw notWord();
@@ -177,18 +212,10 @@ function resolvePackageTarget(target: string): string {
       segments.pop();
       continue;
     }
-    segments.push(decodeURIComponentSafe(segment));
+    segments.push(segment);
   }
   if (segments.length === 0) throw notWord();
   return segments.join("/");
-}
-
-function decodeURIComponentSafe(segment: string): string {
-  try {
-    return decodeURIComponent(segment);
-  } catch {
-    throw notWord();
-  }
 }
 
 function normalizePartName(name: string): string {

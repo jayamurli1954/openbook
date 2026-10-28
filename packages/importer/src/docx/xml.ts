@@ -89,6 +89,10 @@ export function decodeXmlBytes(bytes: Uint8Array, part: string): string {
   return text;
 }
 
+// Sticky (/y) so names and attributes match in place, without copying text per tag.
+const NAME_AT = /[^\s/>=<"'&]+/y;
+const ATTRIBUTE_AT = /([^\s/>=<"'&]+)\s*=\s*(["'])/y;
+
 interface OpenElement {
   readonly qname: string;
   readonly ns: string;
@@ -186,7 +190,8 @@ export function parseXml(text: string, limits: XmlParseLimits, part: string): Xm
       throw invalid(part, "it has more than one root element");
     }
     pos += 1;
-    const nameMatch = /^[^\s/>=<"'&]+/.exec(text.slice(pos, pos + 512));
+    NAME_AT.lastIndex = pos;
+    const nameMatch = NAME_AT.exec(text);
     if (!nameMatch) throw invalid(part, "an element has no name");
     const qname = nameMatch[0];
     pos += qname.length;
@@ -205,7 +210,8 @@ export function parseXml(text: string, limits: XmlParseLimits, part: string): Xm
         pos += 1;
         break;
       }
-      const attrMatch = /^([^\s/>=<"'&]+)\s*=\s*(["'])/.exec(text.slice(pos, pos + 1024));
+      ATTRIBUTE_AT.lastIndex = pos;
+      const attrMatch = ATTRIBUTE_AT.exec(text);
       if (!attrMatch) throw invalid(part, "an attribute is malformed");
       const attrName = attrMatch[1]!;
       const quote = attrMatch[2]!;

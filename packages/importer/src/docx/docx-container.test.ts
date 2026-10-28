@@ -11,6 +11,7 @@ import {
   type DocxLimits,
   type DocxPackage,
 } from "../index.js";
+import { resolveDocxLimits } from "./limits.js";
 import { crc32 } from "./zip.js";
 import { parseXml, parseXmlPart, type XmlElement } from "./xml.js";
 
@@ -442,6 +443,92 @@ test("decodes UTF-16 parts and refuses other encodings and malformed bytes", () 
     "DOCX_XML_INVALID",
   );
   expectReadError(() => parseXmlPart(new Uint8Array([0x3c, 0x61, 0x3e, 0xff, 0x3c, 0x2f, 0x61, 0x3e]), XML_LIMITS, "t.xml"), "DOCX_XML_INVALID");
+});
+
+// --- review regressions ----------------------------------------------------------------
+
+test("an undefined limit override keeps the default; invalid overrides are refused", () => {
+  assert.deepEqual(resolveDocxLimits({ maxFileBytes: undefined }), DEFAULT_DOCX_LIMITS);
+  const bytes = makeDocx();
+  expectOpenFailure(bytes, "DOCX_FILE_TOO_LARGE", { maxFileBytes: bytes.length - 1, maxEntries: undefined });
+  for (const bad of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.throws(() => openDocxPackage(bytes, { maxFileBytes: bad }), TypeError);
+  }
+  assert.throws(() => resolveDocxLimits({ maxBogus: 1 } as Partial<DocxLimits>), TypeError);
+});
+
+test("an embedded macro-enabled object does not reject the document, and is never read", () => {
+  const docx = open(
+    makeDocx({
+      "[Content_Types].xml": contentTypes(
+        DOC_TYPE,
+        `<Default Extension="xlsm" ContentType="application/vnd.ms-excel.sheet.macroEnabled.12"/>`,
+      ),
+      "word/charts/book1.xlsm": new Uint8Array([1, 2, 3]),
+    }),
+  );
+  expectReadError(() => docx.readPart("word/charts/book1.xlsm"), "DOCX_PART_BLOCKED");
+});
+
+test("rejects a macro-enabled template (.dotm) as containing macros", () => {
+  const dotm = "application/vnd.ms-word.template.macroEnabledTemplate.main+xml";
+  expectOpenFailure(makeDocx({ "[Content_Types].xml": contentTypes(dotm) }), "DOCX_MACRO_ENABLED");
+});
+
+test("blocks OLE, ActiveX, and embedded packages by content type, wherever they are stored", () => {
+  const docx = open(
+    makeDocx({
+      "[Content_Types].xml": contentTypes(
+        DOC_TYPE,
+        `<Override PartName="/word/media/image9.bin" ContentType="application/vnd.openxmlformats-officedocument.oleObject"/>` +
+          `<Default Extension="xlsx" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>`,
+      ),
+      "word/media/image9.bin": new Uint8Array([1, 2, 3]),
+      "word/media/table.xlsx": new Uint8Array([4, 5, 6]),
+    }),
+  );
+  expectReadError(() => docx.readPart("word/media/image9.bin"), "DOCX_PART_BLOCKED");
+  expectReadError(() => docx.readPart("word/media/table.xlsx"), "DOCX_PART_BLOCKED");
+  assert.equal(docx.readXmlPart("word/document.xml").local, "document");
+});
+
+test("tolerates padding after the end of the ZIP", () => {
+  const bytes = makeDocx();
+  const padded = new Uint8Array(bytes.length + 100);
+  padded.set(bytes);
+  assert.equal(open(padded).readXmlPart("word/document.xml").local, "document");
+});
+
+test("reading a part again does not count it against the total twice", () => {
+  const bytes = makeDocx();
+  const declared = open(bytes).partNames.reduce((sum, name) => sum + open(bytes).readPart(name).length, 0);
+  const docx = open(bytes, { maxTotalUncompressedBytes: declared });
+  for (let i = 0; i < 10; i += 1) {
+    assert.ok(docx.readPart("word/document.xml").length > 0);
+  }
+  assert.equal(docx.readXmlPart("word/document.xml"), docx.readXmlPart("word/document.xml"));
+});
+
+test("finds a percent-encoded main document part", () => {
+  const bytes = makeDocx({
+    "_rels/.rels": rootRels("word/my%20book.xml"),
+    "[Content_Types].xml": contentTypes(DOC_TYPE, `<Override PartName="/word/my%20book.xml" ContentType="${DOC_TYPE}"/>`),
+    "word/my%20book.xml": documentXml(""),
+  });
+  const docx = open(bytes);
+  assert.equal(docx.mainDocumentPart, "word/my%20book.xml");
+  assert.equal(docx.readXmlPart(docx.mainDocumentPart).local, "document");
+});
+
+test("reads a main document without an .xml extension, under the XML size cap", () => {
+  const files = {
+    "_rels/.rels": rootRels("word/document"),
+    "[Content_Types].xml": contentTypes(DOC_TYPE, `<Override PartName="/word/document" ContentType="${DOC_TYPE}"/>`),
+    "word/document": documentXml(`<w:p><w:r><w:t>${"x".repeat(5000)}</w:t></w:r></w:p>`),
+  };
+  const docx = open(makeDocx(files));
+  assert.equal(docx.readXmlPart("word/document").local, "document");
+  expectReadError(() => open(makeDocx(files), { maxXmlPartBytes: 4096 }).readXmlPart("word/document"), "DOCX_ENTRY_TOO_LARGE");
 });
 
 // --- support ---------------------------------------------------------------------------

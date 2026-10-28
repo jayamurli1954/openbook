@@ -44,6 +44,8 @@ export class ZipArchive {
   readonly #byKey: Map<string, ZipEntry>;
   readonly entries: readonly ZipEntry[];
   #inflatedTotal = 0;
+  /** Parts already counted toward the total; re-reading a part does not count it again. */
+  readonly #counted = new Set<string>();
 
   private constructor(bytes: Uint8Array, limits: DocxLimits, entries: ZipEntry[]) {
     this.#bytes = bytes;
@@ -71,8 +73,9 @@ export class ZipArchive {
     if (!entry) {
       throw new DocxReadError("DOCX_PART_MISSING", `This Word file is missing a required part.`, name);
     }
-    const remaining = this.#limits.maxTotalUncompressedBytes - this.#inflatedTotal;
-    if (entry.uncompressedSize > remaining) {
+    const key = entryKey(entry.name);
+    const counted = this.#counted.has(key);
+    if (!counted && entry.uncompressedSize > this.#limits.maxTotalUncompressedBytes - this.#inflatedTotal) {
       throw totalTooLarge(this.#limits);
     }
 
@@ -82,7 +85,10 @@ export class ZipArchive {
     if (crc32(out) !== entry.crc32) {
       throw corrupt(entry.name);
     }
-    this.#inflatedTotal += out.length;
+    if (!counted) {
+      this.#counted.add(key);
+      this.#inflatedTotal += out.length;
+    }
     return out;
   }
 }
@@ -118,8 +124,9 @@ function findEndOfCentralDirectory(bytes: Uint8Array, view: DataView): EndOfCent
   const lowest = Math.max(0, bytes.length - EOCD_MIN_LENGTH - MAX_EOCD_COMMENT);
   for (let pos = bytes.length - EOCD_MIN_LENGTH; pos >= lowest; pos -= 1) {
     if (view.getUint32(pos, true) !== EOCD_SIG) continue;
+    // Trailing bytes after the record are tolerated (some tools pad files); the comment must fit.
     const commentLength = view.getUint16(pos + 20, true);
-    if (pos + EOCD_MIN_LENGTH + commentLength !== bytes.length) continue;
+    if (pos + EOCD_MIN_LENGTH + commentLength > bytes.length) continue;
 
     const diskNumber = view.getUint16(pos + 4, true);
     const centralDirectoryDisk = view.getUint16(pos + 6, true);
@@ -286,10 +293,8 @@ function readLocalHeader(
 function inflateBounded(entry: ZipEntry, compressed: Uint8Array): Uint8Array {
   const out = new Uint8Array(entry.uncompressedSize);
   let written = 0;
-  let overflow = false;
   const inflater = new Inflate((chunk) => {
     if (written + chunk.length > out.length) {
-      overflow = true;
       throw new DocxReadError(
         "DOCX_COMPRESSION_RATIO",
         "Part of this file expands to more than it says it contains. It may be damaged or unsafe.",
@@ -309,7 +314,7 @@ function inflateBounded(entry: ZipEntry, compressed: Uint8Array): Uint8Array {
       inflater.push(compressed.subarray(offset, next), next === compressed.length);
     }
   } catch (err) {
-    if (overflow && err instanceof DocxReadError) {
+    if (err instanceof DocxReadError) {
       throw err;
     }
     throw corrupt(entry.name);

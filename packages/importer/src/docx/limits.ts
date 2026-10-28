@@ -41,6 +41,21 @@ export const DEFAULT_DOCX_LIMITS: DocxLimits = Object.freeze({
   maxXmlAttributes: 64,
 });
 
+/**
+ * Applies overrides to the defaults. An override left `undefined` keeps the default;
+ * anything that is not a positive finite number is a programming error, never a disabled limit.
+ */
 export function resolveDocxLimits(overrides?: Partial<DocxLimits>): DocxLimits {
-  return Object.freeze({ ...DEFAULT_DOCX_LIMITS, ...overrides });
+  const resolved: Record<string, number> = { ...DEFAULT_DOCX_LIMITS };
+  for (const [key, value] of Object.entries(overrides ?? {})) {
+    if (value === undefined) continue;
+    if (!(key in DEFAULT_DOCX_LIMITS)) {
+      throw new TypeError(`Unknown .docx limit "${key}".`);
+    }
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+      throw new TypeError(`.docx limit "${key}" must be a positive finite number.`);
+    }
+    resolved[key] = value;
+  }
+  return Object.freeze(resolved) as unknown as DocxLimits;
 }
