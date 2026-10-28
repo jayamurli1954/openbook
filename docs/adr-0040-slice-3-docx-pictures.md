@@ -1,6 +1,6 @@
 # ADR-0040 Slice 3: DOCX Pictures — Implementation Record
 
-- **Status:** Implemented in a Draft PR; merge on explicit authorization
+- **Status:** Implemented on main (PR #170)
 - **Date:** 2026-10-28
 - **Parent architecture:** ADR-0040 — Word (.docx) Import
 - **Scope:** Embedded pictures with alt text and captions; ingestion through the ADR-0017/ADR-0021 asset pipeline in `DesktopStudioCoordinator`, with placeholder substitution, an explicit image-reference check, rejection-to-warning, and batch atomicity. No UI (Slice 4).

@@ -23,4 +23,4 @@ After Slice 2 merged (PR #168) and its status was reconciled (PR #169), the main
 
 ## Outcomes
 
-- Branch `feat/adr-0040-slice-3-docx-pictures`.
+- Branch `feat/adr-0040-slice-3-docx-pictures`; merged as PR #170 after a review pass (8 of 9 findings fixed; the desktop test's own ZIP writer kept by design).
