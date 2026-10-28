@@ -78,6 +78,11 @@ export type ImportSource =
 
 **ADR-0015 §2.3 and ADR-0020 INV-2 (format firewall).** The firewall becomes `markdown`, `text`, `docx`. Everything else stays rejected with `UNSUPPORTED_FORMAT`: `.doc`, `.docm`, `.dotx`, `.odt`, `.rtf`, PDF, EPUB, HTML. The `canImport("docx") === false` test assertion is replaced, in the slice that adds the reader, by `true`, and a new assertion keeps `canImport("doc") === false`.
 
+`ImportService.import` changes with the union:
+
+- today it rejects any source whose `content` is not a string (`INVALID_CONTENT`). That guard applies to `markdown` and `text` only; a `docx` source must instead carry a non-empty `Uint8Array` in `bytes`, or it fails with `INVALID_CONTENT`;
+- today the default id seed is built from `format`, `filename`, and `content`. For `docx` the seed is built from `format` and the **SHA-256 of `bytes`**, not from the filename, so two different files never share an id sequence and identical bytes always give identical ids (INV-D6). `ImportOptions.idSeed` still wins when given.
+
 The ADR-0015 rejection of external converter subprocesses (Pandoc, LibreOffice, Calibre) is **unchanged**.
 
 ### 2.2 Importer result for images
@@ -102,9 +107,10 @@ export interface ImportResult {
 ```
 
 - The importer stays free of `@openbook/assets`. It does not hash, store, or type-sniff images. ADR-0015 §2.2 dependency rules hold.
-- `result.book` is not committed by the importer. The coordinator ingests every payload, replaces each `placeholderId` with the real `AssetRef.id`, adds the `AssetRef` (with `altText`, and `licence` empty for the author to fill), runs `validateBook`, and only then commits.
+- `result.book` is not committed by the importer. The coordinator ingests every payload, replaces each `placeholderId` with the real `AssetRef.id`, adds the `AssetRef` (with `altText`, and `licence` empty for the author to fill), and only then commits.
+- `validateBook` does **not** check that an `image` block's `assetId` names an entry in `Book.assets`; today only package Save catches that (`DANGLING_IMAGE_REFERENCE`). So before commit the coordinator runs an explicit check: every `image` block's `assetId` is in `Book.assets`, and no `placeholderId` remains anywhere in the Book. A failure is a fail-closed import error, not a warning. Placeholder ids use a reserved prefix that `AssetRef` ids never use, so a leftover is unambiguous.
 - A payload that the asset pipeline rejects (unsupported type, over the size limit, unsafe SVG) removes its `image` block and adds a warning that names the story or chapter where the picture was. The rest of the book still imports. An author can re-insert the picture with the Writing Studio image button.
-- `new-project` mode replaces the in-memory session (ADR-0020 INV-9). `append-sections` mode keeps ADR-0020 INV-10 batch atomicity: if commit fails, assets ingested for this import are not referenced by the Book, and the Book is unchanged. Unreferenced content-addressed bytes are harmless and follow the existing ADR-0029 package rules.
+- `new-project` mode replaces the in-memory session (ADR-0020 INV-9). `append-sections` mode keeps ADR-0020 INV-10 batch atomicity: if commit fails, assets ingested for this import are not referenced by the Book, and the Book is unchanged. Bytes left in the asset store without an `AssetRef` are not written to the package: package Save builds its asset entries from `Book.assets` only (`mapAssetRefsToPackageEntries`), so they never become orphan package entries, which Open rejects. Slice 3 adds a test for this rollback case.
 
 ## 3. Parsing approach — options considered
 
@@ -143,7 +149,7 @@ The reader opens `[Content_Types].xml`, `_rels/.rels`, `word/document.xml`, `wor
 | Paragraph styled **Subtitle** before the first heading | `metadata.subtitle` | Not kept as body text |
 | `dc:creator` | `metadata.authors` | Split on `;`. Word often fills this with the computer's account name, so the import summary shows the author name for the author to confirm in the Metadata Wizard |
 | `dc:language` or `w:lang` of the Normal style | `metadata.language` | Falls back to `ImportOptions.defaultLanguage` |
-| `dcterms:created` | — | **Not** used as `publishedAt` (ADR-0015 INV-4: no manufactured metadata) |
+| `dcterms:created` | — | **Not** used as `publishedAt` (ADR-0015 §2.1 item 4 and ADR-0020 INV-4: no manufactured metadata) |
 | `ImportOptions.metadataOverrides` | metadata | Always win, as today |
 
 ### 4.2 Structure
@@ -161,6 +167,13 @@ Styles are matched by **outline level and built-in style id** (`Heading1`…`Hea
 | Empty paragraphs, page breaks, section breaks, column breaks | dropped |
 | Tables | each cell's paragraphs become `paragraph` blocks in reading order, with one warning per table (no table block in the Book Model) |
 
+**Chapter titles without heading styles.** Many manuscripts format chapter titles by hand (bold or larger Normal text) and use no heading style at all. If the document has **no** Heading 1 (or outline level 0) paragraph, the importer looks for chapter titles in this order and uses the first that finds at least two:
+
+1. **Typed contents page** (§4.4): each contents line, after removing page numbers and leader dots, that matches the whole text of a later short paragraph marks that paragraph as a chapter title.
+2. **Hand-formatted titles:** a short single-line paragraph (≤ 12 words, no ending full stop) whose runs are all bold, or whose size is larger than the Normal style, and which follows a page break or starts a new page section.
+
+Paragraphs found this way are treated as Heading 1. The import summary says chapters were found without heading styles and asks the author to check them in Structure Studio. If neither rule finds two titles, the body becomes one chapter, as plain text import does, with a warning.
+
 ### 4.3 Untagged front matter
 
 Many manuscripts type “Foreword” in bold Normal text instead of using a heading style. Content **before the first Heading 1** is split into front-matter sections using a short, single-line paragraph whose whole text matches a known front-matter title (case- and punctuation-insensitive), in English or Kannada:
@@ -174,7 +187,7 @@ Many manuscripts type “Foreword” in bold Normal text instead of using a head
 | Copyright | `front`, role `copyright` |
 | Publisher's Note, Acknowledgements, About this book · ಪ್ರಕಾಶಕರ ಮಾತು, ಕೃತಜ್ಞತೆಗಳು | `front`, role `custom`, title kept |
 
-The same rule applies to a Heading 1 whose text matches the table: it becomes a `front` section with that role, not a chapter. The word list is a constant in one module so later slices can extend it. The Kannada words are a starting list for the maintainer to confirm in Slice 2.
+The same rule applies to a Heading 1 whose text matches the table, **but only while no chapter has started yet**: it becomes a `front` section with that role. Once the first non-matching Heading 1 has started a chapter, later Heading 1s stay where the author put them. A chapter titled “Introduction” after the front matter stays a chapter, and “Acknowledgements” at the end stays at the end. Moving such sections into back matter is left to the author in Structure Studio. The word list is a constant in one module so later slices can extend it. The Kannada words are a starting list for the maintainer to confirm in Slice 2.
 
 Other content before the first heading:
 
@@ -190,7 +203,7 @@ Engines generate navigation (ADR-0009 nav, ADR-0011, ADR-0013). A Word table of 
 - paragraphs styled `TOC1`…`TOC9`;
 - a **typed** contents page: a paragraph whose text is “Contents”, “Table of Contents”, or “ಪರಿವಿಡಿ”, followed by lines most of which (≥ 60 %) match later heading text after removing trailing page numbers and leader dots. The heading and those lines are dropped together.
 
-Each drop adds one `info` issue so the summary can say “Your typed table of contents was removed; OpenBook builds one for you.”
+Each drop adds one `info` issue so the summary can say “Your typed table of contents was removed; OpenBook builds one for you.” A typed contents page is read before it is dropped, because it may supply chapter titles (§4.2).
 
 ### 4.5 Inline text
 
@@ -203,6 +216,18 @@ Each drop adds one `info` issue so the summary can say “Your typed table of co
 | `w:tab`, `w:br` (line break inside a paragraph) | a space; soft line breaks inside poems are kept as separate paragraphs only when the author used paragraph marks |
 | `w:sym`, `w:noBreakHyphen`, `w:softHyphen` | the Unicode character, a non-breaking hyphen, or nothing |
 | Underline, strike, colour, highlight, font, size, spacing, small caps, superscript/subscript | dropped |
+
+**Fields.** For every field, simple (`w:fldSimple`) or complex (`w:fldChar` begin/separate/end), the instruction text (`w:instrText`, `@w:instr`) is **never** emitted as content. Only the field result, the runs between `separate` and `end`, is read, under these rules:
+
+| Field | Handling |
+|---|---|
+| `TOC` | result dropped (§4.4) |
+| `HYPERLINK "url"` | result text becomes a `link` under the same scheme rules as `w:hyperlink`; `\l` (internal anchor) gives plain text |
+| `INCLUDEPICTURE`, `INCLUDETEXT`, `LINK`, `DDE`, `DDEAUTO`, `IMPORT` | result dropped with a warning; the target is **never** fetched or opened (§5) |
+| `PAGE`, `NUMPAGES`, `PAGEREF` | result dropped (page numbers belong to the engines) |
+| Anything else (`SEQ`, `REF`, `DATE`, `AUTHOR`, …) | cached result text kept as plain text |
+
+Nested fields follow the same rules from the inside out.
 
 Adjacent runs with the same marks are merged. Text is kept exactly as Unicode (Kannada conjuncts, ZWJ/ZWNJ untouched).
 
@@ -239,11 +264,11 @@ A `.docx` is an untrusted ZIP of XML from outside OpenBook (ROADMAP §“Depende
 | ZIP entry count | ≤ 2,000 |
 | Per-entry uncompressed size | XML parts ≤ 32 MB; media entries ≤ the ADR-0017 image size limit (50 MB) |
 | Total uncompressed size | ≤ 512 MB |
-| Compression ratio | ≤ 100 : 1 per entry once it passes 1 MB uncompressed |
+| Compression ratio | ≤ 1,000 : 1 per entry once it passes 1 MB uncompressed. Real WordprocessingML is usually 5–30 : 1, but long, repetitive documents can pass 100 : 1, so the ceiling stays well above that. Memory is bounded by the absolute size caps above, and the ratio only stops runaway entries early. Slice 1 measures real manuscripts, including the English and Kannada fixtures, and records the observed ratios before this constant is fixed |
 | How sizes are enforced | Declared sizes in the central directory are checked first, then **actual** inflated bytes are counted while streaming (`fflate` streaming inflate) and decompression stops the moment a limit is passed. Headers are not trusted |
 | ZIP features | Encrypted entries, multi-disk archives, and duplicate entry names are rejected. Entry names are only used as lookup keys in memory; nothing is written to disk from them |
 | Macros | `.docm`/`.dotm` content types (`application/vnd.ms-word.document.macroEnabled.main+xml`, template types) are rejected. `vbaProject.bin` and `word/vbaData.xml` are never read |
-| External relationships | `TargetMode="External"` targets are **never fetched or opened**. Only hyperlinks use their target, as an `href` string (§4.5). Attached templates, linked images, frames, and remote subdocuments are ignored with a warning |
+| External relationships | `TargetMode="External"` targets are **never fetched or opened**. Only hyperlinks use their target, as an `href` string (§4.5). Attached templates, linked images, frames, and remote subdocuments are ignored with a warning. Field instructions that name files or URLs (`INCLUDEPICTURE`, `INCLUDETEXT`, `LINK`, `DDE`) are never resolved (§4.5) |
 | Embedded objects | OLE objects (`w:object`, `o:OLEObject`, `word/embeddings/*`), ActiveX controls, and `w:altChunk` (embedded HTML, RTF, or other documents) are **never parsed**. Their placeholder images are dropped; one warning lists them |
 | XML | No DTD, no entities beyond the predefined five, depth ≤ 256, attributes ≤ 64 per element (§3) |
 | Parts read | Only the parts listed in §4. Custom XML, glossary, web settings, fonts (`word/fonts/*`, obfuscated embedded fonts) are not read |
@@ -263,7 +288,7 @@ Parsing is synchronous and bounded by these limits. The desktop shows a progress
 
 ## 7. Non-goals
 
-- **Tracked changes:** the importer reads the document **as if all changes were accepted** (`w:ins` kept, `w:del` dropped) and warns once that tracked changes were present. It does not show or preserve revisions.
+- **Tracked changes:** the importer reads the document **as if all changes were accepted** and warns once that tracked changes were present. It does not show or preserve revisions. Accepting means: `w:ins` and `w:moveTo` content kept; `w:del`, `w:delText`, and `w:moveFrom` content dropped (so moved text appears once, at its new place); a deleted paragraph mark (`w:pPr/w:rPr/w:del`) joins that paragraph with the next one; formatting changes (`w:rPrChange`, `w:pPrChange`) use the new formatting.
 - **Comments** (`word/comments.xml`): not read; one warning.
 - **Footnotes and endnotes:** not imported in this ADR. The reference mark is dropped and one warning says how many notes were skipped. A later ADR may add a notes model; mapping trivial endnotes to a `notes` back-matter section is a candidate, not a commitment.
 - Text boxes, shapes, WordArt, SmartArt, charts, equations (OMML): text inside text boxes is not imported; one warning per kind.
@@ -279,8 +304,8 @@ Parsing is synchronous and bounded by these limits. The desktop shows a progress
 When separately authorized, implementation should proceed in small slices, for example:
 
 1. **Slice 1 — Container reader and limits:** `fflate` reuse in `packages/importer` (§3.1 evidence updates in the same PR); `ImportSource` byte variant; signature, size, entry-count, ratio, and streaming-inflate limits; macro and encryption rejection; restricted XML tokenizer; tests with crafted ZIP bombs, deep XML, DOCTYPE, `.docm`, and CFB files. `canImport("docx")` stays `false` until Slice 2.
-2. **Slice 2 — Text and structure mapping:** styles, numbering, metadata, headings and sections, front-matter detection (§4.3), TOC dropping (§4.4), inline marks and links, tracked-changes/comments/footnote handling per §7; `canImport("docx") === true`; deterministic ids; `validateBook` passes; English and Kannada fixtures built in tests from XML strings.
-3. **Slice 3 — Images:** `ImportedImagePayload`, drawing/VML/SVG-fallback/caption handling (§4.6); coordinator ingestion through `AssetIngestionPipeline`, placeholder substitution, rejection-to-warning, and ADR-0020 INV-10 batch atomicity.
+2. **Slice 2 — Text and structure mapping:** styles, numbering, metadata, headings and sections, chapter titles without heading styles (§4.2), front-matter detection (§4.3), TOC dropping (§4.4), inline marks, links, and fields (§4.5), tracked changes (including moves), comments, and footnote handling per §7; `canImport("docx") === true`; deterministic ids; `validateBook` passes; English and Kannada fixtures built in tests from XML strings.
+3. **Slice 3 — Images:** `ImportedImagePayload`, drawing/VML/SVG-fallback/caption handling (§4.6); coordinator ingestion through `AssetIngestionPipeline`, placeholder substitution with the explicit image-reference check (§2.2), rejection-to-warning, and ADR-0020 INV-10 batch atomicity, including a test that a rolled-back append leaves no orphan package entry.
 4. **Slice 4 — Desktop import surface:** start-screen and Write-step actions, `.docx` dialog and browser fallback, host size check before read (and binary transport if needed), import summary in the Guide panel.
 5. **Slice 5 — Hardening:** end-to-end English and Kannada `.docx` fixtures with images (including one shaped like *Little Krishna's Wisdom Stories*: untagged Foreword/Preface/Publisher's Note, typed contents page, many inline images) through import → package Save/Open → autosave → EPUB (EPUBCheck), HTML, and PDF; malicious-file corpus re-run; closure reconciliation.
 
@@ -292,9 +317,9 @@ Exact slice boundaries may be adjusted in per-slice proposals; each slice still 
 
 1. **INV-D1:** Every `.docx` import yields a `validateBook`-valid Book or a structured fail-closed error; on error the session is unchanged.
 2. **INV-D2:** No Word XML node, style id, relationship id, or numbering id appears in the Book or crosses the importer boundary.
-3. **INV-D3:** Every `image` block in an imported Book references an `AssetRef` that passed `AssetIngestionPipeline`. No image bytes are stored in Book JSON.
+3. **INV-D3:** Every `image` block in an imported Book references an `AssetRef` that passed `AssetIngestionPipeline`, checked explicitly by the coordinator before commit (not left to `validateBook`). No placeholder id survives commit. No image bytes are stored in Book JSON.
 4. **INV-D4:** No limit in §5 can be exceeded by a crafted file; decompression stops at the limit without allocating the declared size.
-5. **INV-D5:** No external relationship target is fetched, opened, or resolved; no macro, OLE, ActiveX, or `altChunk` content is parsed.
+5. **INV-D5:** No external relationship target or field instruction target is fetched, opened, or resolved; no macro, OLE, ActiveX, or `altChunk` content is parsed; no field instruction text appears in the Book.
 6. **INV-D6:** Identical input bytes and options produce an identical Book (deterministic ids, ADR-0015 §2.1 item 3).
 7. **INV-D7:** `publishedAt` is never derived from DOCX dates.
 8. **INV-D8:** Markdown and text import behaviour and output are unchanged.
