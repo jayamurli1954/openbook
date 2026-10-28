@@ -174,8 +174,8 @@ test("finds the main document by relationship, not by a fixed name", () => {
   assert.equal(open(bytes).mainDocumentPart, "content/main.xml");
 });
 
-test("canImport('docx') stays false until Slice 2", () => {
-  assert.equal(new ImportService().canImport("docx"), false);
+test("canImport('docx') is on from Slice 2", () => {
+  assert.equal(new ImportService().canImport("docx"), true);
 });
 
 // --- file signature and size ----------------------------------------------------

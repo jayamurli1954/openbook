@@ -17,7 +17,7 @@ const WORD_TEMPLATE_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml";
 
 const CONTENT_TYPES_NS = "http://schemas.openxmlformats.org/package/2006/content-types";
-const RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
+export const RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
 const OFFICE_DOCUMENT_REL_TYPES = new Set([
   "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
   "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",
@@ -201,21 +201,39 @@ function findMainDocument(root: XmlElement): string {
  * Targets stay percent-encoded: OPC stores ZIP item names in the same encoded form.
  */
 function resolvePackageTarget(target: string): string {
+  const resolved = resolveInternalTarget("", target);
+  if (resolved === undefined) throw notWord();
+  return resolved;
+}
+
+/**
+ * Resolves an internal relationship target against the part that owns the relationship
+ * (`word/document.xml` → base `word/`). Returns `undefined` for anything that is a URI,
+ * uses backslashes, or climbs out of the package.
+ */
+export function resolveInternalTarget(sourcePart: string, target: string): string | undefined {
   if (/^[a-z][a-z0-9+.-]*:/i.test(target) || target.includes("\\")) {
-    throw notWord();
+    return undefined;
   }
-  const segments: string[] = [];
+  const base = target.startsWith("/") ? [] : normalizePartName(sourcePart).split("/").slice(0, -1);
+  const segments: string[] = base.filter((segment) => segment !== "");
   for (const segment of target.split("/")) {
     if (segment === "" || segment === ".") continue;
     if (segment === "..") {
-      if (segments.length === 0) throw notWord();
+      if (segments.length === 0) return undefined;
       segments.pop();
       continue;
     }
     segments.push(segment);
   }
-  if (segments.length === 0) throw notWord();
-  return segments.join("/");
+  return segments.length === 0 ? undefined : segments.join("/");
+}
+
+/** `word/document.xml` → `word/_rels/document.xml.rels`. */
+export function relationshipsPartFor(part: string): string {
+  const normalized = normalizePartName(part);
+  const slash = normalized.lastIndexOf("/");
+  return `${normalized.slice(0, slash + 1)}_rels/${normalized.slice(slash + 1)}.rels`;
 }
 
 function normalizePartName(name: string): string {

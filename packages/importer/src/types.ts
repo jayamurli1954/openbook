@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { Book, BookMetadata } from "@openbook/book-model";
 
-export type SupportedImportFormat = "markdown" | "text";
+export type SupportedImportFormat = "markdown" | "text" | "docx";
 
-export interface ImportSource {
+/** Markdown or plain text, already decoded by the caller (ADR-0015 §2.1). */
+export interface TextImportSource {
   /** Target format parser to invoke */
-  readonly format: SupportedImportFormat;
+  readonly format: "markdown" | "text";
   /**
    * Pre-decoded JavaScript Unicode string.
    * Byte decoding and UTF-8 validation are performed by the caller before import.
@@ -17,13 +18,15 @@ export interface ImportSource {
 
 /**
  * Word `.docx` source (ADR-0040 §2.1): bytes, not text, because a `.docx` is a ZIP of XML parts.
- * Slice 1 defines the shape only; it joins `ImportSource` and the format firewall in Slice 2.
+ * File access stays with the caller; the importer never opens a path.
  */
 export interface DocxImportSource {
   readonly format: "docx";
   readonly bytes: Uint8Array;
   readonly filename?: string;
 }
+
+export type ImportSource = TextImportSource | DocxImportSource;
 
 export interface ImportOptions {
   /** Strategy for partitioning document into chapters */
