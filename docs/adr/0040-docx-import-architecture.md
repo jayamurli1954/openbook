@@ -187,7 +187,7 @@ Many manuscripts type “Foreword” in bold Normal text instead of using a head
 | Copyright | `front`, role `copyright` |
 | Publisher's Note, Acknowledgements, About this book · ಪ್ರಕಾಶಕರ ಮಾತು, ಕೃತಜ್ಞತೆಗಳು | `front`, role `custom`, title kept |
 
-The same rule applies to a Heading 1 whose text matches the table, **but only while no chapter has started yet**: it becomes a `front` section with that role. Once the first non-matching Heading 1 has started a chapter, later Heading 1s stay where the author put them. A chapter titled “Introduction” after the front matter stays a chapter, and “Acknowledgements” at the end stays at the end. Moving such sections into back matter is left to the author in Structure Studio. The word list is a constant in one module so later slices can extend it. The Kannada words are a starting list for the maintainer to confirm in Slice 2.
+The same rule applies to a Heading 1 whose text matches the table, **but only while no chapter has started yet**: it becomes a `front` section with that role. Once the first non-matching Heading 1 has started a chapter, later Heading 1s stay where the author put them. A chapter titled “Introduction” after the front matter stays a chapter, and “Acknowledgements” at the end stays at the end. Moving such sections into back matter is left to the author in Structure Studio. The word list is a constant in one module so later slices can extend it. The maintainer confirmed the Kannada words on 2026-10-28.
 
 Other content before the first heading:
 

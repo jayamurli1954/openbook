@@ -38,9 +38,12 @@ A coding-agent session asked for a selection record and an architecture ADR, doc
 6. Fixed ZIP, XML, and size limits; no macros, no external fetches, no field-target resolution, no OLE parsing.
 7. No Book Model change.
 
+## Maintainer confirmations
+
+- 2026-10-28: the maintainer confirmed the Kannada front-matter and contents-page words in ADR-0040 §4.3–§4.4 (“ಮುನ್ನುಡಿ, ಪೀಠಿಕೆ, ಪರಿವಿಡಿ, … yes this is correct”).
+
 ## Unresolved questions
 
-- Are the Kannada front-matter and contents-page words in ADR-0040 §4.3–§4.4 right, and complete?
 - Is the 1,000 : 1 compression-ratio ceiling right? Slice 1 is to measure real manuscripts first.
 - Does Slice 4 need a binary host read command, or is `asset_read_bytes` fast enough for real manuscript sizes?
 - May the maintainer's own book be used as a local manual check in Slice 5?
@@ -49,7 +52,6 @@ A coding-agent session asked for a selection record and an architecture ADR, doc
 ## Action items
 
 - Maintainer: review Draft PR #164; merge only by writing `I authorize merge PR #164`.
-- Maintainer: confirm the Kannada word list before Slice 2.
 - After merge: each ADR-0040 slice needs its own explicit authorization.
 
 ## Outcomes
