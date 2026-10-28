@@ -1,6 +1,6 @@
 # ADR-0040 Slice 1: DOCX Container Reader and Limits — Implementation Record
 
-- **Status:** Implemented in a Draft PR; merge on explicit authorization
+- **Status:** Implemented on main (PR #166)
 - **Date:** 2026-10-28
 - **Parent architecture:** ADR-0040 — Word (.docx) Import
 - **Scope:** Read a `.docx` package safely: ZIP structure, size and ratio limits, macro/template/encryption rejection, restricted XML reader. No Book mapping, no desktop change.
