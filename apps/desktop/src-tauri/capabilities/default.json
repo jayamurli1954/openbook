@@ -9,6 +9,7 @@
     "dialog:default",
     "allow-export-path-exists",
     "allow-export-write-atomically",
-    "allow-asset-read-bytes"
+    "allow-asset-read-bytes",
+    "allow-docx-read-bytes"
   ]
 }

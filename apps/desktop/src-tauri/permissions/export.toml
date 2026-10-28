@@ -12,3 +12,8 @@ commands.allow = ["export_write_atomically"]
 identifier = "allow-asset-read-bytes"
 description = "Allows reading image bytes from a dialog-selected path for Writing Studio insertion (ADR-0034 Slice 4)."
 commands.allow = ["asset_read_bytes"]
+
+[[permission]]
+identifier = "allow-docx-read-bytes"
+description = "Allows reading a size-checked Word .docx file from a dialog-selected path for import (ADR-0040 Slice 4)."
+commands.allow = ["docx_read_bytes"]
