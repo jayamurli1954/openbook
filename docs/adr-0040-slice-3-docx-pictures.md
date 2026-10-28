@@ -17,6 +17,13 @@
 - `r:link` pictures (linked to an outside file) and missing relationships are never fetched; warning `DOCX_LINKED_PICTURES_SKIPPED`.
 - A picture part the reader refuses (for example a target under `word/embeddings/`) or cannot read loses its image blocks; warning `DOCX_PICTURES_UNREADABLE`.
 - Pictures before the first section are kept in a front section (titled from the first text line, or “Title page”).
+- A picture anchored to a paragraph that becomes a section title (chapter, front matter) opens that section. A picture in the Title or Subtitle paragraph stays on the title page.
+- A picture inside a list item is placed after the list, so the list is not split.
+- Hidden pictures (in a run marked Hidden) are never imported.
+- Word's automatically generated descriptions (“… Description automatically generated”) are not used as alt text. The alt text is left empty so Book Doctor asks the author, with warning `DOCX_AUTOMATIC_ALT_TEXT_REMOVED`.
+- A reused picture keeps one alt text (alt text lives on the AssetRef); different descriptions give warning `DOCX_PICTURE_ALT_TEXT_DIFFERS`.
+- File names are percent-decoded for display.
+- Security limits reached while reading a picture (total size, part size, ratio) stay fatal, as ADR-0040 §5 requires; only per-picture problems become warnings.
 - The importer does not type-check, hash, or store pictures. The Slice 2 warning “pictures not imported yet” is gone.
 
 ## 2. Coordinator (`apps/desktop`)
@@ -33,6 +40,8 @@
 - Importer (`docx-import.test.ts`, 95 tests in the package): payloads, placement, alt text and caption; one payload for a reused picture; SVG PNG fallback and VML; linked and unreadable pictures; a title-page picture.
 - Coordinator (`desktopStudioCoordinator.import.test.ts`): a new-project import with a PNG used twice and a refused EMF (one asset, two blocks, warning naming the chapter, resolver returns the bytes); append keeping existing assets; append rollback leaving no assets; a dangling placeholder failing closed with the Book unchanged; a damaged file failing with the reader's message. The tests build `.docx` files with a small stored-ZIP writer, so `apps/desktop` gains no ZIP dependency.
 - A bug found while testing: the rejection warning was built before the sections were walked, so it named no chapters. Fixed.
+- A review pass found 9 issues; 8 were fixed with regression tests (the importer now runs 101). Pictures are now ingested concurrently.
+- Kept as is: the desktop test has its own small stored-ZIP writer. ADR-0040 §3.1 keeps ZIP libraries out of `apps/desktop`, and exporting a test helper from the shipped importer would add production API surface for tests only.
 
 ## 4. Explicit exclusions
 

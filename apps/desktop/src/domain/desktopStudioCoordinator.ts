@@ -1761,17 +1761,23 @@ async function ingestImportedImages(
   if (images.length === 0) {
     return { book, newAssets: [], issues: [] };
   }
+  // Pictures are independent: hash and store them concurrently, keeping their order.
+  const results = await Promise.all(
+    images.map((image) =>
+      pipeline.ingest({
+        content: image.bytes,
+        originalFilename: image.sourceName,
+        kind: "image",
+        altText: image.altText,
+        idSeed,
+      }),
+    ),
+  );
   const resolved = new Map<string, AssetRef | null>();
-  for (const image of images) {
-    const result = await pipeline.ingest({
-      content: image.bytes,
-      originalFilename: image.sourceName,
-      kind: "image",
-      altText: image.altText,
-      idSeed,
-    });
+  images.forEach((image, index) => {
+    const result = results[index]!;
     resolved.set(image.placeholderId, result.success && result.assetRef ? result.assetRef : null);
-  }
+  });
 
   const rejectedIn: string[] = [];
   const mapSections = (sections: readonly StructuralSection[]): StructuralSection[] =>

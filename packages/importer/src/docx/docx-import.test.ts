@@ -158,6 +158,7 @@ function makeDocx(spec: DocxSpec): Uint8Array {
     `<Relationship Id="rId22" Type="${R}/image" Target="https://example.com/outside.png" TargetMode="External"/>` +
     `<Relationship Id="rId23" Type="${R}/image" Target="embeddings/oleObject1.bin"/>` +
     `<Relationship Id="rId24" Type="${R}/image" Target="media/image3.svg"/>` +
+    `<Relationship Id="rId25" Type="${R}/image" Target="media/my%20drawing.png"/>` +
     (spec.comments ? `<Relationship Id="rId30" Type="${R}/comments" Target="comments.xml"/>` : "") +
     `</Relationships>`;
   const files: Record<string, string> = {
@@ -195,6 +196,7 @@ function makeDocx(spec: DocxSpec): Uint8Array {
   for (const [name, value] of Object.entries(files)) zippable[name] = strToU8(value);
   zippable["word/media/image1.png"] = PNG;
   zippable["word/media/image2.jpeg"] = JPEG;
+  zippable["word/media/my%20drawing.png"] = PNG;
   zippable["word/media/image3.svg"] = strToU8(`<svg xmlns="http://www.w3.org/2000/svg"/>`);
   zippable["word/embeddings/oleObject1.bin"] = new Uint8Array([1, 2, 3]);
   return zipSync(zippable, { mtime: new Date("2026-10-28T00:00:00Z") });
@@ -662,6 +664,69 @@ test("keeps a title-page picture in a front section", async () => {
   const { book, result } = await importBook({ body });
   assert.deepEqual(book.frontMatter.map((s) => [s.title, s.blocks.map((b) => b.type)]), [["Title page", ["image"]]]);
   assert.equal(result.images?.length, 1);
+});
+
+// --- Slice 3 review regressions ------------------------------------------------------------------
+
+test("keeps pictures anchored to chapter titles, front-matter titles, and the Title paragraph", async () => {
+  const body =
+    p(r("Little Krishna") + pictureRun({ alt: "Cover art" }), { style: "Title" }) +
+    p(r("Foreword") + pictureRun({ rid: "rId21", alt: "Lotus" }), { style: "Heading1" }) +
+    t("Why I wrote this.") +
+    p(r("The Butter Thief") + pictureRun({ alt: "Krishna and the butter pot", anchor: true }), { style: "Heading1" }) +
+    t("Story.");
+  const { book, result } = await importBook({ body });
+  assert.equal(book.metadata.title, "Little Krishna");
+  assert.deepEqual(book.frontMatter.map((s) => [s.title, s.blocks.map((b) => b.type)]), [
+    ["Title page", ["image"]],
+    ["Foreword", ["image", "paragraph"]],
+  ]);
+  assert.deepEqual(book.chapters[0]!.blocks.map((b) => b.type), ["image", "paragraph"]);
+  assert.equal(result.images?.length, 2, "the cover art and the chapter picture share image1.png");
+});
+
+test("never imports hidden pictures", async () => {
+  const hiddenPicture = pictureRun({ alt: "Secret" }).replace("<w:r>", "<w:r><w:rPr><w:vanish/></w:rPr>");
+  const body = t("Chapter", { style: "Heading1" }) + p(r("Visible.") + hiddenPicture);
+  const { book, result } = await importBook({ body });
+  assert.equal(book.chapters[0]!.blocks.filter((b) => b.type === "image").length, 0);
+  assert.equal(result.images, undefined);
+  assert.ok(codes(result).includes("DOCX_HIDDEN_TEXT_SKIPPED"));
+});
+
+test("leaves Word's automatic descriptions out of the alt text", async () => {
+  const body =
+    t("Chapter", { style: "Heading1" }) +
+    p(pictureRun({ alt: "A cartoon of a boy with a flute Description automatically generated" })) +
+    p(pictureRun({ rid: "rId21", alt: "A drawing of a cow Description automatically generated with medium confidence", title: "Nandi the cow" }));
+  const { result } = await importBook({ body });
+  assert.deepEqual(result.images?.map((image) => image.altText), ["", "Nandi the cow"]);
+  assert.ok(codes(result).includes("DOCX_AUTOMATIC_ALT_TEXT_REMOVED"));
+});
+
+test("warns when a reused picture has different descriptions", async () => {
+  const body = t("Chapter", { style: "Heading1" }) + p(pictureRun({ alt: "Lotus" })) + p(pictureRun({ alt: "Peacock feather" }));
+  const { result } = await importBook({ body });
+  assert.equal(result.images?.[0]?.altText, "Lotus");
+  assert.ok(codes(result).includes("DOCX_PICTURE_ALT_TEXT_DIFFERS"));
+});
+
+test("a picture inside a list item goes after the list instead of splitting it", async () => {
+  const body =
+    t("Chapter", { style: "Heading1" }) +
+    t("Wake up", { numId: 2 }) +
+    p(r("Milk the cow") + pictureRun(), { numId: 2 }) +
+    t("Churn the butter", { numId: 2 });
+  const { book } = await importBook({ body });
+  const blocks = book.chapters[0]!.blocks;
+  assert.deepEqual(blocks.map((b) => b.type), ["list", "image"]);
+  assert.equal(blockText(blocks[0]!), "Wake up | Milk the cow | Churn the butter");
+});
+
+test("shows picture file names without percent-encoding", async () => {
+  const body = t("Chapter", { style: "Heading1" }) + p(pictureRun({ rid: "rId25" }));
+  const { result } = await importBook({ body });
+  assert.equal(result.images?.[0]?.sourceName, "my drawing.png");
 });
 
 // --- review regressions -----------------------------------------------------------------------

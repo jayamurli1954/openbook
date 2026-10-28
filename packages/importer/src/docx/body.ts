@@ -72,6 +72,8 @@ export interface BodyCounts {
   pictures: number;
   /** Pictures linked to a file outside the document, or with no picture part (never fetched). */
   linkedPictures: number;
+  /** Pictures whose only description was written automatically by Word. */
+  automaticAltText: number;
   textBoxes: number;
   shapes: number;
   objects: number;
@@ -134,6 +136,7 @@ class BodyWalker {
       footnotes: 0,
       pictures: 0,
       linkedPictures: 0,
+      automaticAltText: 0,
       textBoxes: 0,
       shapes: 0,
       objects: 0,
@@ -388,7 +391,8 @@ class BodyWalker {
 
     for (const child of xmlChildElements(r)) {
       if (child.ns === MC_NS && child.local === "AlternateContent") {
-        this.#drawing(firstChoice(child), ctx);
+        if (hidden) this.#noteHidden();
+        else this.#drawing(firstChoice(child), ctx);
         continue;
       }
       if (!isW(child)) continue;
@@ -435,7 +439,8 @@ class BodyWalker {
           break;
         case "drawing":
         case "pict":
-          this.#drawing(child, ctx);
+          if (hidden) this.#noteHidden();
+          else this.#drawing(child, ctx);
           break;
         case "object":
           this.counts.objects += 1;
@@ -454,6 +459,11 @@ class BodyWalker {
   }
 
   /** Applies field begin/separate/end and instruction text found anywhere under `el`, emitting no text. */
+  /** Hidden pictures are counted with hidden text; neither reaches the Book. */
+  #noteHidden(): void {
+    this.counts.hiddenRuns += 1;
+  }
+
   #fieldMarkersOnly(el: XmlElement): void {
     for (const child of xmlChildElements(el)) {
       if (isW(child, "fldChar")) {
@@ -528,7 +538,8 @@ class BodyWalker {
       this.counts.shapes += 1;
       return;
     }
-    const altText = pictureAltText(el);
+    const { altText, automatic } = pictureAltText(el);
+    if (automatic) this.counts.automaticAltText += images.length;
     for (const image of images) {
       const id = rAttr(image, "embed") ?? rAttr(image, "id");
       const rel = id !== undefined ? this.#parts.documentRels.get(id) : undefined;
@@ -635,17 +646,33 @@ function descendants(el: XmlElement, locals: readonly string[]): XmlElement[] {
   return out;
 }
 
-/** wp:docPr description, then title; VML shapes use their alt attribute. */
-function pictureAltText(el: XmlElement): string {
+/** Word 365 writes machine-generated descriptions ending with this phrase. */
+const AUTOMATIC_ALT_TEXT = /description automatically generated(\s+with\s+[^.]*)?\.?\s*$/i;
+
+/**
+ * wp:docPr description, then title; VML shapes use their alt attribute. Word's automatically
+ * generated descriptions are not the author's alt text: they are left empty so Book Doctor asks
+ * the author to describe the picture.
+ */
+function pictureAltText(el: XmlElement): { altText: string; automatic: boolean } {
+  const candidates: string[] = [];
   for (const docPr of descendants(el, ["docPr", "cNvPr"])) {
-    const value = (getXmlAttribute(docPr, "", "descr") ?? getXmlAttribute(docPr, "", "title") ?? "").trim();
-    if (value) return value;
+    candidates.push(getXmlAttribute(docPr, "", "descr") ?? "", getXmlAttribute(docPr, "", "title") ?? "");
   }
   for (const shape of descendants(el, ["shape"])) {
-    const value = (getXmlAttribute(shape, "", "alt") ?? "").trim();
-    if (value) return value;
+    candidates.push(getXmlAttribute(shape, "", "alt") ?? "");
   }
-  return "";
+  let automatic = false;
+  for (const candidate of candidates) {
+    const value = candidate.trim();
+    if (!value) continue;
+    if (AUTOMATIC_ALT_TEXT.test(value)) {
+      automatic = true;
+      continue;
+    }
+    return { altText: value, automatic: false };
+  }
+  return { altText: "", automatic };
 }
 
 function hasDescendant(el: XmlElement, locals: readonly string[]): boolean {

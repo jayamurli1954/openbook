@@ -16,6 +16,9 @@ import { openDocxPackage } from "./package.js";
 import { readDocxParts } from "./parts.js";
 import { structureDocx } from "./structure.js";
 
+/** Security limits stay fatal even when reached while reading a picture (ADR-0040 §5). */
+const FATAL_READ_ERRORS = new Set(["DOCX_TOTAL_TOO_LARGE", "DOCX_ENTRY_TOO_LARGE", "DOCX_COMPRESSION_RATIO"]);
+
 /**
  * Word `.docx` → canonical Book (ADR-0040 Slices 2–3: text, structure, pictures).
  * Pictures come back as `ImportResult.images`; image blocks reference their placeholder ids
@@ -64,11 +67,11 @@ export function importDocx(
         images.push({
           placeholderId: picture.placeholderId,
           bytes: opened.docx.readPart(picture.part),
-          sourceName: picture.part.slice(picture.part.lastIndexOf("/") + 1),
+          sourceName: decodePartName(picture.part.slice(picture.part.lastIndexOf("/") + 1)),
           altText: picture.altText,
         });
       } catch (err) {
-        if (!(err instanceof DocxReadError)) throw err;
+        if (!(err instanceof DocxReadError) || FATAL_READ_ERRORS.has(err.code)) throw err;
         unreadable.add(picture.placeholderId);
       }
     }
@@ -80,6 +83,14 @@ export function importDocx(
         code: "DOCX_PICTURES_UNREADABLE",
         severity: "warning",
         message: `${plural(unreadable.size, "picture")} could not be read from this file and ${unreadable.size === 1 ? "was" : "were"} left out. You can add ${unreadable.size === 1 ? "it" : "them"} again with the picture button in Write.`,
+      });
+    }
+
+    if (structure.altTextConflicts > 0) {
+      issues.push({
+        code: "DOCX_PICTURE_ALT_TEXT_DIFFERS",
+        severity: "warning",
+        message: `${plural(structure.altTextConflicts, "picture")} appear${structure.altTextConflicts === 1 ? "s" : ""} more than once with different descriptions. OpenBook keeps one description per picture; please check the alt text in Write.`,
       });
     }
 
@@ -103,6 +114,15 @@ function removeImageBlocks(section: StructuralSection, placeholders: ReadonlySet
   }
 }
 
+/** OPC part names are percent-encoded; show the plain file name. */
+function decodePartName(name: string): string {
+  try {
+    return decodeURIComponent(name);
+  } catch {
+    return name;
+  }
+}
+
 function declaredLanguage(core: string | undefined, styleDefault: string | undefined): string | undefined {
   const value = (core ?? styleDefault)?.trim();
   return value ? value : undefined;
@@ -120,6 +140,13 @@ function reportDropped(counts: BodyCounts, tocRemoved: boolean, listsFlattened: 
   );
   if (tocRemoved || counts.tocFields > 0) {
     add("DOCX_TOC_REMOVED", "info", "Your table of contents was removed. OpenBook builds one for you from your chapters.");
+  }
+  if (counts.automaticAltText > 0) {
+    add(
+      "DOCX_AUTOMATIC_ALT_TEXT_REMOVED",
+      "warning",
+      `${plural(counts.automaticAltText, "picture")} had only a description written automatically by Word. OpenBook left ${counts.automaticAltText === 1 ? "its" : "their"} alt text empty so you can describe ${counts.automaticAltText === 1 ? "it" : "them"} yourself; the book check will remind you.`,
+    );
   }
   if (counts.linkedPictures > 0) {
     add(
@@ -162,7 +189,7 @@ function reportDropped(counts: BodyCounts, tocRemoved: boolean, listsFlattened: 
     add("DOCX_LINKS_REMOVED", "warning", `${plural(counts.unsafeLinks, "link")} that did not point to a web page or email address ${counts.unsafeLinks === 1 ? "was" : "were"} kept as plain text.`);
   }
   if (counts.hiddenRuns > 0) {
-    add("DOCX_HIDDEN_TEXT_SKIPPED", "info", "Text marked as Hidden in Word was not imported, because Word never shows or prints it.");
+    add("DOCX_HIDDEN_TEXT_SKIPPED", "info", "Text or pictures marked as Hidden in Word were not imported, because Word never shows or prints them.");
   }
   if (counts.brokenFields > 0) {
     add(
