@@ -7,14 +7,14 @@ import type {
   ImportIssue,
   ImportOptions,
   ImportResult,
-  ImportSource,
+  TextImportSource,
 } from "./types.js";
 
 /**
  * Plain-text import: double-newline paragraph segmentation into one chapter.
  */
 export function importPlainText(
-  source: ImportSource,
+  source: TextImportSource,
   options: ImportOptions | undefined,
   ids: DeterministicIdFactory,
 ): ImportResult {

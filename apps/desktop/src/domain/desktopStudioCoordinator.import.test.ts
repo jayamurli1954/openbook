@@ -102,14 +102,26 @@ test("unsupported format rejects with UNSUPPORTED_FORMAT and leaves IMPORT/faile
   await assert.rejects(
     () =>
       coordinator.importContent({
-        format: "html" as ImportSource["format"],
+        format: "html",
         content: "<p>nope</p>",
-      }),
+      } as unknown as ImportSource),
     (err: unknown) =>
       err instanceof DesktopStudioError && err.code === "UNSUPPORTED_FORMAT",
   );
   assert.equal(coordinator.getState().stage, "IMPORT");
   assert.equal(coordinator.getState().jobStatus, "failed");
+  assert.equal(JSON.stringify(coordinator.getBook()), before);
+});
+
+test("docx is not accepted by the coordinator until ADR-0040 Slice 4", async () => {
+  const coordinator = freshCoordinator("docx");
+  const before = JSON.stringify(coordinator.getBook());
+  await assert.rejects(
+    () => coordinator.importContent({ format: "docx", bytes: new Uint8Array([0x50, 0x4b, 0x03, 0x04]) }),
+    (err: unknown) =>
+      err instanceof DesktopStudioError && err.code === "UNSUPPORTED_FORMAT",
+  );
+  assert.equal(coordinator.getState().stage, "IMPORT");
   assert.equal(JSON.stringify(coordinator.getBook()), before);
 });
 

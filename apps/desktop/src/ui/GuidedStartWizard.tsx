@@ -6,7 +6,7 @@
  * or coordinator methods live here.
  */
 import { useEffect, useState } from "react";
-import type { ImportSource } from "@openbook/importer";
+import type { TextImportSource } from "@openbook/importer";
 import type {
   GuidedStartPath,
   GuidedStartRecentEntry,
@@ -86,7 +86,7 @@ export default function GuidedStartWizard({
   const [approximateLength, setApproximateLength] = useState("");
   const [writingGoal, setWritingGoal] = useState("");
 
-  const [importFormat, setImportFormat] = useState<ImportSource["format"]>("markdown");
+  const [importFormat, setImportFormat] = useState<TextImportSource["format"]>("markdown");
   const [importFilename, setImportFilename] = useState("manuscript.md");
   const [importText, setImportText] = useState("");
   const [openRoot, setOpenRoot] = useState("");

@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test dist/importer.test.js dist/docx/docx-container.test.js"
+    "test": "npm run build && node --test dist/importer.test.js dist/docx/docx-container.test.js dist/docx/docx-import.test.js"
   },
   "dependencies": {
     "@openbook/book-model": "*",

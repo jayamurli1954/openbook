@@ -4,6 +4,7 @@ export type {
   SupportedImportFormat,
   ImportSource,
   DocxImportSource,
+  TextImportSource,
   ImportOptions,
   ImportIssueSeverity,
   ImportIssue,

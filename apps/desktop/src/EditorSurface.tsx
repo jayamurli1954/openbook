@@ -11,7 +11,7 @@ import Link from "@tiptap/extension-link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { bookToSemanticDocument } from "@openbook/semantic-document";
 import { nextStage, WORKFLOW_STAGES } from "@openbook/workflow";
-import type { ImportSource } from "@openbook/importer";
+import type { TextImportSource } from "@openbook/importer";
 import {
   normalizeTipTapDoc,
   semanticDocumentToTipTapJson,
@@ -142,7 +142,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   };
   const [projectList, setProjectList] = useState<ProjectSummary[]>([]);
   const [importText, setImportText] = useState("");
-  const [importFormat, setImportFormat] = useState<ImportSource["format"]>("markdown");
+  const [importFormat, setImportFormat] = useState<TextImportSource["format"]>("markdown");
   const [importFilename, setImportFilename] = useState("manuscript.md");
   const [importNote, setImportNote] = useState("Choose a file or paste text, then add it to your book.");
   const switchingRef = useRef(false);
