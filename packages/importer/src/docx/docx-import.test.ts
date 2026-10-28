@@ -4,7 +4,7 @@ import test from "node:test";
 import * as assert from "node:assert/strict";
 import { strToU8, zipSync, type Zippable } from "fflate";
 import { validateBook, type Book, type ContentBlock, type InlineSpan } from "@openbook/book-model";
-import { ImportService, type ImportOptions, type ImportResult } from "../index.js";
+import { IMPORTED_IMAGE_PLACEHOLDER_PREFIX, ImportService, type ImportOptions, type ImportResult } from "../index.js";
 
 // --- document builder ----------------------------------------------------------------------
 
@@ -60,11 +60,35 @@ function p(content: string, o: ParagraphOptions = {}): string {
 const t = (text: string, o: ParagraphOptions = {}): string => p(r(text), o);
 const pageBreak = `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
 
-const picture =
-  `<w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
-  `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData>` +
-  `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:blipFill><a:blip r:embed="rId20"/></pic:blipFill></pic:pic>` +
-  `</a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+interface PictureOptions {
+  readonly rid?: string;
+  readonly alt?: string;
+  readonly title?: string;
+  readonly anchor?: boolean;
+  /** r:link instead of r:embed: a picture linked to an outside file. */
+  readonly linked?: boolean;
+  /** Word's SVG picture: a:blip is the PNG fallback, asvg:svgBlip the SVG. */
+  readonly svgRid?: string;
+}
+
+function pictureRun(o: PictureOptions = {}): string {
+  const wrap = o.anchor ? "anchor" : "inline";
+  const blipRef = o.linked ? `r:link="${o.rid ?? "rId22"}"` : `r:embed="${o.rid ?? "rId20"}"`;
+  const svg = o.svgRid
+    ? `<a:extLst><a:ext uri="{96DAC541-7B7A-43D3-8B79-37D633B846F1}"><asvg:svgBlip xmlns:asvg="http://schemas.microsoft.com/office/drawing/2016/SVG/main" r:embed="${o.svgRid}"/></a:ext></a:extLst>`
+    : "";
+  return (
+    `<w:r><w:drawing><wp:${wrap} xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
+    `<wp:docPr id="1" name="Picture 1"${o.alt !== undefined ? ` descr="${esc(o.alt)}"` : ""}${o.title !== undefined ? ` title="${esc(o.title)}"` : ""}/>` +
+    `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData>` +
+    `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:blipFill><a:blip ${blipRef}>${svg}</a:blip></pic:blipFill></pic:pic>` +
+    `</a:graphicData></a:graphic></wp:${wrap}></w:drawing></w:r>`
+  );
+}
+
+const picture = pictureRun();
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46]);
 
 function field(instr: string, result: string): string {
   return (
@@ -130,6 +154,10 @@ function makeDocx(spec: DocxSpec): Uint8Array {
     `<Relationship Id="rId10" Type="${R}/hyperlink" Target="https://example.com/krishna" TargetMode="External"/>` +
     `<Relationship Id="rId11" Type="${R}/hyperlink" Target="javascript:alert(1)" TargetMode="External"/>` +
     `<Relationship Id="rId20" Type="${R}/image" Target="media/image1.png"/>` +
+    `<Relationship Id="rId21" Type="${R}/image" Target="media/image2.jpeg"/>` +
+    `<Relationship Id="rId22" Type="${R}/image" Target="https://example.com/outside.png" TargetMode="External"/>` +
+    `<Relationship Id="rId23" Type="${R}/image" Target="embeddings/oleObject1.bin"/>` +
+    `<Relationship Id="rId24" Type="${R}/image" Target="media/image3.svg"/>` +
     (spec.comments ? `<Relationship Id="rId30" Type="${R}/comments" Target="comments.xml"/>` : "") +
     `</Relationships>`;
   const files: Record<string, string> = {
@@ -165,7 +193,10 @@ function makeDocx(spec: DocxSpec): Uint8Array {
   if (spec.comments) files["word/comments.xml"] = XML + `<w:comments xmlns:w="${W}"/>`;
   const zippable: Zippable = {};
   for (const [name, value] of Object.entries(files)) zippable[name] = strToU8(value);
-  zippable["word/media/image1.png"] = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+  zippable["word/media/image1.png"] = PNG;
+  zippable["word/media/image2.jpeg"] = JPEG;
+  zippable["word/media/image3.svg"] = strToU8(`<svg xmlns="http://www.w3.org/2000/svg"/>`);
+  zippable["word/embeddings/oleObject1.bin"] = new Uint8Array([1, 2, 3]);
   return zipSync(zippable, { mtime: new Date("2026-10-28T00:00:00Z") });
 }
 
@@ -533,12 +564,13 @@ test("reports what it leaves out, once each, in plain language", async () => {
   const text = allText(book);
   assert.ok(text.includes("Cell one") && text.includes("Cell two"));
   assert.ok(!text.includes("Boxed text"));
-  assert.ok(!text.includes("Figure 1"), "a caption after a picture waits for picture import");
+  const image = book.chapters[0]!.blocks.find((block) => block.type === "image");
+  assert.ok(image && image.type === "image");
+  assert.equal(textOf(image.caption), "Figure 1: Krishna with the cows");
   const found = codes(result);
   for (const code of [
     "DOCX_FOOTNOTES_SKIPPED",
     "DOCX_TABLES_FLATTENED",
-    "DOCX_PICTURES_NOT_YET_IMPORTED",
     "DOCX_TEXT_BOXES_SKIPPED",
     "DOCX_EQUATIONS_SKIPPED",
     "DOCX_COMMENTS_SKIPPED",
@@ -558,6 +590,78 @@ test("warns about pre-Unicode Kannada fonts", async () => {
 test("works without a styles part", async () => {
   const { book } = await importBook({ body: t("Hello.") + t("World."), styles: null });
   assert.equal(book.chapters[0]!.blocks.length, 2);
+});
+
+// --- pictures (Slice 3) -------------------------------------------------------------------------
+
+test("returns pictures as payloads; image blocks follow their paragraph with alt text and caption", async () => {
+  const body =
+    t("The Butter Thief", { style: "Heading1" }) +
+    p(r("Krishna by the river.") + pictureRun({ alt: "Krishna with the cows" })) +
+    t("Figure 1: At the river", { style: "Caption" }) +
+    p(pictureRun({ rid: "rId21", title: "Yashoda", anchor: true })) +
+    t("Story text.");
+  const { book, result } = await importBook({ body });
+
+  const blocks = book.chapters[0]!.blocks;
+  assert.deepEqual(blocks.map((b) => b.type), ["paragraph", "image", "image", "paragraph"]);
+  const [first, second] = [blocks[1]!, blocks[2]!];
+  assert.ok(first.type === "image" && second.type === "image");
+  assert.ok(first.assetId.startsWith(IMPORTED_IMAGE_PLACEHOLDER_PREFIX));
+  assert.equal(textOf(first.caption), "Figure 1: At the river");
+  assert.deepEqual(second.caption, []);
+  assert.equal(book.assets.length, 0, "the caller ingests the bytes and adds AssetRefs");
+
+  assert.deepEqual(
+    result.images?.map((image) => [image.placeholderId, image.sourceName, image.altText, image.bytes.length]),
+    [
+      [first.assetId, "image1.png", "Krishna with the cows", PNG.length],
+      [second.assetId, "image2.jpeg", "Yashoda", JPEG.length],
+    ],
+  );
+  assert.deepEqual([...result.images![0]!.bytes], [...PNG]);
+  assert.ok(!codes(result).includes("DOCX_PICTURES_NOT_YET_IMPORTED"));
+});
+
+test("the same picture used twice is one payload", async () => {
+  const body = t("Chapter", { style: "Heading1" }) + p(pictureRun()) + t("Between.") + p(pictureRun({ alt: "Late alt" }));
+  const { book, result } = await importBook({ body });
+  const images = book.chapters[0]!.blocks.filter((block) => block.type === "image");
+  assert.equal(images.length, 2);
+  assert.equal(result.images?.length, 1);
+  assert.equal(result.images?.[0]?.altText, "Late alt", "the first non-empty alt text is kept");
+  assert.ok(images.every((block) => block.type === "image" && block.assetId === result.images?.[0]?.placeholderId));
+});
+
+test("uses the PNG fallback of an SVG picture and reads VML pictures", async () => {
+  const vml =
+    `<w:r><w:pict><v:shape xmlns:v="urn:schemas-microsoft-com:vml" alt="Old-style picture">` +
+    `<v:imagedata r:id="rId21"/></v:shape></w:pict></w:r>`;
+  const body = t("Chapter", { style: "Heading1" }) + p(pictureRun({ svgRid: "rId24" })) + p(vml);
+  const { result } = await importBook({ body });
+  assert.deepEqual(result.images?.map((image) => [image.sourceName, image.altText]), [
+    ["image1.png", ""],
+    ["image2.jpeg", "Old-style picture"],
+  ]);
+});
+
+test("never fetches linked pictures, and leaves out pictures it may not read", async () => {
+  const body =
+    t("Chapter", { style: "Heading1" }) +
+    p(r("Linked: ") + pictureRun({ linked: true })) +
+    p(r("Embedded object: ") + pictureRun({ rid: "rId23" }));
+  const { book, result } = await importBook({ body });
+  assert.equal(book.chapters[0]!.blocks.filter((block) => block.type === "image").length, 0);
+  assert.equal(result.images, undefined);
+  assert.ok(codes(result).includes("DOCX_LINKED_PICTURES_SKIPPED"));
+  assert.ok(codes(result).includes("DOCX_PICTURES_UNREADABLE"));
+});
+
+test("keeps a title-page picture in a front section", async () => {
+  const body = p(pictureRun({ alt: "Cover art" })) + t("Chapter", { style: "Heading1" }) + t("Text.");
+  const { book, result } = await importBook({ body });
+  assert.deepEqual(book.frontMatter.map((s) => [s.title, s.blocks.map((b) => b.type)]), [["Title page", ["image"]]]);
+  assert.equal(result.images?.length, 1);
 });
 
 // --- review regressions -----------------------------------------------------------------------

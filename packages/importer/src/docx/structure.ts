@@ -9,7 +9,8 @@ import type {
 import type { DeterministicIdFactory } from "../ids.js";
 import type { ImportIssue, ImportOptions } from "../types.js";
 import { inlinesToPlainText } from "../markdown-import.js";
-import type { DocxParagraph, TextRun } from "./body.js";
+import { IMPORTED_IMAGE_PLACEHOLDER_PREFIX } from "../types.js";
+import type { DocxParagraph, PictureRef, TextRun } from "./body.js";
 
 /**
  * Turns paragraph records into Book sections (ADR-0040 §4.1–§4.5).
@@ -64,6 +65,14 @@ export interface DocxStructure {
   readonly chapters: StructuralSection[];
   readonly tocRemoved: boolean;
   readonly listsFlattened: boolean;
+  /** One entry per distinct picture part; image blocks reference `placeholderId`. */
+  readonly pictures: readonly PlacedPicture[];
+}
+
+export interface PlacedPicture {
+  readonly placeholderId: string;
+  readonly part: string;
+  readonly altText: string;
 }
 
 export function structureDocx(input: DocxStructureInput): DocxStructure {
@@ -140,7 +149,7 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
     builder.startChapter("Chapter 1");
     for (const p of items) builder.add(p);
     builder.close();
-    return { metadata, frontMatter: [], chapters: builder.chapters, tocRemoved, listsFlattened: builder.listsFlattened };
+    return { metadata, frontMatter: [], chapters: builder.chapters, tocRemoved, listsFlattened: builder.listsFlattened, pictures: builder.pictures };
   }
 
   // --- chapter titles (§4.2) ---------------------------------------------------------------
@@ -182,7 +191,7 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
         builder.startChapter("Chapter 1");
         for (const p of items) builder.add(p);
         builder.close();
-        return { metadata, frontMatter: [], chapters: builder.chapters, tocRemoved, listsFlattened: builder.listsFlattened };
+        return { metadata, frontMatter: [], chapters: builder.chapters, tocRemoved, listsFlattened: builder.listsFlattened, pictures: builder.pictures };
       }
     }
   }
@@ -227,14 +236,18 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
   }
 
   // Content before any section: drop what only repeats the title page; keep the rest for review.
-  const leftover = before.filter((p) => p.pictures > 0 || !repeatsTitlePage(p));
-  if (leftover.some((p) => p.text !== "")) {
-    const first = leftover.find((p) => p.text !== "")!;
-    builder.prependFront(first, leftover.filter((p) => p !== first));
+  const leftover = before.filter((p) => p.pictures.length > 0 || !repeatsTitlePage(p));
+  if (leftover.some((p) => p.text !== "" || p.pictures.length > 0)) {
+    // Repeated title-page text is dropped, but a picture in that paragraph is kept.
+    const kept = leftover.map((p) => (repeatsTitlePage(p) ? { ...p, text: "", runs: [] } : p));
+    const first = kept.find((p) => p.text !== "");
+    const title = first?.text ?? "Title page";
+    const rest = first ? kept.filter((p) => p !== first) : kept;
+    builder.prependFront(title, rest.length > 0 ? rest : first ? [first] : []);
     issues.push({
       code: "DOCX_FRONT_MATTER_REVIEW",
       severity: "warning",
-      message: `Some text before the first chapter did not have a recognised title. OpenBook put it in a front section called “${first.text}”. Please check it in Structure.`,
+      message: `Some ${first ? "text" : "pictures"} before the first chapter did not have a recognised title. OpenBook put ${first ? "it" : "them"} in a front section called “${title}”. Please check it in Structure.`,
     });
   }
 
@@ -248,6 +261,7 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
     chapters: builder.chapters,
     tocRemoved,
     listsFlattened: builder.listsFlattened,
+    pictures: builder.pictures,
   };
 }
 
@@ -260,7 +274,9 @@ class SectionBuilder {
   readonly #ids: DeterministicIdFactory;
   #current: StructuralSection | undefined;
   #openList: { numId: string; block: Extract<ContentBlock, { type: "list" }> } | undefined;
-  #previousHadPicture = false;
+  /** Image blocks from the previous paragraph, so a Caption paragraph can attach to the last one. */
+  #lastImages: Array<Extract<ContentBlock, { type: "image" }>> = [];
+  readonly #placed = new Map<string, { placeholderId: string; part: string; altText: string }>();
 
   constructor(ids: DeterministicIdFactory) {
     this.#ids = ids;
@@ -268,6 +284,22 @@ class SectionBuilder {
 
   get hasSection(): boolean {
     return this.#current !== undefined;
+  }
+
+  get pictures(): PlacedPicture[] {
+    return [...this.#placed.values()];
+  }
+
+  /** The same picture part used twice shares one placeholder (and so one asset). */
+  #placeholderFor(picture: PictureRef): string {
+    const existing = this.#placed.get(picture.part);
+    if (existing) {
+      if (!existing.altText && picture.altText) existing.altText = picture.altText;
+      return existing.placeholderId;
+    }
+    const placeholderId = `${IMPORTED_IMAGE_PLACEHOLDER_PREFIX}${String(this.#placed.size + 1)}`;
+    this.#placed.set(picture.part, { placeholderId, part: picture.part, altText: picture.altText });
+    return placeholderId;
   }
 
   startFront(role: SectionRole, title: string): void {
@@ -279,28 +311,49 @@ class SectionBuilder {
   }
 
   /** A front section placed before every other front section (content before any title). */
-  prependFront(titleItem: DocxParagraph, rest: readonly DocxParagraph[]): void {
+  prependFront(title: string, items: readonly DocxParagraph[]): void {
     const saved = this.#current;
-    const section = this.#newSection("front", "custom", titleItem.text);
+    const section = this.#newSection("front", "custom", title);
     this.#current = section;
     this.#openList = undefined;
-    for (const p of rest.length > 0 ? rest : [titleItem]) this.add(p);
+    this.#lastImages = [];
+    for (const p of items) this.add(p);
     this.#finish(section);
     this.front.unshift(section);
     this.#current = saved;
     this.#openList = undefined;
+    this.#lastImages = [];
   }
 
   add(p: DocxParagraph): void {
     const section = this.#current;
     if (!section) return;
-    const hadPicture = this.#previousHadPicture;
-    this.#previousHadPicture = p.pictures > 0;
 
-    // A caption right after a picture belongs to that picture, imported in Slice 3.
-    if (p.styleClass.kind === "caption" && hadPicture) return;
-    if (p.text === "") return;
+    // A Caption paragraph right after a picture becomes that picture's caption (ADR-0040 §4.6).
+    const previousImage = this.#lastImages[this.#lastImages.length - 1];
+    this.#lastImages = [];
+    if (p.styleClass.kind === "caption" && previousImage && p.pictures.length === 0) {
+      previousImage.caption = toInlines(p.runs);
+      return;
+    }
 
+    if (p.text !== "") this.#addText(section, p);
+
+    // Pictures follow their paragraph's text, in reading order (floating pictures included).
+    for (const picture of p.pictures) {
+      const block: Extract<ContentBlock, { type: "image" }> = {
+        type: "image",
+        id: this.#ids.nextBlockId(),
+        assetId: this.#placeholderFor(picture),
+        caption: [],
+      };
+      section.blocks.push(block);
+      this.#lastImages.push(block);
+      this.#openList = undefined;
+    }
+  }
+
+  #addText(section: StructuralSection, p: DocxParagraph): void {
     if (p.list) {
       if (p.list.ilvl > 0) this.listsFlattened = true;
       const item = toInlines(p.runs);
@@ -339,7 +392,7 @@ class SectionBuilder {
     list.push(section);
     this.#current = section;
     this.#openList = undefined;
-    this.#previousHadPicture = false;
+    this.#lastImages = [];
   }
 
   #newSection(kind: StructuralSection["kind"], role: SectionRole, title: string): StructuralSection {

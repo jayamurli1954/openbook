@@ -2,7 +2,14 @@
 import type { DeterministicIdFactory } from "../ids.js";
 import { assembleBook, finalizeBookResult } from "../markdown-import.js";
 import { buildMetadata, emptyStats } from "../metadata.js";
-import type { DocxImportSource, ImportIssue, ImportOptions, ImportResult } from "../types.js";
+import type { StructuralSection } from "@openbook/book-model";
+import type {
+  DocxImportSource,
+  ImportedImagePayload,
+  ImportIssue,
+  ImportOptions,
+  ImportResult,
+} from "../types.js";
 import { walkBody, type BodyCounts } from "./body.js";
 import { DocxReadError, docxReadErrorToIssue } from "./errors.js";
 import { openDocxPackage } from "./package.js";
@@ -10,8 +17,9 @@ import { readDocxParts } from "./parts.js";
 import { structureDocx } from "./structure.js";
 
 /**
- * Word `.docx` → canonical Book (ADR-0040 Slice 2: text and structure).
- * Pictures are counted and reported here; Slice 3 imports them.
+ * Word `.docx` → canonical Book (ADR-0040 Slices 2–3: text, structure, pictures).
+ * Pictures come back as `ImportResult.images`; image blocks reference their placeholder ids
+ * until the caller ingests the bytes (ADR-0040 §2.2).
  */
 export function importDocx(
   source: DocxImportSource,
@@ -47,14 +55,51 @@ export function importDocx(
     });
 
     reportDropped(body.counts, structure.tocRemoved, structure.listsFlattened, issues);
+
+    // Read each distinct picture part once. A part that cannot be read loses its image blocks only.
+    const images: ImportedImagePayload[] = [];
+    const unreadable = new Set<string>();
+    for (const picture of structure.pictures) {
+      try {
+        images.push({
+          placeholderId: picture.placeholderId,
+          bytes: opened.docx.readPart(picture.part),
+          sourceName: picture.part.slice(picture.part.lastIndexOf("/") + 1),
+          altText: picture.altText,
+        });
+      } catch (err) {
+        if (!(err instanceof DocxReadError)) throw err;
+        unreadable.add(picture.placeholderId);
+      }
+    }
+    if (unreadable.size > 0) {
+      for (const section of [...structure.frontMatter, ...structure.chapters]) {
+        removeImageBlocks(section, unreadable, ids);
+      }
+      issues.push({
+        code: "DOCX_PICTURES_UNREADABLE",
+        severity: "warning",
+        message: `${plural(unreadable.size, "picture")} could not be read from this file and ${unreadable.size === 1 ? "was" : "were"} left out. You can add ${unreadable.size === 1 ? "it" : "them"} again with the picture button in Write.`,
+      });
+    }
+
     const metadata = buildMetadata({ source, options, frontmatter: structure.metadata, issues });
     const book = assembleBook(metadata, structure.chapters, structure.frontMatter);
-    return finalizeBookResult(book, issues);
+    const result = finalizeBookResult(book, issues);
+    return result.success && images.length > 0 ? { ...result, images } : result;
   } catch (err) {
     if (err instanceof DocxReadError) {
       return { success: false, issues: [docxReadErrorToIssue(err)], stats: emptyStats() };
     }
     throw err;
+  }
+}
+
+/** Removes image blocks for the given placeholders; a section left empty keeps one empty paragraph. */
+function removeImageBlocks(section: StructuralSection, placeholders: ReadonlySet<string>, ids: DeterministicIdFactory): void {
+  section.blocks = section.blocks.filter((block) => !(block.type === "image" && placeholders.has(block.assetId)));
+  if (section.blocks.length === 0) {
+    section.blocks.push({ type: "paragraph", id: ids.nextBlockId(), inlines: [{ type: "text", text: "" }] });
   }
 }
 
@@ -76,11 +121,11 @@ function reportDropped(counts: BodyCounts, tocRemoved: boolean, listsFlattened: 
   if (tocRemoved || counts.tocFields > 0) {
     add("DOCX_TOC_REMOVED", "info", "Your table of contents was removed. OpenBook builds one for you from your chapters.");
   }
-  if (counts.pictures > 0) {
+  if (counts.linkedPictures > 0) {
     add(
-      "DOCX_PICTURES_NOT_YET_IMPORTED",
+      "DOCX_LINKED_PICTURES_SKIPPED",
       "warning",
-      `${plural(counts.pictures, "picture")} in this file ${counts.pictures === 1 ? "was" : "were"} not imported yet. Picture import is coming in a later OpenBook update.`,
+      `${plural(counts.linkedPictures, "picture")} ${counts.linkedPictures === 1 ? "is" : "are"} linked to a file outside this document rather than stored in it. OpenBook never fetches outside files, so ${counts.linkedPictures === 1 ? "it was" : "they were"} left out. In Word, use Insert > Pictures (not "Link to File") and import again.`,
     );
   }
   if (counts.trackedChanges) {

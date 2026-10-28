@@ -9,8 +9,10 @@ export type {
   ImportIssueSeverity,
   ImportIssue,
   ImportResult,
+  ImportedImagePayload,
   IImportService,
 } from "./types.js";
+export { IMPORTED_IMAGE_PLACEHOLDER_PREFIX } from "./types.js";
 
 export { ImportService } from "./import-service.js";
 export { DeterministicIdFactory } from "./ids.js";

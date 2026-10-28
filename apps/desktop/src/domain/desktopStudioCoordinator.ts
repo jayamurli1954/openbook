@@ -58,7 +58,9 @@ import {
 import type { PdfPublication, PublishingDiagnostic as PdfPublishingDiagnostic } from "@openbook/pdf";
 import type { ValidationReport, ValidatorService } from "@openbook/validator";
 import {
+  IMPORTED_IMAGE_PLACEHOLDER_PREFIX,
   ImportService,
+  type ImportedImagePayload,
   type ImportIssue,
   type ImportOptions,
   type ImportSource,
@@ -1229,10 +1231,15 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         throw new DesktopStudioError("IMPORT_FAILED", combinedIssueMessages(result.issues));
       }
 
-      const imported = result.book;
-      const seed = options?.idSeed ?? (imported.metadata.title || this.#idSeed);
+      const seed = options?.idSeed ?? (result.book.metadata.title || this.#idSeed);
+      // ADR-0040 §2.2: pictures go through the asset pipeline into a fresh runtime first. Only
+      // when the whole import succeeds does it replace the open book's session and asset store.
+      const runtime = this.#freshAssetRuntime();
+      const ingested = await ingestImportedImages(result.book, result.images ?? [], runtime.pipeline, seed, []);
+      assertImageReferences(ingested.book);
+      const imported = ingested.book;
       this.#replaceSession(imported, seed);
-      this.#resetAssetRuntime();
+      this.#adoptAssetRuntime(runtime);
       this.#binding = null;
       this.#pendingName = (options?.projectName ?? imported.metadata.title).trim();
       this.#session.updateMetadata({ title: imported.metadata.title });
@@ -1245,7 +1252,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       this.#succeedStudioJob();
       this.#workflow.requestTransition({ to: "STRUCTURE" });
 
-      return toStudioImportResult("new-project", result.issues, result.stats);
+      return toStudioImportResult("new-project", [...result.issues, ...ingested.issues], result.stats);
     } catch (err) {
       this.#failStudioJob();
       if (err instanceof DesktopStudioError) {
@@ -1287,7 +1294,22 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         throw new DesktopStudioError("IMPORT_FAILED", combinedIssueMessages(result.issues));
       }
 
-      const importedBook = result.book;
+      const ingested = await ingestImportedImages(
+        result.book,
+        result.images ?? [],
+        this.#pipeline,
+        this.#idSeed,
+        preImportSnapshot.assets,
+      );
+      const importedBook = ingested.book;
+      try {
+        for (const asset of ingested.newAssets) this.#session.addAsset(asset);
+      } catch (err) {
+        restore();
+        this.#failStudioJob();
+        const message = err instanceof Error ? err.message : String(err);
+        throw new DesktopStudioError("IMPORT_FAILED", `Adding pictures failed: ${message}. All changes rolled back.`);
+      }
       const partitions: ReadonlyArray<readonly StructuralSection[]> = [
         importedBook.frontMatter,
         importedBook.chapters,
@@ -1319,6 +1341,14 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
         }
       }
 
+      try {
+        assertImageReferences(this.#session.getBook());
+      } catch (err) {
+        restore();
+        this.#failStudioJob();
+        throw err;
+      }
+
       const errors = validateBook(this.#session.getBook()).filter((i) => i.severity === "error");
       if (errors.length > 0) {
         restore();
@@ -1334,7 +1364,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       }
 
       this.#succeedStudioJob();
-      return toStudioImportResult("append-sections", result.issues, result.stats);
+      return toStudioImportResult("append-sections", [...result.issues, ...ingested.issues], result.stats);
     } catch (err) {
       this.#failStudioJob();
       if (err instanceof DesktopStudioError) {
@@ -1384,6 +1414,25 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     this.#bindAssetPipeline();
   }
 
+  /** The asset runtime a new project would get, built without touching the current one. */
+  #freshAssetRuntime(): AssetRuntime {
+    const store = this.#assetStorePinned ? this.#assetStore : new MemoryAssetStore();
+    const registry = new AssetRegistry();
+    return {
+      store,
+      registry,
+      pipeline: new AssetIngestionPipeline(store, registry),
+      resolver: new StoreBackedAssetResolver(store, registry),
+    };
+  }
+
+  #adoptAssetRuntime(runtime: AssetRuntime): void {
+    this.#assetStore = runtime.store;
+    this.#assetRegistry = runtime.registry;
+    this.#pipeline = runtime.pipeline;
+    this.#resolver = runtime.resolver;
+  }
+
   #assertAssetsStage(): void {
     const stage = this.#workflow.getStage();
     if (stage !== "ASSETS") {
@@ -1420,10 +1469,10 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
   }
 
   #assertSupportedFormat(format: string): asserts format is SupportedImportFormat {
-    if (format !== "markdown" && format !== "text") {
+    if (format !== "markdown" && format !== "text" && format !== "docx") {
       throw new DesktopStudioError(
         "UNSUPPORTED_FORMAT",
-        `Unsupported import format "${format}". Supported: markdown, text.`,
+        `Unsupported import format "${format}". Supported: markdown, text, docx.`,
       );
     }
   }
@@ -1681,6 +1730,124 @@ function combinedAssetIssueMessages(issues: readonly AssetIssue[]): string {
     return "Asset ingestion failed.";
   }
   return issues.map((issue) => issue.message).join("; ");
+}
+
+interface AssetRuntime {
+  readonly store: IAssetStore;
+  readonly registry: AssetRegistry;
+  readonly pipeline: AssetIngestionPipeline;
+  readonly resolver: StoreBackedAssetResolver;
+}
+
+interface IngestedImport {
+  readonly book: Book;
+  /** Assets to add to the Book (new ones only; already-present ids are skipped). */
+  readonly newAssets: readonly AssetRef[];
+  readonly issues: readonly ImportIssue[];
+}
+
+/**
+ * ADR-0040 §2.2: run each imported picture through the asset pipeline (size → magic bytes →
+ * SVG reject), swap placeholder ids for AssetRef ids, and drop the blocks of pictures the
+ * pipeline refuses. The returned Book's `assets` include the new AssetRefs.
+ */
+async function ingestImportedImages(
+  book: Book,
+  images: readonly ImportedImagePayload[],
+  pipeline: AssetIngestionPipeline,
+  idSeed: string,
+  existingAssets: readonly AssetRef[],
+): Promise<IngestedImport> {
+  if (images.length === 0) {
+    return { book, newAssets: [], issues: [] };
+  }
+  const resolved = new Map<string, AssetRef | null>();
+  for (const image of images) {
+    const result = await pipeline.ingest({
+      content: image.bytes,
+      originalFilename: image.sourceName,
+      kind: "image",
+      altText: image.altText,
+      idSeed,
+    });
+    resolved.set(image.placeholderId, result.success && result.assetRef ? result.assetRef : null);
+  }
+
+  const rejectedIn: string[] = [];
+  const mapSections = (sections: readonly StructuralSection[]): StructuralSection[] =>
+    sections.map((section) => {
+      let firstRemovedId: string | undefined;
+      const blocks: ContentBlock[] = [];
+      for (const block of section.blocks) {
+        if (block.type === "image" && resolved.has(block.assetId)) {
+          const asset = resolved.get(block.assetId);
+          if (asset) {
+            blocks.push({ ...block, assetId: asset.id });
+          } else {
+            firstRemovedId ??= block.id;
+            if (!rejectedIn.includes(section.title)) rejectedIn.push(section.title);
+          }
+          continue;
+        }
+        blocks.push(block);
+      }
+      if (blocks.length === 0 && firstRemovedId !== undefined) {
+        blocks.push({ type: "paragraph", id: firstRemovedId, inlines: [{ type: "text", text: "" }] });
+      }
+      return { ...section, blocks };
+    });
+
+  const known = new Set(existingAssets.map((asset) => asset.id));
+  const newAssets: AssetRef[] = [];
+  for (const asset of resolved.values()) {
+    if (asset && !known.has(asset.id)) {
+      known.add(asset.id);
+      newAssets.push(asset);
+    }
+  }
+
+  const rejected = [...resolved.values()].filter((asset) => asset === null).length;
+  const issues: ImportIssue[] =
+    rejected === 0
+      ? []
+      : [
+          {
+            code: "DOCX_PICTURES_REJECTED",
+            severity: "warning",
+            message: `${rejected} ${rejected === 1 ? "picture" : "pictures"} could not be used and ${rejected === 1 ? "was" : "were"} left out (in ${rejectedIn.map((title) => `“${title}”`).join(", ")}). OpenBook accepts PNG, JPEG, GIF, WebP, and safe SVG pictures up to the size limit; Word drawings such as EMF or WMF, and TIFF files, are not supported. You can add the pictures again with the picture button in Write.`,
+          },
+        ];
+
+  return {
+    book: {
+      ...book,
+      frontMatter: mapSections(book.frontMatter),
+      chapters: mapSections(book.chapters),
+      backMatter: mapSections(book.backMatter),
+      assets: [...book.assets, ...newAssets],
+    },
+    newAssets,
+    issues,
+  };
+}
+
+/**
+ * ADR-0040 §2.2 / INV-D3: `validateBook` does not check image references, so imports check
+ * explicitly that every image block names an AssetRef and no placeholder survives.
+ */
+function assertImageReferences(book: Book): void {
+  const assetIds = new Set(book.assets.map((asset) => asset.id));
+  for (const section of [...book.frontMatter, ...book.chapters, ...book.backMatter]) {
+    for (const block of section.blocks) {
+      if (block.type !== "image") continue;
+      if (block.assetId.startsWith(IMPORTED_IMAGE_PLACEHOLDER_PREFIX) || !assetIds.has(block.assetId)) {
+        throw new DesktopStudioError(
+          "IMPORT_FAILED",
+          `A picture in “${section.title}” does not refer to an imported image. Nothing was changed.`,
+        );
+      }
+    }
+  }
 }
 
 function toStudioImportResult(

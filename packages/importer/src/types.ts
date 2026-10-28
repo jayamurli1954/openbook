@@ -50,9 +50,29 @@ export interface ImportIssue {
   readonly snippet?: string;
 }
 
+/** Placeholder ids in `ImportResult.book` image blocks always start with this; AssetRef ids never do. */
+export const IMPORTED_IMAGE_PLACEHOLDER_PREFIX = "import-picture-";
+
+/**
+ * A picture found by an importer (ADR-0040 §2.2). The importer does not hash, store, or type-check
+ * it; the caller runs `bytes` through the asset pipeline and replaces `placeholderId` with the
+ * resulting `AssetRef.id` before the Book is committed.
+ */
+export interface ImportedImagePayload {
+  readonly placeholderId: string;
+  readonly bytes: Uint8Array;
+  /** File name inside the source package, e.g. "image3.png". Informational only. */
+  readonly sourceName: string;
+  /** Empty when the source has none. */
+  readonly altText: string;
+}
+
 export interface ImportResult {
   readonly success: boolean;
-  /** Populated only if success === true and validateBook() passed with zero errors */
+  /**
+   * Populated only if success === true and validateBook() passed with zero errors.
+   * When `images` is present, its image blocks reference placeholder ids, not assets yet.
+   */
   readonly book?: Book;
   /** Diagnostic warnings or failure errors */
   readonly issues: readonly ImportIssue[];
@@ -62,6 +82,8 @@ export interface ImportResult {
     readonly blockCount: number;
     readonly wordCount: number;
   };
+  /** Pictures to ingest before commit (`.docx` only). */
+  readonly images?: readonly ImportedImagePayload[];
 }
 
 export interface IImportService {
