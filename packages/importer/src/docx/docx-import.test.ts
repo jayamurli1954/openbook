@@ -729,6 +729,78 @@ test("shows picture file names without percent-encoding", async () => {
   assert.equal(result.images?.[0]?.sourceName, "my drawing.png");
 });
 
+// --- Slice 5: shapes found in the maintainer's manuscript ----------------------------------------
+
+test("removes a contents page whose lines are worded differently from the headings", async () => {
+  const body = [
+    t("Table of Contents", { style: "Heading1" }),
+    t("1. The Chariot Lesson - Responsibility & Courage"),
+    t("2. Doing Homework Like Arjuna - Duty & Honesty"),
+    t("3. The Calm Lake - Inner Peace"),
+    t("Story 1: The Chariot Lesson", { style: "Heading1" }),
+    t("Arjuna stood still."),
+    t("Story 2: Doing Homework Like Arjuna", { style: "Heading1" }),
+    t("Homework time."),
+    t("Story 3: The Calm Lake", { style: "Heading1" }),
+    t("The lake was calm."),
+  ].join("");
+  const { book, result } = await importBook({ body });
+  assert.deepEqual(book.chapters.map((s) => s.title), [
+    "Story 1: The Chariot Lesson",
+    "Story 2: Doing Homework Like Arjuna",
+    "Story 3: The Calm Lake",
+  ]);
+  assert.ok(!allText(book).includes("Responsibility & Courage"));
+  assert.ok(codes(result).includes("DOCX_TOC_REMOVED"));
+});
+
+test("finds chapters from a differently worded contents page when there are no heading styles", async () => {
+  const body = [
+    p(r("Contents", { b: true })),
+    t("1. The Butter Thief - Honesty ........ 3"),
+    t("2. The Serpent - Courage ........ 9"),
+    p(r("Story 1: The Butter Thief", { b: true }), { pageBreakBefore: true }),
+    t("Story text."),
+    p(r("Story 2: The Serpent", { b: true }), { pageBreakBefore: true }),
+    t("Story text."),
+  ].join("");
+  const { book } = await importBook({ body });
+  assert.deepEqual(book.chapters.map((s) => s.title), ["Story 1: The Butter Thief", "Story 2: The Serpent"]);
+});
+
+test("says when pictures have no description, since the book check does not review them", async () => {
+  const body = t("Chapter", { style: "Heading1" }) + p(pictureRun()) + p(pictureRun({ rid: "rId21", alt: "Yashoda" }));
+  const { result } = await importBook({ body });
+  const issue = result.issues.find((i) => i.code === "DOCX_PICTURES_WITHOUT_ALT_TEXT");
+  assert.ok(issue && issue.severity === "warning");
+  assert.match(issue.message, /^1 picture has no description/);
+
+  const described = await importBook({ body: t("Chapter", { style: "Heading1" }) + p(pictureRun({ alt: "Krishna" })) });
+  assert.ok(!codes(described.result).includes("DOCX_PICTURES_WITHOUT_ALT_TEXT"));
+});
+
+test("a one-line contents page is removed only when its line names a later heading", async () => {
+  const named = await importBook({
+    body: t("Contents", { style: "Heading1" }) + t("1. The Golden Rule - Kindness") + t("Story 6: The Golden Rule", { style: "Heading1" }) + t("Text."),
+  });
+  assert.deepEqual(named.book.chapters.map((s) => s.title), ["Story 6: The Golden Rule"]);
+  const unrelated = await importBook({
+    body: t("Contents") + t("What is inside the box") + t("Chapter", { style: "Heading1" }) + t("Text."),
+  });
+  assert.ok(allText(unrelated.book).includes("What is inside the box"), "an ordinary line after the word Contents stays");
+});
+
+test("a program name in the file's properties is not taken as the author", async () => {
+  const body = t("Chapter", { style: "Heading1" }) + t("Text.");
+  const generated = await importBook({ body, core: { creator: "python-docx" } });
+  assert.deepEqual(generated.book.metadata.authors, []);
+  assert.ok(codes(generated.result).includes("DOCX_AUTHOR_NOT_SET"));
+  assert.ok(!codes(generated.result).includes("DOCX_AUTHOR_FROM_PROPERTIES"));
+
+  const mixed = await importBook({ body, core: { creator: "Muralidhar Rao; Microsoft Office User" } });
+  assert.deepEqual(mixed.book.metadata.authors, ["Muralidhar Rao"]);
+});
+
 // --- review regressions -----------------------------------------------------------------------
 
 const BEGIN = `<w:r><w:fldChar w:fldCharType="begin"/></w:r>`;

@@ -86,6 +86,17 @@ export function importDocx(
       });
     }
 
+    // OpenBook's book check does not review picture descriptions yet (ADR-0018 keeps accessibility
+    // checks for later), so the import itself says when pictures have none.
+    const withoutAlt = images.filter((image) => image.altText.trim() === "").length;
+    if (withoutAlt > 0) {
+      issues.push({
+        code: "DOCX_PICTURES_WITHOUT_ALT_TEXT",
+        severity: "warning",
+        message: `${plural(withoutAlt, "picture")} ${withoutAlt === 1 ? "has" : "have"} no description (alt text) for readers who use screen readers. Add descriptions in Word (right-click a picture › View Alt Text) and import again; ebook stores may ask for them.`,
+      });
+    }
+
     if (structure.altTextConflicts > 0) {
       issues.push({
         code: "DOCX_PICTURE_ALT_TEXT_DIFFERS",
@@ -145,7 +156,7 @@ function reportDropped(counts: BodyCounts, tocRemoved: boolean, listsFlattened: 
     add(
       "DOCX_AUTOMATIC_ALT_TEXT_REMOVED",
       "warning",
-      `${plural(counts.automaticAltText, "picture")} had only a description written automatically by Word. OpenBook left ${counts.automaticAltText === 1 ? "its" : "their"} alt text empty so you can describe ${counts.automaticAltText === 1 ? "it" : "them"} yourself; the book check will remind you.`,
+      `${plural(counts.automaticAltText, "picture")} had only a description written automatically by Word, so OpenBook did not use it. Write your own description in Word (right-click the picture › View Alt Text) and import again.`,
     );
   }
   if (counts.linkedPictures > 0) {

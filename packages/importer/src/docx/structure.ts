@@ -42,6 +42,13 @@ const FRONT_MATTER_TITLES: ReadonlyArray<readonly [SectionRole, readonly string[
 const CONTENTS_TITLES = new Set(["contents", "table of contents", "ಪರಿವಿಡಿ"]);
 const TOC_MATCH_RATIO = 0.6;
 
+/**
+ * dc:creator values that name the program that made the file, or a placeholder account,
+ * rather than a person (ADR-0040 §4.1).
+ */
+const NOT_AN_AUTHOR =
+  /^(python-docx|docx4j|apache poi|aspose\b.*|openxml.*|phpword|mammoth|pandoc|libreoffice|microsoft office user|windows user|user|admin|administrator|author|unknown|owner)$/i;
+
 /** Word fills dc:title with these when the author never set a title. */
 const DEFAULT_WORD_TITLE = /^(document|doc|untitled)\s*\d*$/i;
 
@@ -114,7 +121,15 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
   items = items.filter((p) => p !== titleItem && p !== subtitleItem);
 
   if (input.coreCreator) {
-    const authors = input.coreCreator.split(";").map((name) => name.trim()).filter(Boolean);
+    const named = input.coreCreator.split(";").map((name) => name.trim()).filter(Boolean);
+    const authors = named.filter((name) => !NOT_AN_AUTHOR.test(name));
+    if (authors.length < named.length) {
+      issues.push({
+        code: "DOCX_AUTHOR_NOT_SET",
+        severity: "info",
+        message: `The Word file's properties name “${named.filter((name) => NOT_AN_AUTHOR.test(name)).join(", ")}” as the author, which is a program or a placeholder, not a person. Add the author's name in Details.`,
+      });
+    }
     if (authors.length > 0) {
       metadata.authors = authors;
       issues.push({
@@ -552,16 +567,27 @@ function findTypedToc(items: readonly DocxParagraph[]): TypedToc | undefined {
       entries.push(entry.text);
       end += 1;
     }
-    if (entries.length < 2) continue;
+    if (entries.length === 0) continue;
 
-    const later = new Set(items.slice(end).map((p) => normalizeTitle(p.text)));
+    const laterItems = items.slice(end);
+    const later = new Set(laterItems.map((p) => normalizeTitle(p.text)));
+    const laterKeys = new Set(laterItems.map((p) => titleKey(p.text)).filter((key) => key !== ""));
     const titles = new Set<string>();
     let matched = 0;
     let lastMatch = -1;
     entries.forEach((entry, index) => {
       const raw = normalizeTitle(entry);
       const stripped = normalizeTitle(entry.replace(PAGE_NUMBER_TAIL, ""));
-      const hit = later.has(raw) ? raw : later.has(stripped) ? stripped : undefined;
+      // Contents lines are often worded differently from their headings
+      // (“1. The Chariot Lesson - Courage” for “Story 1: The Chariot Lesson”).
+      const key = titleKey(entry.replace(PAGE_NUMBER_TAIL, ""));
+      const hit = later.has(raw)
+        ? raw
+        : later.has(stripped)
+          ? stripped
+          : key !== "" && laterKeys.has(key)
+            ? key
+            : undefined;
       if (hit) {
         matched += 1;
         titles.add(hit);
@@ -569,6 +595,8 @@ function findTypedToc(items: readonly DocxParagraph[]): TypedToc | undefined {
       }
     });
     if (matched / entries.length < TOC_MATCH_RATIO || lastMatch === -1) continue;
+    // A one-line contents page counts only when that line names a later heading.
+    if (entries.length === 1 && matched !== 1) continue;
     // The contents page runs through its last entry that names a later paragraph, plus any
     // following lines that still look like entries (text then a page number), such as
     // “Glossary ..... 101” for a section titled differently in the book.
@@ -577,6 +605,21 @@ function findTypedToc(items: readonly DocxParagraph[]): TypedToc | undefined {
     return { start, end: start + 1 + last + 1, titles };
   }
   return undefined;
+}
+
+/** Leading numbering like “1.”, “Story 1:”, “Chapter IV –”, “ಕಥೆ ೧:”. */
+const TITLE_NUMBERING =
+  /^(?:(?:story|chapter|chap\.?|part|tale|ಕಥೆ|ಅಧ್ಯಾಯ)\s*)?(?:[0-9\u0CE6-\u0CEF]+|[ivxlc]+)\s*[.:)\-\u2013\u2014]\s*/iu;
+/** A trailing “ - subtitle” or “: subtitle” that contents lines add after the title. */
+const TITLE_TAIL = /\s+[-\u2013\u2014:]\s+.*$/u;
+
+/**
+ * The core of a title, for matching a contents line to its heading:
+ * without numbering, without a dash subtitle, normalized. Empty when nothing is left.
+ */
+export function titleKey(text: string): string {
+  const withoutNumber = text.trim().replace(TITLE_NUMBERING, "");
+  return normalizeTitle(withoutNumber.replace(TITLE_TAIL, ""));
 }
 
 function chaptersFromToc(
@@ -588,8 +631,9 @@ function chaptersFromToc(
   const seen = new Set<string>();
   for (const p of items.slice(from)) {
     if (p.list || p.inTable || wordCount(p.text) > 20) continue;
-    const key = normalizeTitle(p.text);
-    if (titles.has(key) && !seen.has(key)) {
+    const normalized = normalizeTitle(p.text);
+    const key = titles.has(normalized) ? normalized : titleKey(p.text);
+    if (key !== "" && titles.has(key) && !seen.has(key)) {
       seen.add(key);
       promoted.add(p);
     }

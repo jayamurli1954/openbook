@@ -651,8 +651,7 @@ const AUTOMATIC_ALT_TEXT = /description automatically generated(\s+with\s+[^.]*)
 
 /**
  * wp:docPr description, then title; VML shapes use their alt attribute. Word's automatically
- * generated descriptions are not the author's alt text: they are left empty so Book Doctor asks
- * the author to describe the picture.
+ * generated descriptions are not the author's alt text: they are left empty and the import says so.
  */
 function pictureAltText(el: XmlElement): { altText: string; automatic: boolean } {
   const candidates: string[] = [];

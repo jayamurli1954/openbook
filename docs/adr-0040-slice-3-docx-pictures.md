@@ -20,7 +20,7 @@
 - A picture anchored to a paragraph that becomes a section title (chapter, front matter) opens that section. A picture in the Title or Subtitle paragraph stays on the title page.
 - A picture inside a list item is placed after the list, so the list is not split.
 - Hidden pictures (in a run marked Hidden) are never imported.
-- Word's automatically generated descriptions (“… Description automatically generated”) are not used as alt text. The alt text is left empty so Book Doctor asks the author, with warning `DOCX_AUTOMATIC_ALT_TEXT_REMOVED`.
+- Word's automatically generated descriptions (“… Description automatically generated”) are not used as alt text. The alt text is left empty, with warning `DOCX_AUTOMATIC_ALT_TEXT_REMOVED`. (Correction, Slice 5: Book Doctor does not review alt text — ADR-0018 keeps accessibility checks inactive — so the import itself now warns when pictures have no description; see `docs/adr-0040-slice-5-hardening.md`.)
 - A reused picture keeps one alt text (alt text lives on the AssetRef); different descriptions give warning `DOCX_PICTURE_ALT_TEXT_DIFFERS`.
 - File names are percent-decoded for display.
 - Security limits reached while reading a picture (total size, part size, ratio) stay fatal, as ADR-0040 §5 requires; only per-picture problems become warnings.
