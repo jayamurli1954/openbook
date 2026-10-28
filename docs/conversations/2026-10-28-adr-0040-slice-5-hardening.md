@@ -24,4 +24,4 @@ After Slice 4 merged (PR #172), the maintainer asked to test importing the Word 
 
 ## Outcomes
 
-- Branch `feat/adr-0040-slice-5-hardening`.
+- Branch `feat/adr-0040-slice-5-hardening`; merged as PR #174 after a review pass (7 findings fixed). ADR-0040 closed.

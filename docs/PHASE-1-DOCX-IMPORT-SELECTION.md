@@ -1,6 +1,6 @@
 # Phase 1 — Next Domain Selection: Word (.docx) Import
 
-- **Status:** Selected; ADR-0040 accepted (PR #164); implementation not authorized
+- **Status:** Selected; ADR-0040 accepted (PR #164); Slices 1–5 done (PRs #166–#174); closed — see `docs/adr-0040-closure-reconciliation.md`
 - **Date:** 2026-10-28
 - **Baseline:** `main` at `b975bd9` (PR #162 — save/autosave race fix)
 - **Prior records:** `docs/adr-0039-closure-reconciliation.md`; `docs/PHASE-1-COVER-WIZARD-SELECTION.md`

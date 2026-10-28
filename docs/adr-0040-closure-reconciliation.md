@@ -1,8 +1,8 @@
 # ADR-0040 Word (.docx) Import — Closure & Reconciliation
 
-- **Status:** Implementation-complete on merge of Slice 5; closure/reconciliation record
+- **Status:** Implementation-complete (Slice 5 merged in PR #174); closure/reconciliation record
 - **Date:** 2026-10-28
-- **Baseline:** `main` after ADR-0040 Slice 4 status reconcile (PR #173, `b456d1d`) plus Slice 5 (this PR)
+- **Baseline:** `main` after ADR-0040 Slice 4 status reconcile (PR #173, `b456d1d`) plus Slice 5 (PR #174)
 - **Authority:** ADR-0040 — Word (.docx) Import Architecture
 - **Implementation authorization:** Completed for the five approved ADR-0040 slices; no further ADR-0040 slice is authorized by this record
 
@@ -21,7 +21,7 @@ This record does not authorize footnotes, tables, nested lists, comments, `.doc`
 | 2 | Text and structure; `.docx` on in the importer | Done — PR #168 (status PR #169) |
 | 3 | Pictures through the asset pipeline; coordinator accepts `.docx` | Done — PR #170 (status PR #171) |
 | 4 | Desktop import surface | Done — PR #172 (status PR #173) |
-| 5 | Hardening, fixes from the real manuscript, closure | This PR |
+| 5 | Hardening, fixes from the real manuscript, closure | Done — PR #174 (status PR closes the sequence) |
 
 Every slice had a review pass before merge; the findings and their fixes are in each slice record.
 
@@ -58,4 +58,4 @@ Every slice had a review pass before merge; the findings and their fixes are in 
 
 ## 6. Closure determination
 
-**ADR-0040 implementation is closed as a slice sequence once Slice 5 merges.** A Word `.docx` manuscript with pictures can be imported from the desktop app's start screen or added from Write, and the maintainer's own book imports cleanly.
+**ADR-0040 implementation is closed as a slice sequence** (Slice 5 merged in PR #174). A Word `.docx` manuscript with pictures can be imported from the desktop app's start screen or added from Write, and the maintainer's own book imports cleanly.
