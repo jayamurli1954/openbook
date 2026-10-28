@@ -76,6 +76,15 @@ export function createBrowserWordFilePickPort(): WordFilePickPort {
             .catch((err: unknown) => finish({ kind: "failed", detail: String(err) }));
         });
         input.addEventListener("cancel", () => finish({ kind: "cancelled" }));
+        // Some engines never fire "cancel". When the window gets focus back with no file
+        // chosen, treat the chooser as closed so the import buttons do not stay busy.
+        const onFocus = () => {
+          window.removeEventListener("focus", onFocus);
+          window.setTimeout(() => {
+            if (!input.files || input.files.length === 0) finish({ kind: "cancelled" });
+          }, 1000);
+        };
+        window.addEventListener("focus", onFocus);
         input.click();
       });
     },

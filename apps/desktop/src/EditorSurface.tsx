@@ -391,6 +391,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   };
 
   const onNewBook = () => {
+    clearWordImport();
     void coordinator.newProject("Desktop editor draft").then(() => {
       seedDraft(coordinator, englishFixture as TipTapDocJSON);
       setSessionNote("Started a new unsaved book session");
@@ -459,6 +460,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
           ? `Opened “${opened.projectName}”.`
           : "Opened your book.",
       );
+      clearWordImport();
       setSessionNote(opened ? `Opened “${opened.projectName}”` : "Opened project");
       loadSectionIntoEditor();
     } catch (err) {
@@ -529,6 +531,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
           : `Added ${result.sectionCount} chapters. Use Save to keep them.`,
       );
       setSessionNote(`Imported “${coordinator.getBook().metadata.title}”`);
+      setWordImportSummary(null);
       loadSectionIntoEditor();
       refresh();
     } catch (err) {
@@ -538,8 +541,16 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   };
 
   /** New book from the start screen, or extra chapters from Write; the summary shows in the Guide. */
+  /** A Word import's summary and start-screen note belong to the book they describe. */
+  const clearWordImport = () => {
+    setWordImportSummary(null);
+    setWordImportMessage("");
+  };
   const runWordImport = async (mode: "new-project" | "append-sections") => {
-    if (mode === "append-sections" && !flushEditorIntoSession()) return;
+    if (mode === "append-sections" && !flushEditorIntoSession()) {
+      setSessionNote("Couldn’t keep the text you are writing, so the Word file wasn’t added. Try again.");
+      return;
+    }
     setWordImportBusy(true);
     setWordImportMessage("");
     try {
@@ -586,10 +597,12 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     setActiveStep(step);
   };
   const openStudio = () => {
+    setWordImportMessage("");
     setView("studio");
     selectStep("write");
   };
   const onGuidedStarted = (path: GuidedStartPath) => {
+    clearWordImport();
     refresh();
     loadSectionIntoEditor();
     setSessionNote("Your book is ready.");

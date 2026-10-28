@@ -16,6 +16,12 @@
 - **New book only from a fresh book:** a whole new book can be imported only while the open book is still at its start (ADR-0020 INV-6). Otherwise the author is told to start a New blank book first, or to add the chapters from Write. The file chooser does not open, and work in progress is never replaced.
 - **Errors:** the reader's own messages (for example “This Word file is damaged and cannot be read.”, or the older-`.doc` hint) are shown when they pass the ADR-0039 author-safe check. Otherwise a plain fallback is shown, and the original text goes to Diagnostics.
 - Technical notes such as “Applied default language” are left out of the summary.
+- The studio's own failure text (rollbacks, internal checks) is never shown; the author gets a plain message, and the original goes to Diagnostics. Adding chapters to a book with no chapter yet asks the author to add one first.
+- The picture count is the image blocks in the sections the import added, so reused pictures still count.
+- The summary and the start-screen note are cleared when the author changes book another way (new blank book, open, Guided Start, a text import), so they never describe the wrong book.
+- The fresh-book message explains exactly where to go: Write for adding chapters, or New blank book and then OpenBook at the top left to come back to Import a Word file.
+- A test keeps the Rust size cap equal to the importer's limit.
+- The browser fallback also settles when the chooser closes without a `cancel` event, so the buttons never stay busy.
 
 ### Host
 

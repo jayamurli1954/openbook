@@ -55,10 +55,22 @@ export type WordImportOutcome =
   | { readonly kind: "failed"; readonly message: string; readonly detail: string };
 
 export const WORD_IMPORT_NEEDS_FRESH_BOOK =
-  "To bring in a Word file as a new book, start from a fresh book: choose New blank book, then Import a Word file. To add a Word file's chapters to this book instead, use Add chapters from a Word file in Write.";
+  "You are already working on a book, so a Word file can’t replace it here. To add the Word file’s chapters to this book, open it and use Add chapters from a Word file in Write. To make a separate book from it, save this one first, choose New blank book below, select OpenBook at the top left to come back to this screen, and then choose Import a Word file.";
+
+export const WORD_IMPORT_NEEDS_A_CHAPTER =
+  "Add a chapter to your book first, then add the Word file’s chapters after it.";
 
 const WORD_IMPORT_FALLBACK =
   "Couldn’t import that Word file. Check that it opens in Word and is saved as .docx, then try again.";
+
+const WORD_APPEND_FALLBACK =
+  "Couldn’t add that Word file’s chapters. Your book was not changed; try again.";
+
+/**
+ * The coordinator's own failure text (rollbacks, internal checks) is technical. Only the
+ * Word reader's messages, which are written for authors, are shown as they are.
+ */
+const COORDINATOR_TEXT = /append|rolled back|session|requires|refer to an imported image|section “/i;
 
 /** Importer notes that are technical rather than useful to an author. */
 const HIDDEN_ISSUE_CODES = new Set(["DEFAULT_LANGUAGE", "DEFAULT_TITLE"]);
@@ -71,6 +83,9 @@ export async function importWordFile(
   // A whole new book can only be imported before the current one has moved on (ADR-0020 INV-6).
   if (mode === "new-project" && coordinator.getState().stage !== "IMPORT") {
     return { kind: "failed", message: WORD_IMPORT_NEEDS_FRESH_BOOK, detail: "IMPORT_NOT_PERMITTED" };
+  }
+  if (mode === "append-sections" && coordinator.getBook().chapters.length === 0) {
+    return { kind: "failed", message: WORD_IMPORT_NEEDS_A_CHAPTER, detail: "NO_CHAPTERS" };
   }
 
   let picked: WordFilePick;
@@ -96,13 +111,10 @@ export async function importWordFile(
     return { kind: "imported", summary: summarizeWordImport(result, before, coordinator.getBook()) };
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    // The reader's own messages are written for authors; show them when they are safe.
+    const fallback = mode === "append-sections" ? WORD_APPEND_FALLBACK : WORD_IMPORT_FALLBACK;
     const firstSentence = detail.split(/;\s|\n/)[0]?.trim() ?? "";
-    return {
-      kind: "failed",
-      message: isAuthorSafeText(firstSentence) ? firstSentence : WORD_IMPORT_FALLBACK,
-      detail,
-    };
+    const fromReader = isAuthorSafeText(firstSentence) && !COORDINATOR_TEXT.test(firstSentence);
+    return { kind: "failed", message: fromReader ? firstSentence : fallback, detail };
   }
 }
 
@@ -110,7 +122,11 @@ export function summarizeWordImport(result: StudioImportResult, before: Book, af
   const isNew = result.mode === "new-project";
   const chapters = isNew ? after.chapters.length : after.chapters.length - before.chapters.length;
   const frontSections = isNew ? after.frontMatter.length : after.frontMatter.length - before.frontMatter.length;
-  const pictures = isNew ? after.assets.length : after.assets.length - before.assets.length;
+  // Count pictures the author will see: image blocks in the sections this import added.
+  const existing = new Set(isNew ? [] : [...before.frontMatter, ...before.chapters, ...before.backMatter].map((s) => s.id));
+  const pictures = [...after.frontMatter, ...after.chapters, ...after.backMatter]
+    .filter((section) => !existing.has(section.id))
+    .reduce((count, section) => count + section.blocks.filter((block) => block.type === "image").length, 0);
   const words = result.wordCount;
 
   const parts = [

@@ -11,6 +11,7 @@ import { SqliteProjectPersistence } from "../../persistence/sqlitePersistence.js
 import { findInternalTerms } from "./studioShellGuide.js";
 import {
   WORD_IMPORT_MAX_FILE_BYTES,
+  WORD_IMPORT_NEEDS_A_CHAPTER,
   WORD_IMPORT_NEEDS_FRESH_BOOK,
   importWordFile,
   type WordFilePick,
@@ -45,8 +46,8 @@ test("imports a Word file as a new book and summarises it for the Guide", async 
   const { summary } = outcome;
   assert.equal(summary.mode, "new-project");
   assert.equal(summary.chapters, 2);
-  assert.equal(summary.pictures, 1);
-  assert.equal(summary.headline, `Imported “Little Krishna”: 2 chapters, ${summary.words} words and 1 picture.`);
+  assert.equal(summary.pictures, 2, "the PNG appears in both chapters; the refused EMF is not counted");
+  assert.equal(summary.headline, `Imported “Little Krishna”: 2 chapters, ${summary.words} words and 2 pictures.`);
   assert.ok(summary.toCheck.some((message) => /could not be used/.test(message)), "the refused EMF is listed to check");
   assert.ok(summary.goodToKnow.some((message) => /fonts, sizes, colours/.test(message)));
   assert.ok(![...summary.toCheck, ...summary.goodToKnow].some((message) => /Applied default language/.test(message)));
@@ -60,9 +61,47 @@ test("adds a Word file's chapters to the open book from Write", async () => {
   assert.equal(outcome.kind, "imported");
   if (outcome.kind !== "imported") return;
   assert.equal(outcome.summary.chapters, 2, "counts only the new chapters");
-  assert.equal(outcome.summary.pictures, 1);
-  assert.match(outcome.summary.headline, /^Added 2 chapters, \d+ words and 1 picture to your book\.$/);
+  assert.equal(outcome.summary.pictures, 2);
+  assert.match(outcome.summary.headline, /^Added 2 chapters, \d+ words and 2 pictures to your book\.$/);
   assert.equal(coordinator.getBook().chapters.length, 3);
+
+  // The same pictures again reuse the book's assets, but the author still sees them.
+  const again = await importWordFile(coordinator, picker(BOOK_FILE), "append-sections");
+  assert.ok(again.kind === "imported" && again.summary.pictures === 2);
+  assert.equal(coordinator.getBook().assets.length, 1);
+});
+
+test("appending needs a chapter to append after", async () => {
+  const coordinator = freshCoordinator("word-empty");
+  const empty = { ...coordinator.getBook(), chapters: [] };
+  const port = picker(BOOK_FILE);
+  const outcome = await importWordFile(
+    { getBook: () => empty, getState: () => coordinator.getState(), importContent: (s, o) => coordinator.importContent(s, o) },
+    port,
+    "append-sections",
+  );
+  assert.deepEqual(outcome, { kind: "failed", message: WORD_IMPORT_NEEDS_A_CHAPTER, detail: "NO_CHAPTERS" });
+  assert.equal(port.calls, 0);
+});
+
+test("technical failure text from the studio is never shown to authors", async () => {
+  const coordinator = freshCoordinator("word-tech");
+  const outcome = await importWordFile(
+    {
+      getBook: () => coordinator.getBook(),
+      getState: () => coordinator.getState(),
+      importContent: async () => {
+        throw new Error("Append failed on section “The Serpent”: boom. All changes rolled back.");
+      },
+    },
+    picker(BOOK_FILE),
+    "append-sections",
+  );
+  assert.ok(outcome.kind === "failed");
+  if (outcome.kind === "failed") {
+    assert.match(outcome.message, /Couldn’t add that Word file’s chapters/);
+    assert.match(outcome.detail, /rolled back/, "the original text stays for Diagnostics");
+  }
 });
 
 test("cancelling the file chooser changes nothing", async () => {
@@ -134,7 +173,7 @@ test("messages shown to authors use no internal terms", async () => {
   const outcome = await importWordFile(coordinator, picker(BOOK_FILE), "new-project");
   assert.equal(outcome.kind, "imported");
   if (outcome.kind !== "imported") return;
-  for (const text of [outcome.summary.headline, WORD_IMPORT_NEEDS_FRESH_BOOK]) {
+  for (const text of [outcome.summary.headline, WORD_IMPORT_NEEDS_FRESH_BOOK, WORD_IMPORT_NEEDS_A_CHAPTER]) {
     assert.deepEqual(findInternalTerms(text), [], text);
   }
 });

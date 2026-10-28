@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { WORD_IMPORT_MAX_FILE_BYTES } from "./wordImport.js";
 
 const repoSrc = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const read = (...parts: string[]) => readFileSync(join(repoSrc, ...parts), "utf8");
@@ -44,6 +45,11 @@ test("the Guide panel shows the import summary until the author dismisses it", (
   assert.match(editor, /importSummary=\{wordImportSummary\}/);
   assert.match(editor, /onDismissImportSummary=\{\(\) => setWordImportSummary\(null\)\}/);
   assert.match(editor, /setGuideOpen\(true\)/);
+  // The summary belongs to the book it describes: other ways of changing book clear it.
+  for (const handler of ["const onNewBook = () => {\n    clearWordImport();", "const onGuidedStarted = (path: GuidedStartPath) => {\n    clearWordImport();"]) {
+    assert.ok(editor.replace(/\r\n/g, "\n").includes(handler), handler);
+  }
+  assert.match(editor, /clearWordImport\(\);\s*setSessionNote\(opened \?/);
 });
 
 test("the host checks the size before reading and reads only .docx", () => {
@@ -53,11 +59,18 @@ test("the host checks the size before reading and reads only .docx", () => {
   assert.match(host, /DOCX_TOO_LARGE/);
   // Browser fallback: the size is checked before arrayBuffer() reads the file.
   assert.ok(host.indexOf("file.size > WORD_IMPORT_MAX_FILE_BYTES") < host.indexOf(".arrayBuffer()"));
+  // Closing the chooser settles the pick even where the input's "cancel" event never fires.
+  assert.match(host, /window\.addEventListener\("focus", onFocus\)/);
 
   const rust = readFileSync(join(repoSrc, "..", "src-tauri", "src", "lib.rs"), "utf8");
   const command = rust.slice(rust.indexOf("fn docx_read_bytes"));
   assert.ok(command.indexOf("metadata.len() > DOCX_MAX_FILE_BYTES") < command.indexOf("fs::read(&candidate)"));
   assert.match(rust, /tauri::ipc::Response::new\(bytes\)/);
+  // The host's cap must equal the importer's, so neither refuses what the other accepts.
+  const rustCap = /const DOCX_MAX_FILE_BYTES: u64 = ([\d\s*]+);/.exec(rust)?.[1];
+  assert.ok(rustCap, "Rust size cap found");
+  const rustBytes = rustCap.split("*").reduce((product, factor) => product * Number(factor.trim()), 1);
+  assert.equal(rustBytes, WORD_IMPORT_MAX_FILE_BYTES);
   assert.match(rust, /docx_read_bytes\s*\]\)/);
 
   const permissions = readFileSync(join(repoSrc, "..", "src-tauri", "permissions", "export.toml"), "utf8");
