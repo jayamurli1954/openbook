@@ -1,6 +1,6 @@
 # ADR-0040: Word (.docx) Import Architecture
 
-- **Status:** Proposed (Draft PR); becomes Accepted when the PR merges; implementation not authorized
+- **Status:** Accepted (PR #164); implementation not authorized
 - **Date:** 2026-10-28
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.1 “Import Existing Book”)
 - **Area:** Import / Assets / Desktop / Security boundary
