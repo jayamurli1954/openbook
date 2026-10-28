@@ -1,6 +1,6 @@
 # ADR-0040 Slice 4: Desktop Word Import Surface — Implementation Record
 
-- **Status:** Implemented in a Draft PR; merge on explicit authorization
+- **Status:** Implemented on main (PR #172)
 - **Date:** 2026-10-28
 - **Parent architecture:** ADR-0040 — Word (.docx) Import (§6)
 - **Scope:** “Import a Word file” on the start screen; “Add chapters from a Word file” in Write; a host read that checks the file size before reading; the import summary in the Guide panel.
