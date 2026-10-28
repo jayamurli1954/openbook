@@ -15,6 +15,16 @@ export interface ImportSource {
   readonly filename?: string;
 }
 
+/**
+ * Word `.docx` source (ADR-0040 §2.1): bytes, not text, because a `.docx` is a ZIP of XML parts.
+ * Slice 1 defines the shape only; it joins `ImportSource` and the format firewall in Slice 2.
+ */
+export interface DocxImportSource {
+  readonly format: "docx";
+  readonly bytes: Uint8Array;
+  readonly filename?: string;
+}
+
 export interface ImportOptions {
   /** Strategy for partitioning document into chapters */
   readonly splitStrategy?: "heading-1" | "heading-2" | "single-chapter";

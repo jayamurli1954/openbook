@@ -47,7 +47,7 @@ Legacy `.doc`, `.odt`, `.rtf`, PDF, and EPUB import are not part of this selecti
 ## 5. Controlled sequence after ADR acceptance
 
 1. Merge this selection + ADR-0040 (Draft PR → CI/DCO → explicit merge authorization). **Done** — PR #164.
-2. Maintainer separately authorizes implementation Slice 1 per ADR-0040 §8.
+2. Maintainer separately authorizes implementation Slice 1 per ADR-0040 §8. **Authorized** 2026-10-28 — see `docs/adr-0040-slice-1-docx-container.md`.
 3. Later slices only under their own explicit authorization.
 4. Closure reconciliation only after the authorized slices land.
 
