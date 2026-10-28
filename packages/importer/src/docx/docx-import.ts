@@ -2,16 +2,27 @@
 import type { DeterministicIdFactory } from "../ids.js";
 import { assembleBook, finalizeBookResult } from "../markdown-import.js";
 import { buildMetadata, emptyStats } from "../metadata.js";
-import type { DocxImportSource, ImportIssue, ImportOptions, ImportResult } from "../types.js";
+import type { StructuralSection } from "@openbook/book-model";
+import type {
+  DocxImportSource,
+  ImportedImagePayload,
+  ImportIssue,
+  ImportOptions,
+  ImportResult,
+} from "../types.js";
 import { walkBody, type BodyCounts } from "./body.js";
 import { DocxReadError, docxReadErrorToIssue } from "./errors.js";
 import { openDocxPackage } from "./package.js";
 import { readDocxParts } from "./parts.js";
 import { structureDocx } from "./structure.js";
 
+/** Security limits stay fatal even when reached while reading a picture (ADR-0040 §5). */
+const FATAL_READ_ERRORS = new Set(["DOCX_TOTAL_TOO_LARGE", "DOCX_ENTRY_TOO_LARGE", "DOCX_COMPRESSION_RATIO"]);
+
 /**
- * Word `.docx` → canonical Book (ADR-0040 Slice 2: text and structure).
- * Pictures are counted and reported here; Slice 3 imports them.
+ * Word `.docx` → canonical Book (ADR-0040 Slices 2–3: text, structure, pictures).
+ * Pictures come back as `ImportResult.images`; image blocks reference their placeholder ids
+ * until the caller ingests the bytes (ADR-0040 §2.2).
  */
 export function importDocx(
   source: DocxImportSource,
@@ -47,14 +58,68 @@ export function importDocx(
     });
 
     reportDropped(body.counts, structure.tocRemoved, structure.listsFlattened, issues);
+
+    // Read each distinct picture part once. A part that cannot be read loses its image blocks only.
+    const images: ImportedImagePayload[] = [];
+    const unreadable = new Set<string>();
+    for (const picture of structure.pictures) {
+      try {
+        images.push({
+          placeholderId: picture.placeholderId,
+          bytes: opened.docx.readPart(picture.part),
+          sourceName: decodePartName(picture.part.slice(picture.part.lastIndexOf("/") + 1)),
+          altText: picture.altText,
+        });
+      } catch (err) {
+        if (!(err instanceof DocxReadError) || FATAL_READ_ERRORS.has(err.code)) throw err;
+        unreadable.add(picture.placeholderId);
+      }
+    }
+    if (unreadable.size > 0) {
+      for (const section of [...structure.frontMatter, ...structure.chapters]) {
+        removeImageBlocks(section, unreadable, ids);
+      }
+      issues.push({
+        code: "DOCX_PICTURES_UNREADABLE",
+        severity: "warning",
+        message: `${plural(unreadable.size, "picture")} could not be read from this file and ${unreadable.size === 1 ? "was" : "were"} left out. You can add ${unreadable.size === 1 ? "it" : "them"} again with the picture button in Write.`,
+      });
+    }
+
+    if (structure.altTextConflicts > 0) {
+      issues.push({
+        code: "DOCX_PICTURE_ALT_TEXT_DIFFERS",
+        severity: "warning",
+        message: `${plural(structure.altTextConflicts, "picture")} appear${structure.altTextConflicts === 1 ? "s" : ""} more than once with different descriptions. OpenBook keeps one description per picture; please check the alt text in Write.`,
+      });
+    }
+
     const metadata = buildMetadata({ source, options, frontmatter: structure.metadata, issues });
     const book = assembleBook(metadata, structure.chapters, structure.frontMatter);
-    return finalizeBookResult(book, issues);
+    const result = finalizeBookResult(book, issues);
+    return result.success && images.length > 0 ? { ...result, images } : result;
   } catch (err) {
     if (err instanceof DocxReadError) {
       return { success: false, issues: [docxReadErrorToIssue(err)], stats: emptyStats() };
     }
     throw err;
+  }
+}
+
+/** Removes image blocks for the given placeholders; a section left empty keeps one empty paragraph. */
+function removeImageBlocks(section: StructuralSection, placeholders: ReadonlySet<string>, ids: DeterministicIdFactory): void {
+  section.blocks = section.blocks.filter((block) => !(block.type === "image" && placeholders.has(block.assetId)));
+  if (section.blocks.length === 0) {
+    section.blocks.push({ type: "paragraph", id: ids.nextBlockId(), inlines: [{ type: "text", text: "" }] });
+  }
+}
+
+/** OPC part names are percent-encoded; show the plain file name. */
+function decodePartName(name: string): string {
+  try {
+    return decodeURIComponent(name);
+  } catch {
+    return name;
   }
 }
 
@@ -76,11 +141,18 @@ function reportDropped(counts: BodyCounts, tocRemoved: boolean, listsFlattened: 
   if (tocRemoved || counts.tocFields > 0) {
     add("DOCX_TOC_REMOVED", "info", "Your table of contents was removed. OpenBook builds one for you from your chapters.");
   }
-  if (counts.pictures > 0) {
+  if (counts.automaticAltText > 0) {
     add(
-      "DOCX_PICTURES_NOT_YET_IMPORTED",
+      "DOCX_AUTOMATIC_ALT_TEXT_REMOVED",
       "warning",
-      `${plural(counts.pictures, "picture")} in this file ${counts.pictures === 1 ? "was" : "were"} not imported yet. Picture import is coming in a later OpenBook update.`,
+      `${plural(counts.automaticAltText, "picture")} had only a description written automatically by Word. OpenBook left ${counts.automaticAltText === 1 ? "its" : "their"} alt text empty so you can describe ${counts.automaticAltText === 1 ? "it" : "them"} yourself; the book check will remind you.`,
+    );
+  }
+  if (counts.linkedPictures > 0) {
+    add(
+      "DOCX_LINKED_PICTURES_SKIPPED",
+      "warning",
+      `${plural(counts.linkedPictures, "picture")} ${counts.linkedPictures === 1 ? "is" : "are"} linked to a file outside this document rather than stored in it. OpenBook never fetches outside files, so ${counts.linkedPictures === 1 ? "it was" : "they were"} left out. In Word, use Insert > Pictures (not "Link to File") and import again.`,
     );
   }
   if (counts.trackedChanges) {
@@ -117,7 +189,7 @@ function reportDropped(counts: BodyCounts, tocRemoved: boolean, listsFlattened: 
     add("DOCX_LINKS_REMOVED", "warning", `${plural(counts.unsafeLinks, "link")} that did not point to a web page or email address ${counts.unsafeLinks === 1 ? "was" : "were"} kept as plain text.`);
   }
   if (counts.hiddenRuns > 0) {
-    add("DOCX_HIDDEN_TEXT_SKIPPED", "info", "Text marked as Hidden in Word was not imported, because Word never shows or prints it.");
+    add("DOCX_HIDDEN_TEXT_SKIPPED", "info", "Text or pictures marked as Hidden in Word were not imported, because Word never shows or prints them.");
   }
   if (counts.brokenFields > 0) {
     add(

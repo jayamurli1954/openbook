@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { InvalidStructureOperationError } from "@openbook/authoring";
-import type { ImportSource } from "@openbook/importer";
+import { ImportService, type ImportResult, type ImportSource } from "@openbook/importer";
 import type { ContentBlock, StructuralSection } from "@openbook/book-model";
 import {
   DesktopStudioCoordinator,
@@ -113,16 +113,217 @@ test("unsupported format rejects with UNSUPPORTED_FORMAT and leaves IMPORT/faile
   assert.equal(JSON.stringify(coordinator.getBook()), before);
 });
 
-test("docx is not accepted by the coordinator until ADR-0040 Slice 4", async () => {
-  const coordinator = freshCoordinator("docx");
+// --- ADR-0040 Slice 3: Word pictures through the asset pipeline -----------------------------
+
+/** Minimal stored (uncompressed) ZIP writer, so these tests need no ZIP library. */
+function storedZip(files: Record<string, string | Uint8Array>): Uint8Array {
+  const crcTable = new Uint32Array(256).map((_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc32 = (data: Uint8Array): number => {
+    let crc = 0xffffffff;
+    for (const byte of data) crc = crcTable[(crc ^ byte) & 0xff]! ^ (crc >>> 8);
+    return (crc ^ 0xffffffff) >>> 0;
+  };
+  const encoder = new TextEncoder();
+  const locals: Uint8Array[] = [];
+  const centrals: Uint8Array[] = [];
+  let offset = 0;
+  for (const [name, value] of Object.entries(files)) {
+    const data = typeof value === "string" ? encoder.encode(value) : value;
+    const nameBytes = encoder.encode(name);
+    const crc = crc32(data);
+    const local = new Uint8Array(30 + nameBytes.length + data.length);
+    const lv = new DataView(local.buffer);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, data.length, true);
+    lv.setUint32(22, data.length, true);
+    lv.setUint16(26, nameBytes.length, true);
+    local.set(nameBytes, 30);
+    local.set(data, 30 + nameBytes.length);
+    const central = new Uint8Array(46 + nameBytes.length);
+    const cv = new DataView(central.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);
+    cv.setUint16(6, 20, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, data.length, true);
+    cv.setUint32(24, data.length, true);
+    cv.setUint16(28, nameBytes.length, true);
+    cv.setUint32(42, offset, true);
+    central.set(nameBytes, 46);
+    locals.push(local);
+    centrals.push(central);
+    offset += local.length;
+  }
+  const centralSize = centrals.reduce((sum, c) => sum + c.length, 0);
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, centrals.length, true);
+  ev.setUint16(10, centrals.length, true);
+  ev.setUint32(12, centralSize, true);
+  ev.setUint32(16, offset, true);
+  const out = new Uint8Array(offset + centralSize + 22);
+  let at = 0;
+  for (const part of [...locals, ...centrals, eocd]) {
+    out.set(part, at);
+    at += part.length;
+  }
+  return out;
+}
+
+const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+const R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+const PNG_BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+const EMF_BYTES = new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00, 0x20, 0x45, 0x4d, 0x46]);
+
+function wordPicture(rid: string, alt: string): string {
+  return (
+    `<w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
+    `<wp:docPr id="1" name="Picture" descr="${alt}"/>` +
+    `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData>` +
+    `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:blipFill><a:blip r:embed="${rid}"/></pic:blipFill></pic:pic>` +
+    `</a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`
+  );
+}
+
+function chapter(title: string): string {
+  return `<w:p><w:pPr><w:outlineLvl w:val="0"/></w:pPr><w:r><w:t>${title}</w:t></w:r></w:p>`;
+}
+
+function para(content: string): string {
+  return `<w:p>${content}</w:p>`;
+}
+
+function wordDocx(body: string): Uint8Array {
+  return storedZip({
+    "[Content_Types].xml":
+      `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
+      `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
+      `<Default Extension="xml" ContentType="application/xml"/>` +
+      `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`,
+    "_rels/.rels":
+      `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+      `<Relationship Id="rId1" Type="${R_NS}/officeDocument" Target="word/document.xml"/></Relationships>`,
+    "word/_rels/document.xml.rels":
+      `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+      `<Relationship Id="rId20" Type="${R_NS}/image" Target="media/image1.png"/>` +
+      `<Relationship Id="rId21" Type="${R_NS}/image" Target="media/image2.emf"/></Relationships>`,
+    "word/document.xml": `<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="${W_NS}" xmlns:r="${R_NS}"><w:body>${body}</w:body></w:document>`,
+    "word/media/image1.png": PNG_BYTES,
+    "word/media/image2.emf": EMF_BYTES,
+  });
+}
+
+const PICTURE_BOOK = wordDocx(
+  chapter("The Butter Thief") +
+    para(`<w:r><w:t>Krishna by the river.</w:t></w:r>` + wordPicture("rId20", "Krishna with the cows")) +
+    para(wordPicture("rId21", "A Word drawing")) +
+    chapter("The Serpent") +
+    para(wordPicture("rId20", "Krishna again")) +
+    para(`<w:r><w:t>Kaliya lived in the river.</w:t></w:r>`),
+);
+
+function imageBlocks(sections: readonly StructuralSection[]): Array<Extract<ContentBlock, { type: "image" }>> {
+  return sections.flatMap((section) =>
+    section.blocks.filter((block): block is Extract<ContentBlock, { type: "image" }> => block.type === "image"),
+  );
+}
+
+test("imports a Word file with pictures through the asset pipeline (new project)", async () => {
+  const coordinator = freshCoordinator("docx-pictures");
+  const result = await coordinator.importContent({ format: "docx", bytes: PICTURE_BOOK, filename: "krishna.docx" });
+  assert.equal(result.success, true);
+  assert.equal(coordinator.getState().stage, "STRUCTURE");
+
+  const book = coordinator.getBook();
+  assert.deepEqual(book.chapters.map((c) => c.title), ["The Butter Thief", "The Serpent"]);
+  assert.equal(book.assets.length, 1, "the PNG used twice is one asset; the EMF is refused");
+  const asset = book.assets[0]!;
+  assert.equal(asset.mediaType, "image/png");
+  assert.equal(asset.altText, "Krishna with the cows");
+
+  const images = imageBlocks(book.chapters);
+  assert.equal(images.length, 2);
+  assert.ok(images.every((block) => block.assetId === asset.id));
+  assert.ok(result.issues.some((issue) => issue.code === "DOCX_PICTURES_REJECTED" && /The Butter Thief/.test(issue.message)));
+
+  const bytes = await coordinator.getAssetResolver().resolve(asset);
+  assert.deepEqual([...bytes], [...PNG_BYTES]);
+});
+
+test("appends a Word file's chapters and pictures, keeping existing assets", async () => {
+  const coordinator = freshCoordinator("docx-append");
+  await coordinator.importContent({ format: "markdown", content: "# Opening\n\nHello." }, { idSeed: "docx-append-base" });
+  const result = await coordinator.importContent(
+    { format: "docx", bytes: PICTURE_BOOK },
+    { mode: "append-sections" },
+  );
+  assert.equal(result.success, true);
+  const book = coordinator.getBook();
+  assert.deepEqual(book.chapters.map((c) => c.title), ["Opening", "The Butter Thief", "The Serpent"]);
+  assert.equal(book.assets.length, 1);
+  assert.ok(imageBlocks(book.chapters).every((block) => block.assetId === book.assets[0]!.id));
+});
+
+test("a failed append rolls back sections and pictures together", async () => {
+  const coordinator = freshCoordinator("docx-rollback");
+  await coordinator.importContent({ format: "markdown", content: "# Stay\n\nOriginal." }, { idSeed: "docx-rollback-base" });
+  const before = JSON.stringify(coordinator.getBook());
+  const session = coordinator.getSession();
+  const originalAdd = session.addSection.bind(session);
+  let calls = 0;
+  session.addSection = ((params: Parameters<typeof session.addSection>[0]) => {
+    calls += 1;
+    if (calls === 2) throw new InvalidStructureOperationError("simulated append failure");
+    return originalAdd(params);
+  }) as typeof session.addSection;
+
+  await assert.rejects(
+    () => coordinator.importContent({ format: "docx", bytes: PICTURE_BOOK }, { mode: "append-sections" }),
+    (err: unknown) => err instanceof DesktopStudioError && err.code === "IMPORT_FAILED" && /rolled back/.test(err.message),
+  );
+  assert.equal(JSON.stringify(coordinator.getBook()), before);
+  assert.equal(coordinator.getBook().assets.length, 0, "no asset survives the rollback, so Save writes no orphan");
+});
+
+test("an image block that does not name an imported asset fails the import closed", async () => {
+  const coordinator = freshCoordinator("docx-dangling");
+  const before = JSON.stringify(coordinator.getBook());
+  const original = ImportService.prototype.import;
+  ImportService.prototype.import = async function (this: ImportService, source, options): Promise<ImportResult> {
+    const real = await original.call(this, source, options);
+    // Simulate an importer bug: a placeholder with no payload behind it.
+    return { ...real, images: [] };
+  };
+  try {
+    await assert.rejects(
+      () => coordinator.importContent({ format: "docx", bytes: PICTURE_BOOK }),
+      (err: unknown) =>
+        err instanceof DesktopStudioError && err.code === "IMPORT_FAILED" && /does not refer to an imported image/.test(err.message),
+    );
+  } finally {
+    ImportService.prototype.import = original;
+  }
+  assert.equal(JSON.stringify(coordinator.getBook()), before);
+  assert.equal(coordinator.getState().stage, "IMPORT");
+  assert.equal(coordinator.getState().jobStatus, "failed");
+});
+
+test("a damaged Word file fails with the reader's message and changes nothing", async () => {
+  const coordinator = freshCoordinator("docx-damaged");
   const before = JSON.stringify(coordinator.getBook());
   await assert.rejects(
-    () => coordinator.importContent({ format: "docx", bytes: new Uint8Array([0x50, 0x4b, 0x03, 0x04]) }),
-    (err: unknown) =>
-      err instanceof DesktopStudioError && err.code === "UNSUPPORTED_FORMAT",
+    () => coordinator.importContent({ format: "docx", bytes: new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0]) }),
+    (err: unknown) => err instanceof DesktopStudioError && err.code === "IMPORT_FAILED" && /damaged/.test(err.message),
   );
-  assert.equal(coordinator.getState().stage, "IMPORT");
   assert.equal(JSON.stringify(coordinator.getBook()), before);
+  assert.equal(coordinator.getState().stage, "IMPORT");
 });
 
 test("empty markdown fails the job and stays on IMPORT", async () => {

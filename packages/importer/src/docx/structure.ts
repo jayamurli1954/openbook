@@ -9,7 +9,8 @@ import type {
 import type { DeterministicIdFactory } from "../ids.js";
 import type { ImportIssue, ImportOptions } from "../types.js";
 import { inlinesToPlainText } from "../markdown-import.js";
-import type { DocxParagraph, TextRun } from "./body.js";
+import { IMPORTED_IMAGE_PLACEHOLDER_PREFIX } from "../types.js";
+import type { DocxParagraph, PictureRef, TextRun } from "./body.js";
 
 /**
  * Turns paragraph records into Book sections (ADR-0040 §4.1–§4.5).
@@ -64,6 +65,16 @@ export interface DocxStructure {
   readonly chapters: StructuralSection[];
   readonly tocRemoved: boolean;
   readonly listsFlattened: boolean;
+  /** One entry per distinct picture part; image blocks reference `placeholderId`. */
+  readonly pictures: readonly PlacedPicture[];
+  /** Reused pictures whose uses had different alt texts (one AssetRef keeps the first). */
+  readonly altTextConflicts: number;
+}
+
+export interface PlacedPicture {
+  readonly placeholderId: string;
+  readonly part: string;
+  readonly altText: string;
 }
 
 export function structureDocx(input: DocxStructureInput): DocxStructure {
@@ -93,6 +104,10 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
       ? firstTitle
       : undefined;
   const storyTitles = titleItems.filter((p) => p !== titleItem);
+  // The Title and Subtitle paragraphs become metadata, but a picture in them stays on the title page.
+  const titlePagePictures = [titleItem, subtitleItem]
+    .filter((p): p is DocxParagraph => p !== undefined && p.pictures.length > 0)
+    .map((p) => ({ ...p, text: "", runs: [] }));
   const title = coreTitle ?? titleItem?.text;
   if (title) metadata.title = title;
   if (subtitleItem) metadata.subtitle = subtitleItem.text;
@@ -138,9 +153,9 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
 
   if (strategy === "single-chapter") {
     builder.startChapter("Chapter 1");
-    for (const p of items) builder.add(p);
+    for (const p of [...titlePagePictures, ...items]) builder.add(p);
     builder.close();
-    return { metadata, frontMatter: [], chapters: builder.chapters, tocRemoved, listsFlattened: builder.listsFlattened };
+    return { metadata, frontMatter: [], chapters: builder.chapters, tocRemoved, listsFlattened: builder.listsFlattened, pictures: builder.pictures, altTextConflicts: builder.altTextConflicts };
   }
 
   // --- chapter titles (§4.2) ---------------------------------------------------------------
@@ -180,9 +195,9 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
             "OpenBook could not find chapter titles in this file, so everything was imported as one chapter. You can split it in Structure, or use Word's Heading 1 style for chapter titles and import again.",
         });
         builder.startChapter("Chapter 1");
-        for (const p of items) builder.add(p);
+        for (const p of [...titlePagePictures, ...items]) builder.add(p);
         builder.close();
-        return { metadata, frontMatter: [], chapters: builder.chapters, tocRemoved, listsFlattened: builder.listsFlattened };
+        return { metadata, frontMatter: [], chapters: builder.chapters, tocRemoved, listsFlattened: builder.listsFlattened, pictures: builder.pictures, altTextConflicts: builder.altTextConflicts };
       }
     }
   }
@@ -195,6 +210,7 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
   let chapterStarted = false;
   for (const p of items) {
     const role = chapterStarted || p.list || p.inTable ? undefined : frontMatterRole(p.text);
+    // A title paragraph names its section; a picture anchored to it opens the section.
     if (isChapterTitle(p)) {
       if (role) {
         builder.startFront(role, p.text);
@@ -204,10 +220,12 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
         for (const part of pendingParts) builder.add(part);
         pendingParts = [];
       }
+      builder.addPictures(p);
       continue;
     }
     if (role && p.styleClass.kind !== "quote") {
       builder.startFront(role, p.text);
+      builder.addPictures(p);
       continue;
     }
     if (p.styleClass.kind === "heading" && p.styleClass.level < splitLevel) {
@@ -226,15 +244,21 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
     else before.push(part);
   }
 
+  before.unshift(...titlePagePictures);
+
   // Content before any section: drop what only repeats the title page; keep the rest for review.
-  const leftover = before.filter((p) => p.pictures > 0 || !repeatsTitlePage(p));
-  if (leftover.some((p) => p.text !== "")) {
-    const first = leftover.find((p) => p.text !== "")!;
-    builder.prependFront(first, leftover.filter((p) => p !== first));
+  const leftover = before.filter((p) => p.pictures.length > 0 || !repeatsTitlePage(p));
+  if (leftover.some((p) => p.text !== "" || p.pictures.length > 0)) {
+    // Repeated title-page text is dropped, but a picture in that paragraph is kept.
+    const kept = leftover.map((p) => (repeatsTitlePage(p) ? { ...p, text: "", runs: [] } : p));
+    const first = kept.find((p) => p.text !== "");
+    const title = first?.text ?? "Title page";
+    const rest = first ? kept.filter((p) => p !== first) : kept;
+    builder.prependFront(title, rest.length > 0 ? rest : first ? [first] : []);
     issues.push({
       code: "DOCX_FRONT_MATTER_REVIEW",
       severity: "warning",
-      message: `Some text before the first chapter did not have a recognised title. OpenBook put it in a front section called “${first.text}”. Please check it in Structure.`,
+      message: `Some ${first ? "text" : "pictures"} before the first chapter did not have a recognised title. OpenBook put ${first ? "it" : "them"} in a front section called “${title}”. Please check it in Structure.`,
     });
   }
 
@@ -248,6 +272,7 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
     chapters: builder.chapters,
     tocRemoved,
     listsFlattened: builder.listsFlattened,
+    pictures: builder.pictures, altTextConflicts: builder.altTextConflicts,
   };
 }
 
@@ -260,7 +285,12 @@ class SectionBuilder {
   readonly #ids: DeterministicIdFactory;
   #current: StructuralSection | undefined;
   #openList: { numId: string; block: Extract<ContentBlock, { type: "list" }> } | undefined;
-  #previousHadPicture = false;
+  /** Image blocks from the previous paragraph, so a Caption paragraph can attach to the last one. */
+  #lastImages: Array<Extract<ContentBlock, { type: "image" }>> = [];
+  readonly #placed = new Map<string, { placeholderId: string; part: string; altText: string }>();
+  /** Pictures inside list items wait until the list ends, so they do not split it. */
+  #deferred: PictureRef[] = [];
+  altTextConflicts = 0;
 
   constructor(ids: DeterministicIdFactory) {
     this.#ids = ids;
@@ -268,6 +298,23 @@ class SectionBuilder {
 
   get hasSection(): boolean {
     return this.#current !== undefined;
+  }
+
+  get pictures(): PlacedPicture[] {
+    return [...this.#placed.values()];
+  }
+
+  /** The same picture part used twice shares one placeholder (and so one asset). */
+  #placeholderFor(picture: PictureRef): string {
+    const existing = this.#placed.get(picture.part);
+    if (existing) {
+      if (!existing.altText && picture.altText) existing.altText = picture.altText;
+      else if (existing.altText && picture.altText && existing.altText !== picture.altText) this.altTextConflicts += 1;
+      return existing.placeholderId;
+    }
+    const placeholderId = `${IMPORTED_IMAGE_PLACEHOLDER_PREFIX}${String(this.#placed.size + 1)}`;
+    this.#placed.set(picture.part, { placeholderId, part: picture.part, altText: picture.altText });
+    return placeholderId;
   }
 
   startFront(role: SectionRole, title: string): void {
@@ -279,28 +326,73 @@ class SectionBuilder {
   }
 
   /** A front section placed before every other front section (content before any title). */
-  prependFront(titleItem: DocxParagraph, rest: readonly DocxParagraph[]): void {
+  prependFront(title: string, items: readonly DocxParagraph[]): void {
     const saved = this.#current;
-    const section = this.#newSection("front", "custom", titleItem.text);
+    const savedDeferred = this.#deferred;
+    const section = this.#newSection("front", "custom", title);
     this.#current = section;
     this.#openList = undefined;
-    for (const p of rest.length > 0 ? rest : [titleItem]) this.add(p);
+    this.#lastImages = [];
+    this.#deferred = [];
+    for (const p of items) this.add(p);
     this.#finish(section);
     this.front.unshift(section);
     this.#current = saved;
     this.#openList = undefined;
+    this.#lastImages = [];
+    this.#deferred = savedDeferred;
+  }
+
+  /** Pictures from a paragraph that was used as a section title. */
+  addPictures(p: DocxParagraph): void {
+    if (this.#current && p.pictures.length > 0) this.#pushPictures(this.#current, p.pictures);
   }
 
   add(p: DocxParagraph): void {
     const section = this.#current;
     if (!section) return;
-    const hadPicture = this.#previousHadPicture;
-    this.#previousHadPicture = p.pictures > 0;
 
-    // A caption right after a picture belongs to that picture, imported in Slice 3.
-    if (p.styleClass.kind === "caption" && hadPicture) return;
-    if (p.text === "") return;
+    // A Caption paragraph right after a picture becomes that picture's caption (ADR-0040 §4.6).
+    const previousImage = this.#lastImages[this.#lastImages.length - 1];
+    this.#lastImages = [];
+    if (p.styleClass.kind === "caption" && previousImage && p.pictures.length === 0) {
+      previousImage.caption = toInlines(p.runs);
+      return;
+    }
 
+    if (!p.list) this.#flushDeferred(section);
+    if (p.text !== "") this.#addText(section, p);
+
+    if (p.list) {
+      this.#deferred.push(...p.pictures);
+      return;
+    }
+    // Pictures follow their paragraph's text, in reading order (floating pictures included).
+    this.#pushPictures(section, p.pictures);
+  }
+
+  #pushPictures(section: StructuralSection, pictures: readonly PictureRef[]): void {
+    for (const picture of pictures) {
+      const block: Extract<ContentBlock, { type: "image" }> = {
+        type: "image",
+        id: this.#ids.nextBlockId(),
+        assetId: this.#placeholderFor(picture),
+        caption: [],
+      };
+      section.blocks.push(block);
+      this.#lastImages.push(block);
+      this.#openList = undefined;
+    }
+  }
+
+  #flushDeferred(section: StructuralSection): void {
+    if (this.#deferred.length === 0) return;
+    const pictures = this.#deferred;
+    this.#deferred = [];
+    this.#pushPictures(section, pictures);
+  }
+
+  #addText(section: StructuralSection, p: DocxParagraph): void {
     if (p.list) {
       if (p.list.ilvl > 0) this.listsFlattened = true;
       const item = toInlines(p.runs);
@@ -339,7 +431,7 @@ class SectionBuilder {
     list.push(section);
     this.#current = section;
     this.#openList = undefined;
-    this.#previousHadPicture = false;
+    this.#lastImages = [];
   }
 
   #newSection(kind: StructuralSection["kind"], role: SectionRole, title: string): StructuralSection {
@@ -347,6 +439,7 @@ class SectionBuilder {
   }
 
   #finish(section: StructuralSection): void {
+    this.#flushDeferred(section);
     if (section.blocks.length === 0) {
       section.blocks.push({ type: "paragraph", id: this.#ids.nextBlockId(), inlines: [{ type: "text", text: "" }] });
     }
