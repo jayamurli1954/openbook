@@ -35,6 +35,12 @@
 - **Text (§4.5):** bold → strong and italic → emphasis, from direct formatting or the Strong/Emphasis character styles; paragraph-style bold is appearance and is ignored. Heading text is plain. `http`, `https`, and `mailto` links are kept; other schemes and internal anchors become plain text. Field instructions are never emitted; HYPERLINK fields become links; TOC, PAGE, NUMPAGES, PAGEREF, SECTIONPAGES results are dropped; INCLUDEPICTURE, INCLUDETEXT, LINK, DDE, DDEAUTO, IMPORT results are dropped with a warning and never resolved; other field results are kept.
 - **Tracked changes (§7):** read as accepted: `w:ins`/`w:moveTo` kept, `w:del`/`w:moveFrom`/`w:delText` dropped, a deleted paragraph mark joins the paragraph to the next.
 - **Lists:** consecutive items with the same numbering instance become one list; nested items are flattened with a warning.
+- **Field safety:** field boundaries inside deleted text still open and close fields. A field left open is closed at its paragraph's end (or, for a table of contents, at the first non-TOC paragraph), with a warning. A broken field never swallows later text.
+- **Hidden text** (`w:vanish`, direct or through a style) is never imported; one info issue.
+- **Symbols:** Symbol-font characters map to Greek and maths Unicode; picture-font symbols (Wingdings and the like) are dropped with a warning.
+- **Title style used for stories:** a lone Title paragraph is the title page. With several, if the first differs from the file's title, they become chapters, with a warning.
+- **Part headings** (Heading 1 with the `heading-2` strategy) open the next chapter as a heading block instead of becoming front matter.
+- **Contents tail:** contents lines after the last matched entry that still end in a page number are removed too.
 - **Left out, with one issue each:** formatting (info), table of contents (info), pictures (warning, “coming in a later update”), tracked changes, comments, footnotes/endnotes, tables (cell text kept as paragraphs), text boxes, shapes/charts/SmartArt, equations, embedded objects and `altChunk`, outside content, unsafe links, and pre-Unicode Kannada fonts (Nudi / BRH / Baraha ASCII).
 - A Caption paragraph right after a picture is held back for Slice 3, which attaches it to the picture.
 
@@ -59,7 +65,9 @@ The coordinator still rejects `docx` at runtime (`UNSUPPORTED_FORMAT`) until Sli
 - Lists split by numbering instance and flattened nesting; everything left out reported exactly once; the legacy Kannada font warning; a document without a styles part.
 - Failures: not a ZIP, no text, bytes of the wrong type. Markdown and text unchanged.
 
-The importer runs 80 tests and the desktop 444. The full repository `npm test` (12 packages, 0 failures) and the desktop build pass locally.
+A review pass found 10 issues (field safety, hidden text, title-page lines guessed as chapters, carried text at the end or before a table, Part headings, Title-style story titles, the contents tail, symbols, double spaces, and duplicated code). All were fixed, with regression tests.
+
+The importer runs 90 tests and the desktop 444. The full repository `npm test` (12 packages, 0 failures) and the desktop build pass locally.
 
 ## 4. Explicit exclusions
 

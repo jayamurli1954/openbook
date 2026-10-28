@@ -110,6 +110,8 @@ export interface RunProps {
   readonly italic?: boolean;
   /** Font size in half-points (`w:sz`). */
   readonly size?: number;
+  /** Word's Hidden font option (`w:vanish`). */
+  readonly hidden?: boolean;
   readonly fonts: readonly string[];
 }
 
@@ -238,17 +240,20 @@ function mergeChain(chain: readonly StyleInfo[]): RunProps {
   let bold: boolean | undefined;
   let italic: boolean | undefined;
   let size: number | undefined;
+  let hidden: boolean | undefined;
   const fonts: string[] = [];
   for (const style of chain) {
     bold ??= style.run.bold;
     italic ??= style.run.italic;
     size ??= style.run.size;
+    hidden ??= style.run.hidden;
     fonts.push(...style.run.fonts);
   }
   return {
     ...(bold !== undefined ? { bold } : {}),
     ...(italic !== undefined ? { italic } : {}),
     ...(size !== undefined ? { size } : {}),
+    ...(hidden !== undefined ? { hidden } : {}),
     fonts,
   };
 }
@@ -287,6 +292,7 @@ function styleIdAsName(id: string): string {
 export function readRunProps(rPr: XmlElement | undefined): RunProps {
   const bold = readToggle(wChild(rPr, "b"));
   const italic = readToggle(wChild(rPr, "i"));
+  const hidden = readToggle(wChild(rPr, "vanish"));
   const szVal = wAttr(wChild(rPr, "sz"), "val");
   const rFonts = wChild(rPr, "rFonts");
   const fonts = ["ascii", "hAnsi", "cs", "eastAsia"]
@@ -296,6 +302,7 @@ export function readRunProps(rPr: XmlElement | undefined): RunProps {
     ...(bold !== undefined ? { bold } : {}),
     ...(italic !== undefined ? { italic } : {}),
     ...(szVal !== undefined && /^\d+$/.test(szVal) ? { size: Number(szVal) } : {}),
+    ...(hidden !== undefined ? { hidden } : {}),
     fonts,
   };
 }

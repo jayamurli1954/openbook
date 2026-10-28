@@ -73,6 +73,11 @@ export interface BodyCounts {
   externalFields: number;
   embeddedDocuments: number;
   unsafeLinks: number;
+  hiddenRuns: number;
+  /** Fields whose end was missing; text after them was recovered. */
+  brokenFields: number;
+  /** Symbol-font characters with no Unicode equivalent (Wingdings and the like). */
+  symbolsDropped: number;
   legacyFonts: Set<string>;
 }
 
@@ -129,6 +134,9 @@ class BodyWalker {
       externalFields: 0,
       embeddedDocuments: 0,
       unsafeLinks: 0,
+      hiddenRuns: 0,
+      brokenFields: 0,
+      symbolsDropped: 0,
       legacyFonts: new Set(),
     };
     this.#noteFonts(parts.styles.defaults.fonts);
@@ -137,7 +145,33 @@ class BodyWalker {
   run(): BodyResult {
     const body = wChild(this.#parts.document, "body");
     if (body) this.#blocks(body, false);
+    this.#flushCarry(false);
+    if (this.#fields.length > 0) {
+      this.counts.brokenFields += this.#fields.length;
+      this.#fields.length = 0;
+    }
     return { paragraphs: this.#paragraphs, counts: this.counts };
+  }
+
+  /** Text held by a deleted paragraph mark with no paragraph after it to join stands alone. */
+  #flushCarry(inTable: boolean): void {
+    const carried = this.#carry;
+    this.#carry = undefined;
+    if (!carried) return;
+    const text = carried.runs.map((run) => run.text).join("").replace(/\s+/g, " ").trim();
+    if (text === "" && carried.pictures === 0) return;
+    const visible = carried.runs.filter((run) => run.text.trim() !== "");
+    this.#paragraphs.push({
+      styleClass: { kind: "normal" },
+      runs: carried.runs,
+      text,
+      allBold: visible.length > 0 && visible.every((run) => run.looksBold),
+      larger: visible.length > 0 && visible.every((run) => run.size > this.#normalSize),
+      pageBreakBefore: this.#pendingBreak,
+      pictures: carried.pictures,
+      inTable,
+    });
+    this.#pendingBreak = false;
   }
 
   #blocks(container: XmlElement, inTable: boolean): void {
@@ -148,6 +182,7 @@ class BodyWalker {
           this.#paragraph(el, inTable);
           break;
         case "tbl":
+          this.#flushCarry(inTable);
           this.counts.tables += 1;
           for (const row of xmlChildElements(el)) {
             if (!isW(row, "tr")) continue;
@@ -191,6 +226,18 @@ class BodyWalker {
     const directOutline = outlineVal !== undefined && /^\d+$/.test(outlineVal) ? Number(outlineVal) : undefined;
     const paragraphRun = styles.paragraphRunProps(styleId);
     this.#noteFonts(paragraphRun.fonts);
+    const styleClass = styles.paragraphClass(styleId, directOutline);
+
+    // A table-of-contents field result spans TOC-styled paragraphs. If a paragraph that is
+    // not part of it arrives while it is still open, its end was lost: recover the text.
+    if (
+      this.#fields.some((frame) => frame.kind === "toc") &&
+      styleClass.kind !== "toc" &&
+      styleClass.kind !== "toc-heading"
+    ) {
+      this.counts.brokenFields += this.#fields.length;
+      this.#fields.length = 0;
+    }
 
     const carried = this.#carry;
     this.#carry = undefined;
@@ -203,6 +250,13 @@ class BodyWalker {
     };
     this.#pendingBreak = false;
     this.#inline(p, ctx, undefined);
+
+    // Only a table-of-contents result legitimately continues past its paragraph.
+    // Any other field still open here lost its end; close it so later text is not swallowed.
+    while (this.#fields.length > 0 && this.#fields[this.#fields.length - 1]!.kind !== "toc") {
+      this.#fields.pop();
+      this.counts.brokenFields += 1;
+    }
 
     // A deleted paragraph mark joins this paragraph to the next one (ADR-0040 §7).
     if (wChild(wChild(pPr, "rPr"), "del")) {
@@ -221,7 +275,6 @@ class BodyWalker {
     }
     this.#pendingBreak = afterThis;
 
-    const styleClass = styles.paragraphClass(styleId, directOutline);
     const numRef = readNumPr(wChild(pPr, "numPr")) ?? styles.paragraphNumbering(styleId);
     const ordered = numRef ? this.#parts.numbering.isOrdered(numRef) : undefined;
     const visible = ctx.runs.filter((run) => run.text.trim() !== "");
@@ -266,7 +319,9 @@ class BodyWalker {
           break;
         case "del":
         case "moveFrom":
+          // Deleted text is dropped, but a field boundary inside it still opens or closes the field.
           this.counts.trackedChanges = true;
+          this.#fieldMarkersOnly(el);
           break;
         case "smartTag":
         case "customXml":
@@ -304,9 +359,19 @@ class BodyWalker {
     const italic = direct.italic ?? character.italic ?? false;
     const looksBold = direct.bold ?? character.bold ?? ctx.paragraphRun.bold ?? false;
     const size = direct.size ?? character.size ?? ctx.paragraphRun.size ?? this.#normalSize;
+    // Word's Hidden text is never shown or printed, so it never reaches the book.
+    const hidden = direct.hidden ?? character.hidden ?? ctx.paragraphRun.hidden ?? false;
+    let hiddenCounted = false;
 
     const emit = (text: string): void => {
       if (!this.#textAllowed()) return;
+      if (hidden) {
+        if (!hiddenCounted && text.trim() !== "") {
+          this.counts.hiddenRuns += 1;
+          hiddenCounted = true;
+        }
+        return;
+      }
       const fieldHref = this.#fieldHref();
       const link = fieldHref === undefined ? href : fieldHref ?? undefined;
       ctx.runs.push({ text, bold, italic, looksBold, size, ...(link !== undefined ? { href: link } : {}) });
@@ -342,11 +407,9 @@ class BodyWalker {
           emit("‑");
           break;
         case "sym": {
-          const code = parseInt(wAttr(child, "char") ?? "", 16);
-          const mapped = code >= 0xf000 ? code - 0xf000 : code;
-          if (Number.isFinite(mapped) && mapped >= 0x20 && mapped <= 0x10ffff) {
-            emit(String.fromCodePoint(mapped));
-          }
+          const mapped = symbolToUnicode(wAttr(child, "font"), parseInt(wAttr(child, "char") ?? "", 16));
+          if (mapped !== undefined) emit(mapped);
+          else if (this.#textAllowed() && !hidden) this.counts.symbolsDropped += 1;
           break;
         }
         case "fldChar":
@@ -377,6 +440,20 @@ class BodyWalker {
           break;
         default:
           break;
+      }
+    }
+  }
+
+  /** Applies field begin/separate/end and instruction text found anywhere under `el`, emitting no text. */
+  #fieldMarkersOnly(el: XmlElement): void {
+    for (const child of xmlChildElements(el)) {
+      if (isW(child, "fldChar")) {
+        this.#fieldChar(wAttr(child, "fldCharType"));
+      } else if (isW(child, "instrText") || isW(child, "delInstrText")) {
+        const top = this.#fields[this.#fields.length - 1];
+        if (top?.phase === "instr") top.instr += textOf(child);
+      } else {
+        this.#fieldMarkersOnly(child);
       }
     }
   }
@@ -481,6 +558,36 @@ function classifyField(instr: string): { kind: FieldKind; href: string | undefin
     default:
       return { kind: "keep", href: undefined };
   }
+}
+
+/** Symbol font (Adobe Symbol encoding) letters and maths signs that differ from ASCII. */
+const SYMBOL_FONT: Readonly<Record<string, string>> = (() => {
+  const upper = "ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ";
+  const lower = "αβχδεφγηιϕκλμνοπθρστυϖωξψζ";
+  const table: Record<string, string> = {
+    "22": "∀", "24": "∃", "27": "∋", "2a": "∗", "2d": "−", "40": "≅", "5c": "∴", "5e": "⊥", "60": "‾", "7e": "∼",
+  };
+  for (let index = 0; index < 26; index += 1) {
+    table[(0x41 + index).toString(16)] = upper[index]!;
+    table[(0x61 + index).toString(16)] = lower[index]!;
+  }
+  return table;
+})();
+
+/**
+ * `w:sym`: a character from a symbol font. Symbol-font characters map to Unicode; picture
+ * fonts (Wingdings, Webdings, …) have no text equivalent and are dropped.
+ */
+function symbolToUnicode(font: string | undefined, code: number): string | undefined {
+  if (!Number.isFinite(code)) return undefined;
+  const isPrivate = code >= 0xf000 && code <= 0xf0ff;
+  if (!isPrivate) {
+    return code >= 0x20 && code <= 0x10ffff && (code < 0xd800 || code > 0xdfff) ? String.fromCodePoint(code) : undefined;
+  }
+  if ((font ?? "").trim().toLowerCase() !== "symbol") return undefined;
+  const low = code - 0xf000;
+  if (low < 0x20 || low > 0x7e) return undefined;
+  return SYMBOL_FONT[low.toString(16)] ?? String.fromCharCode(low);
 }
 
 function isTableOfContentsSdt(sdt: XmlElement): boolean {

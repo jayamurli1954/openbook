@@ -451,7 +451,7 @@ function takeUntil(
   return { inner, next: i };
 }
 
-function inlinesToPlainText(inlines: InlineSpan[]): string {
+export function inlinesToPlainText(inlines: InlineSpan[]): string {
   return inlines
     .map((span) => {
       switch (span.type) {

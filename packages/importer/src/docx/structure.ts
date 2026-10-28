@@ -8,6 +8,7 @@ import type {
 } from "@openbook/book-model";
 import type { DeterministicIdFactory } from "../ids.js";
 import type { ImportIssue, ImportOptions } from "../types.js";
+import { inlinesToPlainText } from "../markdown-import.js";
 import type { DocxParagraph, TextRun } from "./body.js";
 
 /**
@@ -76,12 +77,22 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
 
   // --- metadata (§4.1) -------------------------------------------------------------
   const metadata: { -readonly [K in keyof BookMetadata]?: BookMetadata[K] } = {};
-  const titleItem = items.find((p) => p.styleClass.kind === "title");
   const firstHeading = items.findIndex((p) => p.styleClass.kind === "heading");
   const subtitleItem = items.find(
     (p, index) => p.styleClass.kind === "subtitle" && (firstHeading === -1 || index < firstHeading),
   );
   const coreTitle = input.coreTitle && !DEFAULT_WORD_TITLE.test(input.coreTitle) ? input.coreTitle : undefined;
+  // Some authors style every story title with Word's Title style. A lone Title paragraph is the
+  // title page. With several, the first is the book's title unless the core properties name a
+  // different one; the others are chapter candidates.
+  const titleItems = items.filter((p) => p.styleClass.kind === "title");
+  const firstTitle = titleItems[0];
+  const titleItem =
+    firstTitle &&
+    (titleItems.length === 1 || !coreTitle || normalizeTitle(firstTitle.text) === normalizeTitle(coreTitle))
+      ? firstTitle
+      : undefined;
+  const storyTitles = titleItems.filter((p) => p !== titleItem);
   const title = coreTitle ?? titleItem?.text;
   if (title) metadata.title = title;
   if (subtitleItem) metadata.subtitle = subtitleItem.text;
@@ -101,6 +112,15 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
 
   const language = resolveLanguage(input.declaredLanguage, input.paragraphs, issues);
   if (language) metadata.language = language;
+
+  // Text that only repeats the title page: never a chapter title, and dropped before the first section.
+  const repeated = new Set(
+    [metadata.title, metadata.subtitle, ...(metadata.authors ?? []), ...(input.options?.metadataOverrides?.authors ?? []),
+      input.options?.metadataOverrides?.title]
+      .filter((value): value is string => typeof value === "string" && value.trim() !== "")
+      .map(normalizeTitle),
+  );
+  const repeatsTitlePage = (p: DocxParagraph): boolean => repeated.has(normalizeTitle(p.text.replace(/^by\s+/i, "")));
 
   // --- typed table of contents (§4.4) -------------------------------------------------
   const typedToc = findTypedToc(items);
@@ -129,7 +149,14 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
     p.styleClass.kind === "heading" && p.styleClass.level === splitLevel;
   let promoted = new Set<DocxParagraph>();
 
-  if (!items.some(isStyledChapter)) {
+  if (!items.some(isStyledChapter) && storyTitles.length >= 2) {
+    promoted = new Set(storyTitles);
+    issues.push({
+      code: "DOCX_CHAPTERS_FROM_TITLE_STYLE",
+      severity: "warning",
+      message: `This file uses Word's Title style for ${storyTitles.length} titles, so OpenBook made each one a chapter. Please check them in Structure.`,
+    });
+  } else if (!items.some(isStyledChapter)) {
     promoted = chaptersFromToc(items, tocTitles, tocStart);
     if (promoted.size >= 2) {
       issues.push({
@@ -138,7 +165,7 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
         message: `This file has no heading styles, so OpenBook used your table of contents to find ${promoted.size} chapters. Please check them in Structure.`,
       });
     } else {
-      promoted = handFormattedChapters(items);
+      promoted = handFormattedChapters(items, repeatsTitlePage);
       if (promoted.size >= 2) {
         issues.push({
           code: "DOCX_CHAPTERS_FROM_FORMATTING",
@@ -163,6 +190,8 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
 
   // --- sections and front matter (§4.3) --------------------------------------------------------
   const before: DocxParagraph[] = [];
+  // Headings above the split level (a Part title with the heading-2 strategy) open the next chapter.
+  let pendingParts: DocxParagraph[] = [];
   let chapterStarted = false;
   for (const p of items) {
     const role = chapterStarted || p.list || p.inTable ? undefined : frontMatterRole(p.text);
@@ -172,11 +201,17 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
       } else {
         chapterStarted = true;
         builder.startChapter(p.text);
+        for (const part of pendingParts) builder.add(part);
+        pendingParts = [];
       }
       continue;
     }
     if (role && p.styleClass.kind !== "quote") {
       builder.startFront(role, p.text);
+      continue;
+    }
+    if (p.styleClass.kind === "heading" && p.styleClass.level < splitLevel) {
+      pendingParts.push(p);
       continue;
     }
     if (!builder.hasSection) {
@@ -185,18 +220,14 @@ export function structureDocx(input: DocxStructureInput): DocxStructure {
     }
     builder.add(p);
   }
+  // Part headings with no chapter after them stay at the end of the last section.
+  for (const part of pendingParts) {
+    if (builder.hasSection) builder.add(part);
+    else before.push(part);
+  }
 
   // Content before any section: drop what only repeats the title page; keep the rest for review.
-  const repeated = new Set(
-    [metadata.title, metadata.subtitle, ...(metadata.authors ?? []), ...(input.options?.metadataOverrides?.authors ?? []),
-      input.options?.metadataOverrides?.title]
-      .filter((value): value is string => typeof value === "string" && value.trim() !== "")
-      .map(normalizeTitle),
-  );
-  const leftover = before.filter((p) => {
-    const text = normalizeTitle(p.text.replace(/^by\s+/i, ""));
-    return p.pictures > 0 || !repeated.has(text);
-  });
+  const leftover = before.filter((p) => p.pictures > 0 || !repeatsTitlePage(p));
   if (leftover.some((p) => p.text !== "")) {
     const first = leftover.find((p) => p.text !== "")!;
     builder.prependFront(first, leftover.filter((p) => p !== first));
@@ -342,9 +373,10 @@ export function toInlines(runs: readonly TextRun[]): InlineSpan[] {
       merged.push({ text, bold: run.bold, italic: run.italic, href: run.href });
     }
   }
-  // Trim the paragraph's outer whitespace and collapse spaces across run boundaries.
+  // Collapse spaces inside merged runs and across run boundaries; trim the paragraph's outer whitespace.
   for (let index = 0; index < merged.length; index += 1) {
     const run = merged[index]!;
+    run.text = run.text.replace(/ {2,}/g, " ");
     if (index > 0 && merged[index - 1]!.text.endsWith(" ")) run.text = run.text.replace(/^ +/, "");
   }
   if (merged.length > 0) {
@@ -379,9 +411,7 @@ function markSpan(run: { text: string; bold: boolean; italic: boolean }): Inline
 
 /** Headings carry their text; Word's bold on a heading is appearance, not meaning. */
 function plain(inlines: InlineSpan[]): InlineSpan[] {
-  const text = (spans: InlineSpan[]): string =>
-    spans.map((span) => (span.type === "text" ? span.text : text(span.children))).join("");
-  return [{ type: "text", text: text(inlines) }];
+  return [{ type: "text", text: inlinesToPlainText(inlines) }];
 }
 
 // --- heuristics --------------------------------------------------------------------------
@@ -405,7 +435,8 @@ function frontMatterRole(text: string): SectionRole | undefined {
   return undefined;
 }
 
-const PAGE_NUMBER_TAIL = /[\s.…·_\-–—]*([0-9೦-೯]+|[ivxlcdm]+)\s*$/iu;
+/** A page number after at least one separator (space, tab, leader dots, dash); never letters glued to a word. */
+const PAGE_NUMBER_TAIL = /[\s.…·_\-–—]+([0-9೦-೯]+|[ivxlcdm]+)\s*$/iu;
 
 interface TypedToc {
   readonly start: number;
@@ -445,8 +476,12 @@ function findTypedToc(items: readonly DocxParagraph[]): TypedToc | undefined {
       }
     });
     if (matched / entries.length < TOC_MATCH_RATIO || lastMatch === -1) continue;
-    // The contents page ends at its last entry that names a later paragraph.
-    return { start, end: start + 1 + lastMatch + 1, titles };
+    // The contents page runs through its last entry that names a later paragraph, plus any
+    // following lines that still look like entries (text then a page number), such as
+    // “Glossary ..... 101” for a section titled differently in the book.
+    let last = lastMatch;
+    while (last + 1 < entries.length && PAGE_NUMBER_TAIL.test(entries[last + 1]!)) last += 1;
+    return { start, end: start + 1 + last + 1, titles };
   }
   return undefined;
 }
@@ -469,12 +504,17 @@ function chaptersFromToc(
   return promoted;
 }
 
-function handFormattedChapters(items: readonly DocxParagraph[]): Set<DocxParagraph> {
+/** Short bold or large lines at the top of a page; never a line that only repeats the title page. */
+function handFormattedChapters(
+  items: readonly DocxParagraph[],
+  repeatsTitlePage: (p: DocxParagraph) => boolean,
+): Set<DocxParagraph> {
   const promoted = new Set<DocxParagraph>();
   items.forEach((p, index) => {
     if (p.list || p.inTable || p.styleClass.kind !== "normal") return;
     if (p.text === "" || wordCount(p.text) > 12 || /[.!?।]$/.test(p.text)) return;
-    if (!(p.allBold || p.larger)) return;
+    if (!(p.allBold || p.larger) || repeatsTitlePage(p)) return;
+    // The very first line counts too (a book that opens straight into its first story).
     if (p.pageBreakBefore || index === 0) promoted.add(p);
   });
   return promoted;

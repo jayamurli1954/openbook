@@ -116,6 +116,19 @@ function reportDropped(counts: BodyCounts, tocRemoved: boolean, listsFlattened: 
   if (counts.unsafeLinks > 0) {
     add("DOCX_LINKS_REMOVED", "warning", `${plural(counts.unsafeLinks, "link")} that did not point to a web page or email address ${counts.unsafeLinks === 1 ? "was" : "were"} kept as plain text.`);
   }
+  if (counts.hiddenRuns > 0) {
+    add("DOCX_HIDDEN_TEXT_SKIPPED", "info", "Text marked as Hidden in Word was not imported, because Word never shows or prints it.");
+  }
+  if (counts.brokenFields > 0) {
+    add(
+      "DOCX_FIELDS_REPAIRED",
+      "warning",
+      "Some of Word's automatic fields (such as links or a table of contents) were incomplete in this file. OpenBook kept the text around them; please check nearby text in Write.",
+    );
+  }
+  if (counts.symbolsDropped > 0) {
+    add("DOCX_SYMBOLS_SKIPPED", "warning", `${plural(counts.symbolsDropped, "picture-font symbol")} (such as Wingdings) had no text equivalent and ${counts.symbolsDropped === 1 ? "was" : "were"} left out.`);
+  }
   if (counts.legacyFonts.size > 0) {
     add(
       "DOCX_LEGACY_KANNADA_FONT",

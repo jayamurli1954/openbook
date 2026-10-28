@@ -23,6 +23,7 @@ interface RunOptions {
   readonly style?: string;
   readonly sz?: number;
   readonly font?: string;
+  readonly hidden?: boolean;
 }
 
 function r(text: string, o: RunOptions = {}): string {
@@ -31,7 +32,8 @@ function r(text: string, o: RunOptions = {}): string {
     (o.font ? `<w:rFonts w:ascii="${o.font}" w:hAnsi="${o.font}"/>` : "") +
     (o.b ? "<w:b/>" : "") +
     (o.i ? "<w:i/>" : "") +
-    (o.sz ? `<w:sz w:val="${o.sz}"/>` : "");
+    (o.sz ? `<w:sz w:val="${o.sz}"/>` : "") +
+    (o.hidden ? "<w:vanish/>" : "");
   return `<w:r>${props ? `<w:rPr>${props}</w:rPr>` : ""}<w:t xml:space="preserve">${esc(text)}</w:t></w:r>`;
 }
 
@@ -92,6 +94,7 @@ const STYLES =
   `<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/></w:style>` +
   `<w:style w:type="character" w:styleId="Strong"><w:name w:val="Strong"/></w:style>` +
   `<w:style w:type="character" w:styleId="Emphasis"><w:name w:val="Emphasis"/></w:style>` +
+  `<w:style w:type="character" w:customStyle="1" w:styleId="HiddenNote"><w:name w:val="Hidden Note"/><w:rPr><w:vanish/></w:rPr></w:style>` +
   `</w:styles>`;
 
 const NUMBERING =
@@ -555,6 +558,133 @@ test("warns about pre-Unicode Kannada fonts", async () => {
 test("works without a styles part", async () => {
   const { book } = await importBook({ body: t("Hello.") + t("World."), styles: null });
   assert.equal(book.chapters[0]!.blocks.length, 2);
+});
+
+// --- review regressions -----------------------------------------------------------------------
+
+const BEGIN = `<w:r><w:fldChar w:fldCharType="begin"/></w:r>`;
+const SEPARATE = `<w:r><w:fldChar w:fldCharType="separate"/></w:r>`;
+const END = `<w:r><w:fldChar w:fldCharType="end"/></w:r>`;
+const instr = (text: string): string => `<w:r><w:instrText xml:space="preserve"> ${text} </w:instrText></w:r>`;
+
+test("a field whose end was deleted with track changes still closes", async () => {
+  const body =
+    t("Chapter", { style: "Heading1" }) +
+    p(BEGIN + instr('HYPERLINK "https://example.com/krishna"') + SEPARATE + r("link text") + `<w:del w:id="5" w:author="A">${END}</w:del>`) +
+    t("After the field.") +
+    t("Second", { style: "Heading1" }) +
+    t("More.");
+  const { book, result } = await importBook({ body });
+  assert.deepEqual(book.chapters.map((s) => s.title), ["Chapter", "Second"]);
+  assert.ok(allText(book).includes("After the field.") && allText(book).includes("More."));
+  assert.ok(!codes(result).includes("DOCX_FIELDS_REPAIRED"));
+});
+
+test("a field with no end never swallows the rest of the book", async () => {
+  const body =
+    t("Chapter", { style: "Heading1" }) +
+    p(r("Page ") + BEGIN + instr("PAGE")) +
+    t("Still here.") +
+    p(BEGIN + instr('TOC \\o "1-3"') + SEPARATE + r("Entry 1"), { style: "TOC1" }) +
+    t("Real", { style: "Heading1" }) +
+    t("Story text.");
+  const { book, result } = await importBook({ body });
+  assert.deepEqual(book.chapters.map((s) => s.title), ["Chapter", "Real"]);
+  assert.ok(allText(book).includes("Still here.") && allText(book).includes("Story text."));
+  assert.ok(!allText(book).includes("Entry 1"));
+  assert.ok(codes(result).includes("DOCX_FIELDS_REPAIRED"));
+});
+
+test("hidden text is never imported, directly or through a style", async () => {
+  const body =
+    t("Chapter", { style: "Heading1" }) +
+    p(r("Visible.") + r(" secret note", { hidden: true }) + r(" also secret", { style: "HiddenNote" }));
+  const { book, result } = await importBook({ body });
+  assert.equal(blockText(book.chapters[0]!.blocks[0]!), "Visible.");
+  assert.ok(codes(result).includes("DOCX_HIDDEN_TEXT_SKIPPED"));
+});
+
+test("the title-page line is not guessed as a chapter", async () => {
+  const body = [
+    p(r("Little Krishna", { b: true, sz: 40 })),
+    t("by Muralidhar Rao"),
+    p(r("The Butter Thief", { b: true }), { pageBreakBefore: true }),
+    t("Krishna loved butter."),
+    p(r("The Serpent", { b: true }), { pageBreakBefore: true }),
+    t("Kaliya lived in the river."),
+  ].join("");
+  const { book } = await importBook({ body, core: { title: "Little Krishna", creator: "Muralidhar Rao" } });
+  assert.deepEqual(book.chapters.map((s) => s.title), ["The Butter Thief", "The Serpent"]);
+  assert.equal(book.frontMatter.length, 0);
+});
+
+test("text held by a deleted paragraph mark survives at the end and before a table", async () => {
+  const body =
+    t("Chapter", { style: "Heading1" }) +
+    p(r("Before table."), { markDeleted: true }) +
+    `<w:tbl><w:tr><w:tc>${t("Cell")}</w:tc></w:tr></w:tbl>` +
+    p(r("Last words."), { markDeleted: true });
+  const { book } = await importBook({ body });
+  assert.deepEqual(book.chapters[0]!.blocks.map(blockText), ["Before table.", "Cell", "Last words."]);
+});
+
+test("with the heading-2 strategy, Part headings open the next chapter instead of front matter", async () => {
+  const body =
+    t("Part One", { style: "Heading1" }) + t("A", { style: "Heading2" }) + t("x") + t("B", { style: "Heading2" }) + t("y") +
+    t("Part Two", { style: "Heading1" }) + t("C", { style: "Heading2" }) + t("z");
+  const { book, result } = await importBook({ body }, { splitStrategy: "heading-2" });
+  assert.deepEqual(book.chapters.map((s) => s.title), ["A", "B", "C"]);
+  assert.equal(book.frontMatter.length, 0);
+  assert.ok(!codes(result).includes("DOCX_FRONT_MATTER_REVIEW"));
+  assert.deepEqual(book.chapters[0]!.blocks.map(blockText), ["Part One", "x"]);
+  assert.deepEqual(book.chapters[2]!.blocks.map(blockText), ["Part Two", "z"]);
+});
+
+test("story titles in Word's Title style become chapters", async () => {
+  const body =
+    p(r("Krishna Stories"), { style: "Title" }) +
+    p(r("The Butter Thief"), { style: "Title" }) + t("Story one.") +
+    p(r("The Serpent"), { style: "Title" }) + t("Story two.");
+  const { book, result } = await importBook({ body, core: { title: "Krishna Stories" } });
+  assert.equal(book.metadata.title, "Krishna Stories");
+  assert.deepEqual(book.chapters.map((s) => s.title), ["The Butter Thief", "The Serpent"]);
+  assert.ok(codes(result).includes("DOCX_CHAPTERS_FROM_TITLE_STYLE"));
+});
+
+test("removes trailing contents lines that do not match a later title", async () => {
+  const body = [
+    p(r("Contents", { b: true })),
+    t("The Butter Thief ..... 1"),
+    t("The Serpent ..... 5"),
+    t("About the Author ..... 98"),
+    p(r("The Butter Thief", { b: true }), { pageBreakBefore: true }),
+    t("Story."),
+    p(r("The Serpent", { b: true }), { pageBreakBefore: true }),
+    t("Story."),
+    p(r("About the writer", { b: true }), { pageBreakBefore: true }),
+    t("Bio."),
+  ].join("");
+  const { book } = await importBook({ body });
+  assert.ok(!allText(book).includes("About the Author"));
+  assert.ok(!allText(book).includes("....."));
+  // Chapters come from the contents page, which does not list “About the writer”: it stays as text.
+  assert.deepEqual(book.chapters.map((s) => s.title), ["The Butter Thief", "The Serpent"]);
+  assert.ok(allText(book).includes("About the writer"));
+});
+
+test("maps Symbol-font characters and drops picture-font symbols", async () => {
+  const body =
+    t("Chapter", { style: "Heading1" }) +
+    p(`<w:r><w:sym w:font="Symbol" w:char="F061"/></w:r>` + r(" and ") + `<w:r><w:sym w:font="Wingdings" w:char="F04A"/></w:r>` + r(" end"));
+  const { book, result } = await importBook({ body });
+  assert.equal(blockText(book.chapters[0]!.blocks[0]!), "α and end");
+  assert.ok(codes(result).includes("DOCX_SYMBOLS_SKIPPED"));
+});
+
+test("collapses spaces across split runs", async () => {
+  const body = t("Chapter", { style: "Heading1" }) + p(r("the ") + r(" cow  ") + r("  ate"));
+  const { book } = await importBook({ body });
+  assert.equal(blockText(book.chapters[0]!.blocks[0]!), "the cow ate");
 });
 
 // --- failures ---------------------------------------------------------------------------------
