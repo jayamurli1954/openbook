@@ -41,12 +41,12 @@ A coding-agent session asked for a selection record and an architecture ADR, doc
 ## Maintainer confirmations
 
 - 2026-10-28: the maintainer confirmed the Kannada front-matter and contents-page words in ADR-0040 §4.3–§4.4 (“ಮುನ್ನುಡಿ, ಪೀಠಿಕೆ, ಪರಿವಿಡಿ, … yes this is correct”).
+- 2026-10-28: the maintainer allowed *Little Krishna's Wisdom Stories* to be used as a local manual check in Slice 5 (“yes go ahead”). The file stays out of the repository and out of test fixtures.
 
 ## Unresolved questions
 
 - Is the 1,000 : 1 compression-ratio ceiling right? Slice 1 is to measure real manuscripts first.
 - Does Slice 4 need a binary host read command, or is `asset_read_bytes` fast enough for real manuscript sizes?
-- May the maintainer's own book be used as a local manual check in Slice 5?
 - ADR-0038 Cover Wizard and ADR-0040 are independent. Which slice comes next is the maintainer's choice.
 
 ## Action items

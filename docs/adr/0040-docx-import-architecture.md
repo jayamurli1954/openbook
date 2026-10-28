@@ -309,7 +309,7 @@ When separately authorized, implementation should proceed in small slices, for e
 4. **Slice 4 — Desktop import surface:** start-screen and Write-step actions, `.docx` dialog and browser fallback, host size check before read (and binary transport if needed), import summary in the Guide panel.
 5. **Slice 5 — Hardening:** end-to-end English and Kannada `.docx` fixtures with images (including one shaped like *Little Krishna's Wisdom Stories*: untagged Foreword/Preface/Publisher's Note, typed contents page, many inline images) through import → package Save/Open → autosave → EPUB (EPUBCheck), HTML, and PDF; malicious-file corpus re-run; closure reconciliation.
 
-Fixture `.docx` files committed to the repository must be authored for the project (no third-party documents). The maintainer's own book is used only with the maintainer's permission, and only as a local manual check unless the maintainer decides otherwise.
+Fixture `.docx` files committed to the repository must be authored for the project (no third-party documents). On 2026-10-28 the maintainer gave permission to use *Little Krishna's Wisdom Stories* as a **local manual check** in Slice 5. The book's file is not committed to the repository, and its text and images do not appear in test fixtures, unless the maintainer decides otherwise.
 
 Exact slice boundaries may be adjusted in per-slice proposals; each slice still needs explicit authorization.
 
