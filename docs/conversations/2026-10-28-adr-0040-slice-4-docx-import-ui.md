@@ -23,4 +23,4 @@ After Slice 3 merged (PR #170) and its status was reconciled (PR #171), the main
 
 ## Outcomes
 
-- Branch `feat/adr-0040-slice-4-docx-import-ui`.
+- Branch `feat/adr-0040-slice-4-docx-import-ui`; merged as PR #172 after a review pass (8 findings fixed).
