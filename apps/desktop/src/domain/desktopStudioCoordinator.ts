@@ -1797,6 +1797,11 @@ async function ingestImportedImages(
       return { ...section, blocks };
     });
 
+  // Walk the sections first: it records where refused pictures were, for the message below.
+  const frontMatter = mapSections(book.frontMatter);
+  const chapters = mapSections(book.chapters);
+  const backMatter = mapSections(book.backMatter);
+
   const known = new Set(existingAssets.map((asset) => asset.id));
   const newAssets: AssetRef[] = [];
   for (const asset of resolved.values()) {
@@ -1821,9 +1826,9 @@ async function ingestImportedImages(
   return {
     book: {
       ...book,
-      frontMatter: mapSections(book.frontMatter),
-      chapters: mapSections(book.chapters),
-      backMatter: mapSections(book.backMatter),
+      frontMatter,
+      chapters,
+      backMatter,
       assets: [...book.assets, ...newAssets],
     },
     newAssets,
