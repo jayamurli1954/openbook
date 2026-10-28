@@ -7,7 +7,7 @@
 
 ## Context
 
-After Slice 4 merged (PR #172), the maintainer asked to test importing the Word file and pointed to `D:\Download\DIGITAL_BOOK_BLOCK`, a byte-identical copy of `DIGITAL_BOOK_BLOCK.docx` with 27 pictures. The local import showed the contents page becoming a chapter and “python-docx” as the author. The maintainer then wrote “Yes, start Slice 5”.
+After Slice 4 merged (PR #172), the maintainer asked to test importing the Word file and pointed to a local copy of the manuscript (a `.docx` with 27 pictures, saved without its extension). The local import showed the contents page becoming a chapter and “python-docx” as the author. The maintainer then wrote “Yes, start Slice 5”.
 
 ## Decisions
 
@@ -20,7 +20,7 @@ After Slice 4 merged (PR #172), the maintainer asked to test importing the Word 
 
 ## Action items
 
-- Maintainer: import `DIGITAL_BOOK_BLOCK.docx` in the desktop app; add alt text to the pictures in Word; decide whether to run EPUBCheck locally (needs a Java runtime download).
+- Maintainer: import the manuscript (`.docx` copy) in the desktop app; add alt text to the pictures in Word; decide whether to run EPUBCheck locally (needs a Java runtime download).
 
 ## Outcomes
 

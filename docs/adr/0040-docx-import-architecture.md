@@ -238,7 +238,7 @@ Adjacent runs with the same marks are merged. Text is kept exactly as Unicode (K
 | DOCX | Handling |
 |---|---|
 | `w:drawing` → `wp:inline` or `wp:anchor` → `a:blip/@r:embed` | `image` block at that point in reading order; bytes from the internal relationship target under `word/media/`. Floating (`wp:anchor`) images are placed after the paragraph that anchors them |
-| `wp:docPr/@descr` (then `@title`) | `AssetRef.altText`. Empty alt text is allowed at import and is reported by Book Doctor as today |
+| `wp:docPr/@descr` (then `@title`) | `AssetRef.altText`. Empty alt text is allowed at import. *Correction (2026-10-28, Slice 5): Book Doctor does not report missing alt text — ADR-0018 keeps accessibility diagnostics inactive — so the import warns itself (`DOCX_PICTURES_WITHOUT_ALT_TEXT`); see `docs/adr-0040-slice-5-hardening.md` §1.* |
 | Next paragraph styled **Caption** | the `image` block's `caption`; the paragraph is not repeated as body text |
 | `asvg:svgBlip` (Word's SVG with PNG fallback) | the **PNG fallback** is used; the SVG is not read |
 | VML `v:imagedata/@r:id` (older documents) | same as `a:blip` |

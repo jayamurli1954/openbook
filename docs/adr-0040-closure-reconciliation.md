@@ -50,7 +50,7 @@ Every slice had a review pass before merge; the findings and their fixes are in 
 ## 5. Explicitly still open (not ADR-0040 failures)
 
 - **EPUBCheck and Typst** with the maintainer's real book: run once a Java runtime is available locally, or through CI's Gate 5/6 jobs on a published fixture.
-- **The desktop app's file dialog** with the real book (pick `DIGITAL_BOOK_BLOCK.docx`, not the copy without an extension).
+- **The desktop app's file dialog** with the real book (pick a copy whose name ends in `.docx`).
 - **Accessibility checks in Book Doctor** (alt text and others): a future ADR (ADR-0018 keeps them inactive).
 - **Editing a picture's alt text after import:** no UI exists yet.
 - Footnotes, comments, tables, nested lists, text boxes, `.doc`/`.odt` import (ADR-0040 §7 non-goals).

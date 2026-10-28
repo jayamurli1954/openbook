@@ -21,6 +21,7 @@ export { sanitizeImportHref } from "./links.js";
 export { resolvePublishedAt } from "./metadata.js";
 
 export { openDocxPackage, WORD_DOCUMENT_CONTENT_TYPE } from "./docx/package.js";
+export { PICTURES_WITHOUT_ALT_TEXT, picturesWithoutAltTextIssue } from "./docx/docx-import.js";
 export type { DocxPackage, DocxOpenResult } from "./docx/package.js";
 export { DEFAULT_DOCX_LIMITS } from "./docx/limits.js";
 export type { DocxLimits } from "./docx/limits.js";

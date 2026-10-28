@@ -60,6 +60,8 @@ import type { ValidationReport, ValidatorService } from "@openbook/validator";
 import {
   IMPORTED_IMAGE_PLACEHOLDER_PREFIX,
   ImportService,
+  PICTURES_WITHOUT_ALT_TEXT,
+  picturesWithoutAltTextIssue,
   type ImportedImagePayload,
   type ImportIssue,
   type ImportOptions,
@@ -1252,7 +1254,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       this.#succeedStudioJob();
       this.#workflow.requestTransition({ to: "STRUCTURE" });
 
-      return toStudioImportResult("new-project", [...result.issues, ...ingested.issues], result.stats);
+      return toStudioImportResult("new-project", mergeImportIssues(result.issues, ingested), result.stats);
     } catch (err) {
       this.#failStudioJob();
       if (err instanceof DesktopStudioError) {
@@ -1364,7 +1366,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
       }
 
       this.#succeedStudioJob();
-      return toStudioImportResult("append-sections", [...result.issues, ...ingested.issues], result.stats);
+      return toStudioImportResult("append-sections", mergeImportIssues(result.issues, ingested), result.stats);
     } catch (err) {
       this.#failStudioJob();
       if (err instanceof DesktopStudioError) {
@@ -1744,6 +1746,8 @@ interface IngestedImport {
   /** Assets to add to the Book (new ones only; already-present ids are skipped). */
   readonly newAssets: readonly AssetRef[];
   readonly issues: readonly ImportIssue[];
+  /** Issue codes from the importer that `issues` replaces (recounted after refusals). */
+  readonly replacesCodes: readonly string[];
 }
 
 /**
@@ -1759,7 +1763,7 @@ async function ingestImportedImages(
   existingAssets: readonly AssetRef[],
 ): Promise<IngestedImport> {
   if (images.length === 0) {
-    return { book, newAssets: [], issues: [] };
+    return { book, newAssets: [], issues: [], replacesCodes: [] };
   }
   // Pictures are independent: hash and store them concurrently, keeping their order.
   const results = await Promise.all(
@@ -1818,10 +1822,18 @@ async function ingestImportedImages(
   }
 
   const rejected = [...resolved.values()].filter((asset) => asset === null).length;
+  // The importer counted pictures without a description before any were refused; recount the kept ones.
+  const recount =
+    rejected === 0
+      ? undefined
+      : picturesWithoutAltTextIssue(
+          images.filter((image) => resolved.get(image.placeholderId) && image.altText.trim() === "").length,
+        );
   const issues: ImportIssue[] =
     rejected === 0
       ? []
       : [
+          ...(recount ? [recount] : []),
           {
             code: "DOCX_PICTURES_REJECTED",
             severity: "warning",
@@ -1839,7 +1851,12 @@ async function ingestImportedImages(
     },
     newAssets,
     issues,
+    replacesCodes: rejected === 0 ? [] : [PICTURES_WITHOUT_ALT_TEXT],
   };
+}
+
+function mergeImportIssues(imported: readonly ImportIssue[], ingested: IngestedImport): ImportIssue[] {
+  return [...imported.filter((issue) => !ingested.replacesCodes.includes(issue.code)), ...ingested.issues];
 }
 
 /**

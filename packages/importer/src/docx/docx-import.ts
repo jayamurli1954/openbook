@@ -88,14 +88,11 @@ export function importDocx(
 
     // OpenBook's book check does not review picture descriptions yet (ADR-0018 keeps accessibility
     // checks for later), so the import itself says when pictures have none.
-    const withoutAlt = images.filter((image) => image.altText.trim() === "").length;
-    if (withoutAlt > 0) {
-      issues.push({
-        code: "DOCX_PICTURES_WITHOUT_ALT_TEXT",
-        severity: "warning",
-        message: `${plural(withoutAlt, "picture")} ${withoutAlt === 1 ? "has" : "have"} no description (alt text) for readers who use screen readers. Add descriptions in Word (right-click a picture › View Alt Text) and import again; ebook stores may ask for them.`,
-      });
-    }
+    const withoutAlt = picturesWithoutAltTextIssue(
+      images.filter((image) => image.altText.trim() === "").length,
+      body.counts.automaticAltText,
+    );
+    if (withoutAlt) issues.push(withoutAlt);
 
     if (structure.altTextConflicts > 0) {
       issues.push({
@@ -115,6 +112,29 @@ export function importDocx(
     }
     throw err;
   }
+}
+
+export const PICTURES_WITHOUT_ALT_TEXT = "DOCX_PICTURES_WITHOUT_ALT_TEXT";
+
+/**
+ * One warning for pictures without a description. `automatic` says how many had only Word's
+ * machine-written description, which is not used. Callers that later drop pictures (the desktop
+ * asset pipeline) rebuild it with the pictures that remain.
+ */
+export function picturesWithoutAltTextIssue(count: number, automatic = 0): ImportIssue | undefined {
+  if (count <= 0) return undefined;
+  const auto = Math.min(automatic, count);
+  const automaticNote =
+    auto === 0
+      ? ""
+      : auto === count
+        ? ` Word had written ${count === 1 ? "a description" : "descriptions"} automatically; OpenBook did not use ${count === 1 ? "it" : "them"}.`
+        : ` ${auto} of them had only a description written automatically by Word, which OpenBook did not use.`;
+  return {
+    code: PICTURES_WITHOUT_ALT_TEXT,
+    severity: "warning",
+    message: `${plural(count, "picture")} ${count === 1 ? "has" : "have"} no description (alt text) for readers who use screen readers.${automaticNote} Add descriptions in Word (right-click a picture › View Alt Text) and import again; ebook stores may ask for them.`,
+  };
 }
 
 /** Removes image blocks for the given placeholders; a section left empty keeps one empty paragraph. */
@@ -151,13 +171,6 @@ function reportDropped(counts: BodyCounts, tocRemoved: boolean, listsFlattened: 
   );
   if (tocRemoved || counts.tocFields > 0) {
     add("DOCX_TOC_REMOVED", "info", "Your table of contents was removed. OpenBook builds one for you from your chapters.");
-  }
-  if (counts.automaticAltText > 0) {
-    add(
-      "DOCX_AUTOMATIC_ALT_TEXT_REMOVED",
-      "warning",
-      `${plural(counts.automaticAltText, "picture")} had only a description written automatically by Word, so OpenBook did not use it. Write your own description in Word (right-click the picture › View Alt Text) and import again.`,
-    );
   }
   if (counts.linkedPictures > 0) {
     add(
