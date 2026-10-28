@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Word (.docx) Import
 
-- **Status:** Proposed in a Draft PR; ADR-0040 is accepted only when that PR merges; implementation not authorized
+- **Status:** Selected; ADR-0040 accepted (PR #164); implementation not authorized
 - **Date:** 2026-10-28
 - **Baseline:** `main` at `b975bd9` (PR #162 — save/autosave race fix)
 - **Prior records:** `docs/adr-0039-closure-reconciliation.md`; `docs/PHASE-1-COVER-WIZARD-SELECTION.md`
 - **Selected domain:** ROADMAP Phase 1 MVP — **Import Existing Book** (§3.1), Word `.docx` with embedded images
-- **Architecture ADR:** ADR-0040 (`docs/adr/0040-docx-import-architecture.md`). Selection alone does not authorize a slice.
+- **Architecture ADR:** ADR-0040 (Accepted in PR #164; implementation not authorized). Selection alone does not authorize a slice.
 
 ## 1. Why this domain
 
@@ -30,7 +30,7 @@ Legacy `.doc`, `.odt`, `.rtf`, PDF, and EPUB import are not part of this selecti
 
 ## 3. What this selection authorizes
 
-1. Accept ADR-0040 DOCX import architecture (this Draft PR, on merge).
+1. Accept ADR-0040 DOCX import architecture (PR #164).
 2. Record front-door reconciliation that the next Phase 1 import ADR is Word `.docx` import.
 
 ## 4. What this selection does **not** authorize
@@ -46,7 +46,7 @@ Legacy `.doc`, `.odt`, `.rtf`, PDF, and EPUB import are not part of this selecti
 
 ## 5. Controlled sequence after ADR acceptance
 
-1. Merge this selection + ADR-0040 (Draft PR → CI/DCO → explicit merge authorization).
+1. Merge this selection + ADR-0040 (Draft PR → CI/DCO → explicit merge authorization). **Done** — PR #164.
 2. Maintainer separately authorizes implementation Slice 1 per ADR-0040 §8.
 3. Later slices only under their own explicit authorization.
 4. Closure reconciliation only after the authorized slices land.
