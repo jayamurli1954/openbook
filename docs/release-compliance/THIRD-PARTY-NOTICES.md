@@ -98,7 +98,7 @@ Pinned in `package-lock.json`. License text is the published package `LICENSE*` 
 | `@tauri-apps/api` | 2.11.1 | Apache-2.0 OR MIT | `@openbook/desktop` |
 | `@tauri-apps/plugin-dialog` | 2.4.1 | MIT OR Apache-2.0 | `@openbook/desktop` |
 | `@tauri-apps/plugin-sql` | 2.4.1 | MIT OR Apache-2.0 | `@openbook/desktop` (ADR-0007) |
-| `fflate` | 0.8.3 | MIT | `@openbook/epub` |
+| `fflate` | 0.8.3 | MIT | `@openbook/epub`, `@openbook/importer` |
 | `markdown-it` | 14.3.1 | MIT | `@openbook/importer` |
 
 **Build/dev toolchain** (Vite, TypeScript, Tauri CLI, `@types/*`, etc.) is **not** redistributed in the Windows NSIS artifact and is recorded as build-only in the inventory.
