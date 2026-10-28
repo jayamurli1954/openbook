@@ -18,6 +18,11 @@ export interface StudioStartScreenProps {
   readonly start: ReactNode;
   /** Books saved inside OpenBook (open, new blank book, status). */
   readonly library: ReactNode;
+  /** ADR-0040 Slice 4: bring in a Word (.docx) manuscript as a new book. */
+  readonly onImportWord: () => void;
+  readonly wordImportBusy: boolean;
+  /** Result or problem from the last Word import, in plain language. */
+  readonly wordImportMessage: string;
 }
 
 export default function StudioStartScreen({
@@ -28,6 +33,9 @@ export default function StudioStartScreen({
   onPickBookType,
   start,
   library,
+  onImportWord,
+  wordImportBusy,
+  wordImportMessage,
 }: StudioStartScreenProps) {
   return (
     <div className="studio-start" data-testid="studio-start">
@@ -48,6 +56,25 @@ export default function StudioStartScreen({
           >
             Continue: {currentBookTitle}
           </button>
+          <div className="studio-start-word">
+            <button
+              type="button"
+              className="studio-btn"
+              onClick={onImportWord}
+              disabled={wordImportBusy}
+              data-testid="studio-start-import-word"
+            >
+              {wordImportBusy ? "Importing your Word file…" : "Import a Word file"}
+            </button>
+            <p className="note">
+              Bring in a finished manuscript saved as .docx, with its chapters and pictures.
+            </p>
+            {wordImportMessage ? (
+              <p className="detail" role="status" data-testid="studio-start-import-word-status">
+                {wordImportMessage}
+              </p>
+            ) : null}
+          </div>
         </section>
 
         <section className="studio-start-section" aria-labelledby="studio-start-types">

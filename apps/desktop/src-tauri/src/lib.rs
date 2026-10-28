@@ -98,6 +98,44 @@ fn asset_read_bytes(path: String) -> Result<Vec<u8>, String> {
     fs::read(&candidate).map_err(|err| format!("Cannot read asset file {path}: {err}"))
 }
 
+/// ADR-0040 §5: the importer's input cap, checked here before any byte is read.
+const DOCX_MAX_FILE_BYTES: u64 = 200 * 1024 * 1024;
+
+/// ADR-0040 Slice 4 — read a dialog-selected Word `.docx` file.
+///
+/// Checks the file size from metadata before reading, so an oversized file is
+/// never loaded, and returns the bytes as a binary IPC response instead of a
+/// JSON number array. An oversized file fails with `DOCX_TOO_LARGE:<bytes>`.
+#[tauri::command]
+fn docx_read_bytes(path: String) -> Result<tauri::ipc::Response, String> {
+    let candidate = PathBuf::from(&path);
+    if !is_safe_dialog_path(&candidate) {
+        return Err(format!("Refusing unsafe document path: {path}"));
+    }
+    let is_docx = candidate
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("docx"))
+        .unwrap_or(false);
+    if !is_docx {
+        return Err(format!("Not a Word .docx file: {path}"));
+    }
+    let metadata =
+        fs::metadata(&candidate).map_err(|err| format!("Cannot read document {path}: {err}"))?;
+    if !metadata.is_file() {
+        return Err(format!("Document path is not a file: {path}"));
+    }
+    if metadata.len() > DOCX_MAX_FILE_BYTES {
+        return Err(format!("DOCX_TOO_LARGE:{}", metadata.len()));
+    }
+    let bytes = fs::read(&candidate).map_err(|err| format!("Cannot read document {path}: {err}"))?;
+    // The file may have grown between the size check and the read.
+    if bytes.len() as u64 > DOCX_MAX_FILE_BYTES {
+        return Err(format!("DOCX_TOO_LARGE:{}", bytes.len()));
+    }
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
 fn temporary_path_for(target: &Path) -> PathBuf {
     let file_name = target
         .file_name()
@@ -143,7 +181,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             export_path_exists,
             export_write_atomically,
-            asset_read_bytes
+            asset_read_bytes,
+            docx_read_bytes
         ])
         .run(tauri::generate_context!())
         .expect("error while running OpenBook desktop shell");

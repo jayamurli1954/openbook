@@ -38,6 +38,8 @@ import StudioGuidePanel from "./ui/StudioGuidePanel";
 import StudioStartScreen from "./ui/StudioStartScreen";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
 import { createWritingStudioImagePickPort } from "./host/createWritingStudioImagePickPort";
+import { createWordFilePickPort } from "./host/createWordFilePickPort";
+import { importWordFile, type WordImportSummary } from "./workflow/domain/wordImport";
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
 import { createWritingStudioQueryAdapter } from "./workflow/domain/writingStudioQueryAdapter";
 import { createWritingStudioImageAdapter } from "./workflow/domain/writingStudioImageAdapter";
@@ -145,6 +147,11 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   const [importFormat, setImportFormat] = useState<TextImportSource["format"]>("markdown");
   const [importFilename, setImportFilename] = useState("manuscript.md");
   const [importNote, setImportNote] = useState("Choose a file or paste text, then add it to your book.");
+  /** ADR-0040 Slice 4: Word (.docx) import from the start screen and Write. */
+  const [wordPicker] = useState(() => createWordFilePickPort());
+  const [wordImportBusy, setWordImportBusy] = useState(false);
+  const [wordImportMessage, setWordImportMessage] = useState("");
+  const [wordImportSummary, setWordImportSummary] = useState<WordImportSummary | null>(null);
   const switchingRef = useRef(false);
 
   const chapters = coordinator.listChapters();
@@ -530,6 +537,32 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     }
   };
 
+  /** New book from the start screen, or extra chapters from Write; the summary shows in the Guide. */
+  const runWordImport = async (mode: "new-project" | "append-sections") => {
+    if (mode === "append-sections" && !flushEditorIntoSession()) return;
+    setWordImportBusy(true);
+    setWordImportMessage("");
+    try {
+      const outcome = await importWordFile(coordinator, wordPicker, mode);
+      if (outcome.kind === "cancelled") return;
+      if (outcome.kind === "failed") {
+        setLastProblem(outcome.detail);
+        if (mode === "new-project") setWordImportMessage(outcome.message);
+        else setSessionNote(outcome.message);
+        refresh();
+        return;
+      }
+      setWordImportSummary(outcome.summary);
+      setGuideOpen(true);
+      setSessionNote(`${outcome.summary.headline} Use Save to keep it.`);
+      loadSectionIntoEditor();
+      refresh();
+      if (mode === "new-project") openStudio();
+    } finally {
+      setWordImportBusy(false);
+    }
+  };
+
   const validationReport = coordinator.getValidationReport();
   const binding = studio.binding;
 
@@ -598,6 +631,9 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
         onPickBookType={(type) =>
           setPickedBookType((current) => (current?.id === type.id ? null : type))
         }
+        onImportWord={() => void runWordImport("new-project")}
+        wordImportBusy={wordImportBusy}
+        wordImportMessage={wordImportMessage}
         start={
           <GuidedStartWizard
             key={pickedBookType?.id ?? "hub"}
@@ -667,6 +703,8 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
             onNext={() => {
               if (nextStep) selectStep(nextStep.id);
             }}
+            importSummary={wordImportSummary}
+            onDismissImportSummary={() => setWordImportSummary(null)}
           />
         )
       }
@@ -907,6 +945,16 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
                   }
                 }}
               />
+              <button
+                type="button"
+                className="studio-btn"
+                disabled={wordImportBusy}
+                onClick={() => void runWordImport("append-sections")}
+                data-testid="writing-studio-import-word"
+                title="Add the chapters and pictures of a Word (.docx) file to the end of this book"
+              >
+                {wordImportBusy ? "Adding chapters…" : "Add chapters from a Word file"}
+              </button>
             </div>
             <WritingStudioFindPanel
               queryAdapter={writingStudioQuery}
