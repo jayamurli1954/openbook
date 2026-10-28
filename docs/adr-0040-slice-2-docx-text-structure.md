@@ -1,6 +1,6 @@
 # ADR-0040 Slice 2: DOCX Text and Structure — Implementation Record
 
-- **Status:** Implemented in a Draft PR; merge on explicit authorization
+- **Status:** Implemented on main (PR #168)
 - **Date:** 2026-10-28
 - **Parent architecture:** ADR-0040 — Word (.docx) Import
 - **Scope:** Turn a `.docx` into a Book: metadata, chapters, front matter, contents-page removal, paragraphs, headings, quotes, lists, bold/italic, links, fields, tracked changes. `.docx` import is switched on in `@openbook/importer`. No pictures (Slice 3), no desktop surface (Slice 4).

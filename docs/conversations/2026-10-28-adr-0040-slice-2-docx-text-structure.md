@@ -27,4 +27,4 @@ After Slice 1 merged (PR #166) and its status was reconciled (PR #167), the main
 
 ## Outcomes
 
-- Branch `feat/adr-0040-slice-2-docx-text`.
+- Branch `feat/adr-0040-slice-2-docx-text`; merged as PR #168 after a review pass (10 findings fixed).
