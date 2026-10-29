@@ -308,3 +308,89 @@ test("incomplete injected runtimeRoot returns null instead of a system Typst", (
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// --- ADR-0038 Slice 5: PDF cover --------------------------------------------
+
+const COVER_ALT = "ಬೆಟ್ಟದ ಮೇಲೆ ಪುಟ್ಟ ಕೃಷ್ಣ";
+
+function coverBook(options: { showInChapter?: boolean } = {}) {
+  const book = loadFixture("kannada-prose.json");
+  book.assets = [
+    ...book.assets,
+    { id: "cover", kind: "image", fileName: "cover.png", mediaType: "image/png", altText: COVER_ALT, licence: "test" },
+  ];
+  book.publishing.coverAssetId = "cover";
+  if (options.showInChapter) {
+    book.chapters[0]!.blocks.push({ type: "image", id: "fig-cover", assetId: "cover", caption: [] });
+  }
+  return book;
+}
+
+const coverResolver = {
+  async resolve(ref: AssetRef) {
+    assert.equal(ref.id, "cover");
+    return TINY_PNG;
+  },
+};
+
+function pdfPageCount(pdf: Uint8Array): number {
+  return [...Buffer.from(pdf).toString("latin1").matchAll(/\/Type\s*\/Page(?![s\w])/g)].length;
+}
+
+test("serializeBookToTypst puts one cover page before the title page", async () => {
+  const pub = serializeBookToTypst(coverBook(), new Map([
+    ["cover", { asset: coverBook().assets.at(-1)!, fileName: "cover.png", relativePath: "assets/cover.png", content: TINY_PNG, altText: COVER_ALT }],
+  ]));
+  const cover = pub.indexOf("#page(margin: 0pt)[");
+  const title = pub.indexOf("\n= ");
+  assert.ok(cover > 0 && cover < title, "cover page comes before the title");
+  assert.equal(pub.split("#page(margin: 0pt)[").length - 1, 1);
+  assert.ok(
+    pub.includes(`#image("assets/cover.png", width: 100%, height: 100%, fit: "contain", alt: "${COVER_ALT}")`),
+  );
+});
+
+test("serializeBookToTypst emits no cover page without a cover", () => {
+  const book = loadFixture("kannada-prose.json");
+  assert.doesNotMatch(serializeBookToTypst(book), /#page\(margin: 0pt\)|fit: "contain"/);
+});
+
+test("a missing cover asset fails closed before rendering", async () => {
+  const book = coverBook();
+  book.assets = book.assets.filter((asset) => asset.id !== "cover");
+  await assert.rejects(
+    buildPdf(book, { assetResolver: coverResolver }),
+    (err: unknown) =>
+      err instanceof AssetValidationError &&
+      err.code === "MISSING_ASSET_REFERENCE" &&
+      /Cover references asset/.test(err.message),
+  );
+  await assert.rejects(
+    buildPdf(coverBook()),
+    (err: unknown) => err instanceof AssetResolutionError && err.code === "MISSING_RESOLVER",
+  );
+});
+
+test(
+  "buildPdf renders the cover as one extra first page, deterministically",
+  { skip: !hasRuntime },
+  async () => {
+    const plain = await buildPdf(loadFixture("kannada-prose.json"));
+    const book = coverBook();
+    const first = await buildPdf(book, { assetResolver: coverResolver });
+    const second = await buildPdf(structuredClone(book), { assetResolver: coverResolver });
+    assert.equal(String.fromCharCode(...first.pdf.subarray(0, 4)), "%PDF");
+    assert.equal(pdfPageCount(first.pdf), pdfPageCount(plain.pdf) + 1);
+    assert.equal(sha256(first.pdf), sha256(second.pdf));
+  },
+);
+
+test(
+  "buildPdf packages a picture shown in a chapter and used as the cover once",
+  { skip: !hasRuntime },
+  async () => {
+    const pub = await buildPdf(coverBook({ showInChapter: true }), { assetResolver: coverResolver });
+    assert.equal(pub.typstSource.split('"assets/cover.png"').length - 1, 2);
+    assert.equal(String.fromCharCode(...pub.pdf.subarray(0, 4)), "%PDF");
+  },
+);
