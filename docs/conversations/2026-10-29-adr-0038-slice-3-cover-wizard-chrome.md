@@ -23,4 +23,5 @@ Slices 1–2 merged (PRs #163, #177). The agent proposed Slice 3 with one open d
 ## Outcomes
 
 - Branch `feat/adr-0038-slice-3-cover-wizard-chrome`.
+- Merged as PR #179 (merge commit `15b041f`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed.
 - Checked in the running app (Vite, browser picker with a generated test picture): choose, preview, warnings, set, replace, cancel, and remove all behaved as described. The browser-only mode cannot open the SQLite store; that is expected outside the desktop app and unrelated to this slice.

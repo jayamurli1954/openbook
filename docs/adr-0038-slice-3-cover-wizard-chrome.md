@@ -1,6 +1,6 @@
 # ADR-0038 Slice 3: Cover Wizard Chrome — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #179)
 - **Date:** 2026-10-29
 - **Parent architecture:** ADR-0038 — Phase 1 Cover Wizard Architecture (Image Cover)
 - **Scope:** The studio's Cover step: choose a picture, describe it, preview it with warnings, set, replace, or remove the cover
