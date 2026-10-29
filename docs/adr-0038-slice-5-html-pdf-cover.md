@@ -1,6 +1,6 @@
 # ADR-0038 Slice 5: HTML and PDF Cover — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #183)
 - **Date:** 2026-10-29
 - **Parent architecture:** ADR-0038 — Phase 1 Cover Wizard Architecture (Image Cover), §2.4
 - **Scope:** When the Book has a cover, the HTML engine shows it before the book's title and sections, and the PDF engine renders it as the first page. Without a cover, output is unchanged
