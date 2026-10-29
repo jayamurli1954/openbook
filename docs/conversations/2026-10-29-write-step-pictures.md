@@ -20,5 +20,6 @@ While implementing ADR-0041 Slice 1, the agent traced how blocks reach the Write
 ## Outcomes
 
 - Branch `fix/write-step-pictures`.
+- Merged as PR #194 (merge commit `8cb086d`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed.
 - Tests: pictures (including a Kannada caption) survive showing a chapter, repeated round trips, and an edit beside them; a picture node without an asset id is dropped with a warning.
 - Checked in the running app (Vite, browser picker with a generated picture): "Insert image" shows the picture in the editor, and it is still a picture after switching to another chapter and back.
