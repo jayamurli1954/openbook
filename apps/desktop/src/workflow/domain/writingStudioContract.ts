@@ -187,6 +187,8 @@ export function countWordsFromContentBlock(block: ContentBlock): number {
     case "heading":
     case "quote":
       return countWordsFromInlineSpans(block.inlines);
+    case "callout":
+      return countWordsFromInlineSpans([{ type: "text", text: block.title }, ...block.inlines]);
     case "list":
       return block.items.reduce(
         (sum, item) => sum + countWordsFromInlineSpans(item),
@@ -313,6 +315,8 @@ export function plainTextFromContentBlock(block: ContentBlock): string {
     case "heading":
     case "quote":
       return plainTextFromInlineSpans(block.inlines);
+    case "callout":
+      return [block.title, plainTextFromInlineSpans(block.inlines)].filter((part) => part.trim()).join(" ");
     case "list":
       return block.items
         .map((item) => plainTextFromInlineSpans(item))

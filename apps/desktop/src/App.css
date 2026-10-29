@@ -1796,3 +1796,18 @@ dd {
   border-radius: var(--ob-radius);
   color: var(--ob-ink-muted);
 }
+
+/* ADR-0041 Slice 1: lesson boxes in the Write editor (display only) */
+.tiptap-surface .openbook-callout {
+  margin: 1em 0;
+  padding: 0.75em 1em;
+  border: 1.5px solid var(--ob-border-strong);
+  border-radius: var(--ob-radius-lg);
+}
+
+.tiptap-surface .openbook-callout[data-title]:not([data-title=""])::before {
+  content: attr(data-title);
+  display: block;
+  margin-bottom: 0.35em;
+  font-weight: 700;
+}

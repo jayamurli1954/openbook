@@ -7,6 +7,8 @@
  */
 import {
   BOOK_MODEL_SCHEMA_VERSION,
+  SUPPORTED_OLDER_SCHEMA_VERSIONS,
+  upgradeBook,
   validateBook,
   type Book,
 } from "@openbook/book-model";
@@ -35,6 +37,11 @@ export interface PackageBookMappingResult {
   compatibility: ProjectPackageCompatibility;
   errors: PackageBookMappingError[];
   document?: PackageBookDocument;
+  /**
+   * ADR-0041: the stored document was this older Book Model version; `document` holds the
+   * Book upgraded in memory. Nothing is rewritten until the next Save.
+   */
+  upgradedFrom?: 1;
 }
 
 const ALLOWED_TOP_LEVEL = ["bookModelVersion", "book"] as const;
@@ -52,6 +59,11 @@ const hasOnlyKeys = (value: Record<string, unknown>, keys: readonly string[]): b
 function isTiptapPayload(value: unknown): boolean {
   if (!isRecord(value)) return false;
   return value.type === "doc" && Array.isArray(value.content);
+}
+
+/** Older Book Model versions this reader upgrades in memory (ADR-0041 §6). */
+export function isUpgradableBookModelVersion(version: number): boolean {
+  return (SUPPORTED_OLDER_SCHEMA_VERSIONS as readonly number[]).includes(version);
 }
 
 function classifyBookModelVersion(bookModelVersion: number): PackageBookMappingResult | undefined {
@@ -164,10 +176,10 @@ export function validatePackageBookDocument(input: unknown): PackageBookMappingR
     return { compatibility: "malformed", errors };
   }
 
-  const bookModelVersion = input.bookModelVersion as number;
-  const book = input.book as Book;
+  const storedVersion = input.bookModelVersion as number;
+  const storedBook = input.book as Book;
 
-  if (book.schemaVersion !== bookModelVersion) {
+  if (storedBook.schemaVersion !== storedVersion) {
     return {
       compatibility: "malformed",
       errors: [
@@ -180,13 +192,17 @@ export function validatePackageBookDocument(input: unknown): PackageBookMappingR
     };
   }
 
-  const versionClass = classifyBookModelVersion(bookModelVersion);
+  // ADR-0041 §6: an older supported version is upgraded in memory, then validated as current.
+  const upgradable = isUpgradableBookModelVersion(storedVersion);
+  const versionClass = upgradable ? undefined : classifyBookModelVersion(storedVersion);
   if (versionClass) {
     return {
       ...versionClass,
-      document: { bookModelVersion, book },
+      document: { bookModelVersion: storedVersion, book: storedBook },
     };
   }
+  const book = upgradable ? upgradeBook(storedBook).book : storedBook;
+  const bookModelVersion = book.schemaVersion;
 
   const bookErrors = validateCurrentBook(book);
   if (bookErrors.length > 0) {
@@ -197,6 +213,7 @@ export function validatePackageBookDocument(input: unknown): PackageBookMappingR
     compatibility: "compatible",
     errors: [],
     document: { bookModelVersion, book },
+    ...(upgradable ? { upgradedFrom: storedVersion as 1 } : {}),
   };
 }
 

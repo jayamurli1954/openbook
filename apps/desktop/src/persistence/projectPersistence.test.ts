@@ -18,7 +18,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { BOOK_MODEL_SCHEMA_VERSION, type Book } from "@openbook/book-model";
+import { BOOK_MODEL_SCHEMA_VERSION, parseBook, type Book } from "@openbook/book-model";
 import {
   createProjectId,
   deserializeProjectFromDto,
@@ -34,12 +34,13 @@ import {
   type ProjectPersistenceMetadata,
 } from "./types.js";
 
-// Load test fixtures from repository root
+// Load test fixtures from repository root. They are stored at Book Model version 1;
+// parseBook upgrades them to the current version, as the app does on read (ADR-0041 §6).
 const REPO_ROOT = join(import.meta.dirname, "../../..");
-const englishBook: Book = JSON.parse(
+const englishBook: Book = parseBook(
   readFileSync(join(REPO_ROOT, "tests/fixtures/simple-english.json"), "utf-8"),
 );
-const kannadaBook: Book = JSON.parse(
+const kannadaBook: Book = parseBook(
   readFileSync(join(REPO_ROOT, "tests/fixtures/kannada-indic.json"), "utf-8"),
 );
 
@@ -89,7 +90,7 @@ test("English content: serialize to DTO and deserialize back without semantic lo
   assert.equal(envelope.project.name, "English Novel Project");
   assert.equal(envelope.project.schema_version, 1);
   assert.equal(envelope.document.project_id, id);
-  assert.equal(envelope.document.book_schema_version, 1);
+  assert.equal(envelope.document.book_schema_version, BOOK_MODEL_SCHEMA_VERSION);
 
   const deserializeRes = deserializeProjectFromDto(envelope);
   assert.equal(deserializeRes.ok, true);
@@ -360,7 +361,7 @@ test("SQLite persistence end-to-end: initialize, save, load, update, metadata, l
   assert.equal(metaRes.value.id, id1);
   assert.equal(metaRes.value.name, "English Book One - Revised");
   assert.equal(metaRes.value.schemaVersion, 1);
-  assert.equal(metaRes.value.bookSchemaVersion, 1);
+  assert.equal(metaRes.value.bookSchemaVersion, BOOK_MODEL_SCHEMA_VERSION);
 
   // 7. List projects
   const listRes = await persistence.listProjects();

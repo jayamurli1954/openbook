@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createId } from "./ids.js";
+import { BOOK_MODEL_SCHEMA_VERSION } from "./types.js";
 import type {
   Book,
   ContentBlock,
@@ -36,7 +37,7 @@ export function createSection(
 export function createBook(input: CreateBookInput = {}): Book {
   const withOpeningChapter = input.withOpeningChapter !== false;
   return {
-    schemaVersion: 1,
+    schemaVersion: BOOK_MODEL_SCHEMA_VERSION,
     metadata: {
       title: input.title ?? "",
       subtitle: "",

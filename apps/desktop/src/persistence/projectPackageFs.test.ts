@@ -387,7 +387,7 @@ test("package layout uses expected filenames", async () => {
     assert.ok(names.includes(PACKAGE_ASSETS_INDEX_FILE));
     assert.ok(names.includes(PACKAGE_INTEGRITY_FILE));
     assert.ok(names.includes(PACKAGE_ASSETS_DIR));
-    assert.equal(BOOK_MODEL_SCHEMA_VERSION, 1);
+    assert.equal(BOOK_MODEL_SCHEMA_VERSION, 2);
     // sanity: sha helper matches node crypto for fixture stability
     const probe = new TextEncoder().encode("x");
     assert.equal(sha256Hex(probe), createHash("sha256").update(probe).digest("hex"));

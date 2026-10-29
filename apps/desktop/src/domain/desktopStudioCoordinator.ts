@@ -332,6 +332,8 @@ export interface OpenFromProjectPackageResult {
   projectRoot: string;
   recovered: boolean;
   restoredFrom?: string;
+  /** ADR-0041: the package stored this older Book Model version; it is rewritten at the next Save. */
+  upgradedFrom?: 1;
 }
 
 export class DesktopStudioError extends Error {
@@ -1089,6 +1091,9 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     };
     if (restoredFrom !== undefined) {
       result.restoredFrom = restoredFrom;
+    }
+    if (opened.value.upgradedFrom !== undefined) {
+      result.upgradedFrom = opened.value.upgradedFrom;
     }
     return result;
   }
