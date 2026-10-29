@@ -18,7 +18,7 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [Phase 1 Structure Studio selection](PHASE-1-STRUCTURE-STUDIO-SELECTION.md) | Structure Studio (ADR-0035; Slices 1–5 done) |
 | [Phase 1 Design Studio selection](PHASE-1-DESIGN-STUDIO-SELECTION.md) | Design Studio (ADR-0036; Slices 1–3 done) |
 | [Phase 1 Metadata Wizard selection](PHASE-1-METADATA-WIZARD-SELECTION.md) | Metadata Wizard (ADR-0037; Slices 1–3 done; closed) |
-| [Phase 1 Cover Wizard selection](PHASE-1-COVER-WIZARD-SELECTION.md) | Cover Wizard, image cover (ADR-0038 accepted; Slices 1–2 done, PRs #163 and #177) |
+| [Phase 1 Cover Wizard selection](PHASE-1-COVER-WIZARD-SELECTION.md) | Cover Wizard, image cover (ADR-0038 accepted; Slices 1–2 done, PRs #163 and #177; Slice 3 in progress) |
 | [Phase 1 Studio Shell & UX selection](PHASE-1-STUDIO-SHELL-UX-SELECTION.md) | Studio shell and guided UX (ADR-0039; Slices 1–7 done; closed) |
 | [Phase 1 Word (.docx) import selection](PHASE-1-DOCX-IMPORT-SELECTION.md) | Word `.docx` import with images (ADR-0040; Slices 1–5 done; closed) |
 | [Foundation closure (post–Gate 10)](FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md) | Historical bridge after Gates 9–10; superseded for Phase 0 outcome by the determination |

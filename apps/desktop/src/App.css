@@ -1681,3 +1681,84 @@ dd {
   font-size: 0.85rem;
   line-height: 1.45;
 }
+
+/* ADR-0038 Slice 3 — Cover Wizard */
+.cover-wizard-body {
+  display: grid;
+  grid-template-columns: minmax(160px, 240px) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+.cover-wizard-preview {
+  aspect-ratio: 1 / 1.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ob-surface-soft);
+  border: 1px dashed var(--ob-border-strong);
+  border-radius: var(--ob-radius);
+  overflow: hidden;
+}
+
+.cover-wizard-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.cover-wizard-panel {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.cover-wizard-warnings {
+  margin: 0.35rem 0 0;
+  padding: 0.5rem 0.75rem 0.5rem 1.6rem;
+  color: var(--ob-warning);
+  background: var(--ob-warning-soft);
+  border-radius: var(--ob-radius);
+}
+
+.cover-wizard-ok {
+  color: var(--ob-success);
+}
+
+.cover-wizard-description {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.cover-wizard-description textarea {
+  font: inherit;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--ob-border-strong);
+  border-radius: var(--ob-radius);
+  background: var(--ob-surface);
+  resize: vertical;
+}
+
+.cover-wizard-description small {
+  color: var(--ob-ink-muted);
+  font-size: 0.78rem;
+}
+
+.cover-wizard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .cover-wizard-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cover-wizard-preview {
+    max-width: 240px;
+  }
+}
