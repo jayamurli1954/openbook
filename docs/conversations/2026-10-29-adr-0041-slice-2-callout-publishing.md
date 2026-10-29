@@ -20,6 +20,7 @@ Slice 1 (PR #196) added the callout to the Book Model; the engines still refused
 ## Outcomes
 
 - Branch `feat/adr-0041-slice-2-callout-publishing`.
+- Merged as PR #198 (merge commit `e75eba0`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed.
 - EPUBCheck 5.3.0 (local): English and Kannada books with lesson boxes, zero errors and zero warnings. Typst renders English and Kannada boxes deterministically.
 - Without callouts: EPUB, HTML, Typst source, and PDF byte-identical to `main`'s engines for five books (four fixtures and one with a picture and a cover).
 - Real-book check (local, not committed): the maintainer's cleaned Word file imported, its 25 "What We Learned:" paragraphs turned into lesson boxes by a script, a cover set; book check clean; EPUB 28.5 MB passes EPUBCheck with zero errors and warnings; HTML has 25 boxes; PDF 73 pages, boxes framed with the title on its own line.
