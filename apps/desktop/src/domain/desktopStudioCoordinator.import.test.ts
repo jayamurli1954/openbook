@@ -5,13 +5,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { InvalidStructureOperationError } from "@openbook/authoring";
-import type { ImportSource } from "@openbook/importer";
+import { ImportService, type ImportResult, type ImportSource } from "@openbook/importer";
 import type { ContentBlock, StructuralSection } from "@openbook/book-model";
 import {
   DesktopStudioCoordinator,
   DesktopStudioError,
 } from "./desktopStudioCoordinator.js";
 import { InMemorySqliteConnection } from "../persistence/sqliteDriver.js";
+import { PICTURE_BOOK, PNG_BYTES, chapter, para, wordDocx, wordPicture } from "./wordDocxTestFixture.js";
 import { SqliteProjectPersistence } from "../persistence/sqlitePersistence.js";
 
 const KANNADA_MARKDOWN = `---
@@ -102,15 +103,129 @@ test("unsupported format rejects with UNSUPPORTED_FORMAT and leaves IMPORT/faile
   await assert.rejects(
     () =>
       coordinator.importContent({
-        format: "html" as ImportSource["format"],
+        format: "html",
         content: "<p>nope</p>",
-      }),
+      } as unknown as ImportSource),
     (err: unknown) =>
       err instanceof DesktopStudioError && err.code === "UNSUPPORTED_FORMAT",
   );
   assert.equal(coordinator.getState().stage, "IMPORT");
   assert.equal(coordinator.getState().jobStatus, "failed");
   assert.equal(JSON.stringify(coordinator.getBook()), before);
+});
+
+// --- ADR-0040 Slice 3: Word pictures through the asset pipeline -----------------------------
+
+function imageBlocks(sections: readonly StructuralSection[]): Array<Extract<ContentBlock, { type: "image" }>> {
+  return sections.flatMap((section) =>
+    section.blocks.filter((block): block is Extract<ContentBlock, { type: "image" }> => block.type === "image"),
+  );
+}
+
+test("imports a Word file with pictures through the asset pipeline (new project)", async () => {
+  const coordinator = freshCoordinator("docx-pictures");
+  const result = await coordinator.importContent({ format: "docx", bytes: PICTURE_BOOK, filename: "krishna.docx" });
+  assert.equal(result.success, true);
+  assert.equal(coordinator.getState().stage, "STRUCTURE");
+
+  const book = coordinator.getBook();
+  assert.deepEqual(book.chapters.map((c) => c.title), ["The Butter Thief", "The Serpent"]);
+  assert.equal(book.assets.length, 1, "the PNG used twice is one asset; the EMF is refused");
+  const asset = book.assets[0]!;
+  assert.equal(asset.mediaType, "image/png");
+  assert.equal(asset.altText, "Krishna with the cows");
+
+  const images = imageBlocks(book.chapters);
+  assert.equal(images.length, 2);
+  assert.ok(images.every((block) => block.assetId === asset.id));
+  assert.ok(result.issues.some((issue) => issue.code === "DOCX_PICTURES_REJECTED" && /The Butter Thief/.test(issue.message)));
+
+  const bytes = await coordinator.getAssetResolver().resolve(asset);
+  assert.deepEqual([...bytes], [...PNG_BYTES]);
+});
+
+test("pictures refused by the asset pipeline are not counted as missing a description", async () => {
+  const coordinator = freshCoordinator("docx-alt-recount");
+  const result = await coordinator.importContent({
+    format: "docx",
+    bytes: wordDocx(
+      chapter("Story") + para(wordPicture("rId20", "Krishna")) + para(wordPicture("rId21", "")) + para(`<w:r><w:t>Text.</w:t></w:r>`),
+    ),
+  });
+  assert.ok(result.issues.some((issue) => issue.code === "DOCX_PICTURES_REJECTED"));
+  assert.ok(
+    !result.issues.some((issue) => issue.code === "DOCX_PICTURES_WITHOUT_ALT_TEXT"),
+    "the only picture without a description was the refused EMF",
+  );
+});
+
+test("appends a Word file's chapters and pictures, keeping existing assets", async () => {
+  const coordinator = freshCoordinator("docx-append");
+  await coordinator.importContent({ format: "markdown", content: "# Opening\n\nHello." }, { idSeed: "docx-append-base" });
+  const result = await coordinator.importContent(
+    { format: "docx", bytes: PICTURE_BOOK },
+    { mode: "append-sections" },
+  );
+  assert.equal(result.success, true);
+  const book = coordinator.getBook();
+  assert.deepEqual(book.chapters.map((c) => c.title), ["Opening", "The Butter Thief", "The Serpent"]);
+  assert.equal(book.assets.length, 1);
+  assert.ok(imageBlocks(book.chapters).every((block) => block.assetId === book.assets[0]!.id));
+});
+
+test("a failed append rolls back sections and pictures together", async () => {
+  const coordinator = freshCoordinator("docx-rollback");
+  await coordinator.importContent({ format: "markdown", content: "# Stay\n\nOriginal." }, { idSeed: "docx-rollback-base" });
+  const before = JSON.stringify(coordinator.getBook());
+  const session = coordinator.getSession();
+  const originalAdd = session.addSection.bind(session);
+  let calls = 0;
+  session.addSection = ((params: Parameters<typeof session.addSection>[0]) => {
+    calls += 1;
+    if (calls === 2) throw new InvalidStructureOperationError("simulated append failure");
+    return originalAdd(params);
+  }) as typeof session.addSection;
+
+  await assert.rejects(
+    () => coordinator.importContent({ format: "docx", bytes: PICTURE_BOOK }, { mode: "append-sections" }),
+    (err: unknown) => err instanceof DesktopStudioError && err.code === "IMPORT_FAILED" && /rolled back/.test(err.message),
+  );
+  assert.equal(JSON.stringify(coordinator.getBook()), before);
+  assert.equal(coordinator.getBook().assets.length, 0, "no asset survives the rollback, so Save writes no orphan");
+});
+
+test("an image block that does not name an imported asset fails the import closed", async () => {
+  const coordinator = freshCoordinator("docx-dangling");
+  const before = JSON.stringify(coordinator.getBook());
+  const original = ImportService.prototype.import;
+  ImportService.prototype.import = async function (this: ImportService, source, options): Promise<ImportResult> {
+    const real = await original.call(this, source, options);
+    // Simulate an importer bug: a placeholder with no payload behind it.
+    return { ...real, images: [] };
+  };
+  try {
+    await assert.rejects(
+      () => coordinator.importContent({ format: "docx", bytes: PICTURE_BOOK }),
+      (err: unknown) =>
+        err instanceof DesktopStudioError && err.code === "IMPORT_FAILED" && /does not refer to an imported image/.test(err.message),
+    );
+  } finally {
+    ImportService.prototype.import = original;
+  }
+  assert.equal(JSON.stringify(coordinator.getBook()), before);
+  assert.equal(coordinator.getState().stage, "IMPORT");
+  assert.equal(coordinator.getState().jobStatus, "failed");
+});
+
+test("a damaged Word file fails with the reader's message and changes nothing", async () => {
+  const coordinator = freshCoordinator("docx-damaged");
+  const before = JSON.stringify(coordinator.getBook());
+  await assert.rejects(
+    () => coordinator.importContent({ format: "docx", bytes: new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0]) }),
+    (err: unknown) => err instanceof DesktopStudioError && err.code === "IMPORT_FAILED" && /damaged/.test(err.message),
+  );
+  assert.equal(JSON.stringify(coordinator.getBook()), before);
+  assert.equal(coordinator.getState().stage, "IMPORT");
 });
 
 test("empty markdown fails the job and stays on IMPORT", async () => {

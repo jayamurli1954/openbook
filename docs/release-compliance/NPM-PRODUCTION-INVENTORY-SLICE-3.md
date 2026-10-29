@@ -44,7 +44,7 @@ For each in-scope package:
 | `@tauri-apps/api` | 2.11.1 | Apache-2.0 OR MIT | Desktop host API |
 | `@tauri-apps/plugin-dialog` | 2.4.1 | MIT OR Apache-2.0 | Native dialogs |
 | `@tauri-apps/plugin-sql` | 2.4.1 | MIT OR Apache-2.0 | SQLite plugin (ADR-0007) |
-| `fflate` | 0.8.3 | MIT | EPUB zip (`@openbook/epub`) |
+| `fflate` | 0.8.3 | MIT | EPUB zip (`@openbook/epub`); Word `.docx` reading (`@openbook/importer`, ADR-0040 Slice 1) |
 | `markdown-it` | 14.3.1 | MIT | Markdown import (`@openbook/importer`) |
 
 ## 5. Explicitly unresolved / deferred

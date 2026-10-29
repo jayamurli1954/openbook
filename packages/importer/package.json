@@ -15,10 +15,11 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test dist/importer.test.js"
+    "test": "npm run build && node --test dist/importer.test.js dist/docx/docx-container.test.js dist/docx/docx-import.test.js"
   },
   "dependencies": {
     "@openbook/book-model": "*",
+    "fflate": "^0.8.3",
     "markdown-it": "^14.1.0"
   },
   "devDependencies": {

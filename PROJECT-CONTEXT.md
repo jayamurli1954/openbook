@@ -95,6 +95,7 @@ No user-installed Java should be required. `jlink` should be evaluated to minimi
 - ADR-0037 accepts Phase 1 Metadata Wizard architecture; Slices 1–3 are done on main (PRs #147, #149, #151) — see `docs/adr-0037-closure-reconciliation.md`.
 - ADR-0038 accepts Phase 1 Cover Wizard architecture (image cover), with an optional `publishing.coverAssetId` Book Model field; Slice 1 (cover model and contract) is in progress — see `docs/adr-0038-slice-1-cover-contract.md`.
 - ADR-0039 accepts the Phase 1 studio shell and guided UX (start screen, six-step book studio, one outline, Guide panel with help at every step); presentation only; Slices 1–5 are done (PRs #155–#159; Slice 4 amended ADR-0022 so the book can be re-checked after PREVIEW); Slices 5–6 (Guide panel, start screen) are done (PRs #159, #160); Slice 7 (hardening) closes ADR-0039 — see `docs/adr-0039-closure-reconciliation.md`. ADR-0038 Cover Wizard is unblocked.
+- ADR-0040 accepts Word `.docx` import with embedded images (in-house OOXML reader over the already-shipped `fflate`; amends the ADR-0015 binary-format deferral and the ADR-0020 format firewall for `.docx` only; no Book Model change); accepted in PR #164; Slice 1 (container reader and limits) is done (PR #166) — see `docs/adr-0040-slice-1-docx-container.md`; Slice 2 (text and structure) is done (PR #168) — see `docs/adr-0040-slice-2-docx-text-structure.md`; Slice 3 (pictures) is done (PR #170) — see `docs/adr-0040-slice-3-docx-pictures.md`; Slice 4 (desktop import surface) is done (PR #172) — see `docs/adr-0040-slice-4-docx-import-ui.md`; Slice 5 (hardening and closure) is done (PR #174); ADR-0040 is closed — see `docs/adr-0040-closure-reconciliation.md`.
 
 See `docs/decisions/ARCHITECTURE-DECISION-INDEX.md` and `docs/adr/`.
 
@@ -130,6 +131,7 @@ Other pending items:
 - Phase 1 Metadata Wizard — **ADR-0037 Accepted** (PR #144); Slices 1–3 **done** (PRs #147, #149, #151) — see `docs/adr-0037-closure-reconciliation.md`
 - Phase 1 Cover Wizard (image cover) — **ADR-0038 Accepted** (PR #153); Slice 1 in progress — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md`
 - Phase 1 Studio Shell & Guided UX — **ADR-0039 Accepted** (PR #154); Slices 1–7 done; closed (`docs/adr-0039-closure-reconciliation.md`) — see `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`
+- Phase 1 Word (.docx) import with images — **ADR-0040 Accepted** (PR #164); Slices 1–5 done (PRs #166, #168, #170, #172, #174); closed — see `docs/PHASE-1-DOCX-IMPORT-SELECTION.md`
 - Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
 - AI/Ollama and DTP/page layout (future; must not displace the next Phase 1 domain selection)
 
@@ -156,6 +158,14 @@ Other pending items:
 - `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md` (selected Phase 1 studio shell and guided UX)
 - `docs/adr/0039-phase-1-studio-shell-and-guided-ux-architecture.md`
 - `docs/adr-0039-closure-reconciliation.md` (ADR-0039 Slices 1–7 closure)
+- `docs/PHASE-1-DOCX-IMPORT-SELECTION.md` (selected Word .docx import domain)
+- `docs/adr/0040-docx-import-architecture.md`
+- `docs/adr-0040-slice-1-docx-container.md` (ADR-0040 Slice 1 record)
+- `docs/adr-0040-slice-2-docx-text-structure.md` (ADR-0040 Slice 2 record)
+- `docs/adr-0040-slice-3-docx-pictures.md` (ADR-0040 Slice 3 record)
+- `docs/adr-0040-slice-4-docx-import-ui.md` (ADR-0040 Slice 4 record)
+- `docs/adr-0040-slice-5-hardening.md` (ADR-0040 Slice 5 record)
+- `docs/adr-0040-closure-reconciliation.md` (ADR-0040 Slices 1–5 closure)
 - `docs/adr-0036-closure-reconciliation.md` (ADR-0036 Slices 1–3 closure)
 - `docs/adr-0033-closure-reconciliation.md` (ADR-0033 Slices 1–5 closure)
 - `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (historical post–Gate 10 bridge; superseded for Phase 0 outcome)

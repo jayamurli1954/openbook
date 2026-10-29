@@ -23,7 +23,7 @@ import type {
   ImportIssue,
   ImportOptions,
   ImportResult,
-  ImportSource,
+  TextImportSource,
 } from "./types.js";
 
 type SplitStrategy = NonNullable<ImportOptions["splitStrategy"]>;
@@ -40,7 +40,7 @@ function createMarkdownIt(): MarkdownIt {
 }
 
 export function importMarkdown(
-  source: ImportSource,
+  source: TextImportSource,
   options: ImportOptions | undefined,
   ids: DeterministicIdFactory,
 ): ImportResult {
@@ -451,7 +451,7 @@ function takeUntil(
   return { inner, next: i };
 }
 
-function inlinesToPlainText(inlines: InlineSpan[]): string {
+export function inlinesToPlainText(inlines: InlineSpan[]): string {
   return inlines
     .map((span) => {
       switch (span.type) {
@@ -468,14 +468,15 @@ function inlinesToPlainText(inlines: InlineSpan[]): string {
     .join("");
 }
 
-function assembleBook(
+export function assembleBook(
   metadata: Book["metadata"],
   chapters: StructuralSection[],
+  frontMatter: StructuralSection[] = [],
 ): Book {
   return {
     schemaVersion: BOOK_MODEL_SCHEMA_VERSION,
     metadata,
-    frontMatter: [],
+    frontMatter,
     chapters,
     backMatter: [],
     assets: [],

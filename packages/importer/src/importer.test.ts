@@ -14,18 +14,20 @@ import type { ImportIssue } from "./types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-test("canImport accepts markdown and text only", () => {
+test("canImport accepts markdown, text, and docx only (ADR-0040)", () => {
   const service = new ImportService();
   assert.equal(service.canImport("markdown"), true);
   assert.equal(service.canImport("text"), true);
-  assert.equal(service.canImport("docx"), false);
+  assert.equal(service.canImport("docx"), true);
+  assert.equal(service.canImport("doc"), false);
+  assert.equal(service.canImport("docm"), false);
   assert.equal(service.canImport("pdf"), false);
 });
 
 test("unknown format fails fatally", async () => {
   const service = new ImportService();
   const result = await service.import({
-    format: "docx" as "markdown",
+    format: "pdf" as "markdown",
     content: "hello",
   });
   assert.equal(result.success, false);

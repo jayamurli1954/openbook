@@ -2,7 +2,7 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-10-14
-- **Reconciled to:** `main` at `b975bd9` after the Save/autosave race fix (#162)
+- **Reconciled to:** `main` at `5b00c1f` after ADR-0040 closure (#175)
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`, `docs/adr/0029-project-package-filesystem-persistence-architecture.md`.
@@ -138,6 +138,12 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0039 Slice 6 (start screen)       [DONE — PR #160]
 ├── ADR-0039 Slice 7 + closure            [DONE — PR #161]
 ├── Save/autosave race fix (ADR-0031 amd.) [DONE — PR #162]
+├── Domain selection + ADR-0040 (DOCX)     [DONE — PR #164]
+├── ADR-0040 Slice 1 (container + limits)  [DONE — PR #166]
+├── ADR-0040 Slice 2 (text + structure)    [DONE — PR #168]
+├── ADR-0040 Slice 3 (pictures)            [DONE — PR #170]
+├── ADR-0040 Slice 4 (desktop import UI)   [DONE — PR #172]
+├── ADR-0040 Slice 5 (hardening + closure) [DONE — PR #174; sequence closed]
 ├── ADR-0038 Slice 1 (cover model/contract) [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
@@ -180,7 +186,7 @@ Status against the ordered list:
 23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slices 1–6 **DONE** (#82, #93, #94, #95, #96, #97).
 24. **ADR-0031 Autosave & Crash Recovery** — **Accepted**. Slices 1–5 **DONE** (#98–#102; Slice 5 merge `d51121d`). Sequencing closed. React recover chrome remains separately gated.
 25. **Gate 10 packaging / release readiness** — ADR-0032 **Accepted**. Slices 1–5 **DONE** (PRs #104–#108). `FOUNDATION-READY` declared separately (PR #115).
-26. **Phase 1 MVP studios** — Guided Start (ADR-0033), Writing Studio (ADR-0034), Structure Studio (ADR-0035), and Design Studio (ADR-0036) **DONE** (PRs #117–#143). Metadata Wizard (ADR-0037) **Accepted** (PR #144); Slices 1–3 **DONE** (PRs #147, #149, #151); sequence closed. Cover Wizard (ADR-0038, image cover) **Accepted** (PR #153). Studio Shell & Guided UX (ADR-0039) **Accepted** (PR #154); Slices 1–7 **DONE** (PRs #155–#161); sequence closed. Cover Wizard Slice 1 (cover model and contract) on this PR.
+26. **Phase 1 MVP studios** — Guided Start (ADR-0033), Writing Studio (ADR-0034), Structure Studio (ADR-0035), and Design Studio (ADR-0036) **DONE** (PRs #117–#143). Metadata Wizard (ADR-0037) **Accepted** (PR #144); Slices 1–3 **DONE** (PRs #147, #149, #151); sequence closed. Cover Wizard (ADR-0038, image cover) **Accepted** (PR #153). Studio Shell & Guided UX (ADR-0039) **Accepted** (PR #154); Slices 1–7 **DONE** (PRs #155–#161); sequence closed. Word `.docx` import with images (ADR-0040) **Accepted** (PR #164); Slice 1 (container reader and limits) **DONE** (PR #166); Slice 2 (text and structure) **DONE** (PR #168); Slice 3 (pictures) **DONE** (PR #170); Slice 4 (desktop import surface) **DONE** (PR #172); Slice 5 (hardening and closure) **DONE** (PR #174); ADR-0040 closed. Cover Wizard Slice 1 (cover model and contract) on this PR.
 
 **Current Test Suite State:**
 - **531 / 531 automated tests passing** (0 failures, 0 skipped) across all 12 monorepo packages at `002ecad` (`npm test`, 2026-10-12). Desktop accounts for 377; the remaining 154 are in the `packages/*` workspaces.
@@ -230,7 +236,7 @@ Cloud sync, AI/Ollama, and DTP remain future work. They must not displace the re
 
 ## Next architectural decision points
 
-Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio (ADR-0034 Slices 1–5) is **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`. Phase 1 Structure Studio (ADR-0035 Slices 1–5) is **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`. Phase 1 Design Studio (ADR-0036 Slices 1–3) is **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`. Phase 1 Metadata Wizard architecture is **Accepted** (ADR-0037, PR #144). Slices 1–3 are **done** (PRs #147, #149, #151) and the slice sequence is closed — see `docs/adr-0037-closure-reconciliation.md`. Phase 1 Cover Wizard architecture (image cover) is **Accepted** (ADR-0038, PR #153); its slices wait for the ADR-0039 Cover step. Phase 1 Studio Shell & Guided UX is **Accepted** (ADR-0039, PR #154). Slice 1 (step and guide contract) is **done** (PR #155). Slice 2 (shell frame) is **done** (PR #156). Slice 3 (outline and Write step) is **done** (PR #157). Slice 4 (studio steps, with the ADR-0022 re-check amendment) is **done** (PR #158). Slice 5 (Guide panel) is **done** (PR #159). Slice 6 (start screen) is **done** (PR #160). Slice 7 (hardening) closes the sequence on this follow-on — see `docs/adr-0039-closure-reconciliation.md`. ADR-0038 Cover Wizard is unblocked; its Slice 1 awaits authorization.
+Gates 1 through 10, ADR-0028's five implementation slices, ADR-0029 Slices 1–6, ADR-0030 Slices 1–5, and ADR-0031 Slices 1–5 are complete on `main`. Gate 10 ADR-0032 Slices 1–5 are done (PRs #104–#108). Evidence ops Slices 1–5 are done (PRs #110–#114). **`FOUNDATION-READY` is declared** — see `docs/FOUNDATION-READY-DETERMINATION.md`. Phase 1 Book Wizard / Guided Start (ADR-0033 Slices 1–5) is **done** (PRs #117–#121) — see `docs/adr-0033-closure-reconciliation.md`. Phase 1 Writing Studio (ADR-0034 Slices 1–5) is **done** (PRs #124–#126, #128, #129) — see `docs/adr-0034-closure-reconciliation.md`. Phase 1 Structure Studio (ADR-0035 Slices 1–5) is **done** (PRs #132–#136) — see `docs/adr-0035-closure-reconciliation.md`. Phase 1 Design Studio (ADR-0036 Slices 1–3) is **done** (PRs #139–#140, #142) — see `docs/adr-0036-closure-reconciliation.md`. Phase 1 Metadata Wizard architecture is **Accepted** (ADR-0037, PR #144). Slices 1–3 are **done** (PRs #147, #149, #151) and the slice sequence is closed — see `docs/adr-0037-closure-reconciliation.md`. Phase 1 Cover Wizard architecture (image cover) is **Accepted** (ADR-0038, PR #153); its slices wait for the ADR-0039 Cover step. Phase 1 Studio Shell & Guided UX is **Accepted** (ADR-0039, PR #154). Slice 1 (step and guide contract) is **done** (PR #155). Slice 2 (shell frame) is **done** (PR #156). Slice 3 (outline and Write step) is **done** (PR #157). Slice 4 (studio steps, with the ADR-0022 re-check amendment) is **done** (PR #158). Slice 5 (Guide panel) is **done** (PR #159). Slice 6 (start screen) is **done** (PR #160). Slice 7 (hardening) closes the sequence on this follow-on — see `docs/adr-0039-closure-reconciliation.md`. ADR-0038 Cover Wizard is unblocked; its Slice 1 awaits authorization. Word `.docx` import with embedded images is **Accepted** (ADR-0040, PR #164) — see `docs/PHASE-1-DOCX-IMPORT-SELECTION.md`; Slice 1 (container reader and limits) is **done** (PR #166) — see `docs/adr-0040-slice-1-docx-container.md`; Slice 2 (text and structure) is **done** (PR #168) — see `docs/adr-0040-slice-2-docx-text-structure.md`; Slice 3 (pictures) **DONE** (PR #170); Slice 4 (desktop import surface) **DONE** (PR #172); Slice 5 (hardening and closure) **DONE** (PR #174); ADR-0040 closed.
 
 Separately gated and not in the required-three: cloud sync; AI/Ollama; DTP/page-layout work.
 

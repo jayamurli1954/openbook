@@ -10,6 +10,7 @@ import type {
   StudioGuide,
   StudioGuideChecklistResult,
 } from "../workflow/domain/studioShellGuide.js";
+import type { WordImportSummary } from "../workflow/domain/wordImport.js";
 
 export interface StudioGuidePanelProps {
   readonly stepLabel: string;
@@ -17,6 +18,9 @@ export interface StudioGuidePanelProps {
   readonly checklist: readonly StudioGuideChecklistResult[];
   readonly nextLabel: string | null;
   readonly onNext: () => void;
+  /** ADR-0040 Slice 4: what the last Word import brought in, left out, and wants checked. */
+  readonly importSummary?: WordImportSummary | null;
+  readonly onDismissImportSummary?: () => void;
 }
 
 export default function StudioGuidePanel({
@@ -25,6 +29,8 @@ export default function StudioGuidePanel({
   checklist,
   nextLabel,
   onNext,
+  importSummary,
+  onDismissImportSummary,
 }: StudioGuidePanelProps) {
   const required = checklist.filter((item) => !item.optional);
   const requiredDone = required.filter((item) => item.done).length;
@@ -35,6 +41,49 @@ export default function StudioGuidePanel({
         <p className="studio-guide-kicker">Guide · {stepLabel}</p>
         <p className="studio-guide-intro">{guide.intro}</p>
       </header>
+
+      {importSummary ? (
+        <section
+          className="studio-guide-section studio-guide-import"
+          aria-labelledby="studio-guide-import"
+          data-testid="studio-guide-import-summary"
+        >
+          <h2 id="studio-guide-import" className="studio-guide-title">
+            Your Word file
+          </h2>
+          <p className="studio-guide-tip">{importSummary.headline}</p>
+          {importSummary.toCheck.length > 0 ? (
+            <>
+              <h3 className="studio-guide-subtitle">Please check</h3>
+              <ul className="studio-guide-import-list" data-testid="studio-guide-import-check">
+                {importSummary.toCheck.map((message) => (
+                  <li key={message}>{message}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          {importSummary.goodToKnow.length > 0 ? (
+            <details className="studio-guide-question">
+              <summary>Good to know</summary>
+              <ul className="studio-guide-import-list" data-testid="studio-guide-import-notes">
+                {importSummary.goodToKnow.map((message) => (
+                  <li key={message}>{message}</li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+          {onDismissImportSummary ? (
+            <button
+              type="button"
+              className="studio-btn"
+              onClick={onDismissImportSummary}
+              data-testid="studio-guide-import-dismiss"
+            >
+              Done reading
+            </button>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="studio-guide-section" aria-labelledby="studio-guide-todo">
         <h2 id="studio-guide-todo" className="studio-guide-title">
