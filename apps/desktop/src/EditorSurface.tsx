@@ -76,7 +76,11 @@ import {
   describeSaveStatus,
   shellBookTitle,
 } from "./workflow/domain/studioShellStatus";
-import { buildStudioOutline, isOutlineChapter } from "./workflow/domain/studioShellOutline";
+import {
+  buildStudioOutline,
+  isOutlineChapter,
+  outlineSectionTitle,
+} from "./workflow/domain/studioShellOutline";
 import { stagesToReachBookCheck, summarizeBookCheck } from "./workflow/domain/studioShellPublish";
 import {
   WRITING_STUDIO_EDITOR_UNAVAILABLE,
@@ -355,9 +359,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     if (!flushEditorIntoSession()) return;
     try {
       coordinator.selectSection(chapterId);
-      setSessionNote(
-        `Selected “${coordinator.listChapters().find((c) => c.id === chapterId)?.title ?? chapterId}”`,
-      );
+      setSessionNote(`Selected “${outlineSectionTitle(coordinator.getBook(), chapterId)}”`);
       loadSectionIntoEditor();
     } catch (err) {
       setSessionNote(noteError(err, "edit"));
