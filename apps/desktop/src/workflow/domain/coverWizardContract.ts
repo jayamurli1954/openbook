@@ -4,13 +4,21 @@
  *
  * Capability matrix + command port over Book.publishing.coverAssetId.
  * React chrome stays outside this module.
- * Image checks, chrome, and engine projections arrive in later slices.
+ * Slice 2 adds byte-level image checks (coverImageChecks.ts).
+ * Chrome and engine projections arrive in later slices.
  */
-import type { Book } from "@openbook/book-model";
+import type { AssetRef, Book } from "@openbook/book-model";
+import type { AssetResolver } from "@openbook/assets";
 import {
   DomainValidationError,
   InvalidStructureOperationError,
 } from "@openbook/authoring";
+import {
+  checkCoverImage,
+  firstCoverImageError,
+  type CoverImageErrorCode,
+  type CoverImageReport,
+} from "./coverImageChecks.js";
 
 export type CoverWizardCapabilityId =
   | "import-image"
@@ -65,7 +73,8 @@ export type CoverWizardErrorCode =
   | "UNSUPPORTED_IMAGE_TYPE"
   | "EMPTY_ALT_TEXT"
   | "NO_COVER"
-  | "COVER_REJECTED";
+  | "COVER_REJECTED"
+  | CoverImageErrorCode;
 
 export type CoverWizardResult =
   | { readonly ok: true }
@@ -171,4 +180,67 @@ export function executeCoverCommand(
   }
 
   return runSession(() => session.setCover(asset.id, altText));
+}
+
+export type CheckedCoverResult = CoverWizardResult & {
+  /** Image checks for set-cover, when the bytes were read. */
+  readonly report?: CoverImageReport;
+};
+
+/** Read the stored bytes and check them as a cover (for the wizard preview). */
+export async function inspectCover(
+  asset: AssetRef,
+  resolver: AssetResolver,
+): Promise<CoverImageReport> {
+  let bytes: Uint8Array;
+  try {
+    bytes = await resolver.resolve(asset);
+  } catch {
+    return unreadableReport(asset);
+  }
+  return checkCoverImage(asset, bytes);
+}
+
+/**
+ * Like executeCoverCommand, but set-cover first checks the stored image bytes.
+ * Errors refuse the command and leave the Book unchanged; warnings never block.
+ */
+export async function executeCheckedCoverCommand(
+  session: CoverWizardSessionPort,
+  resolver: AssetResolver,
+  command: CoverWizardCommand,
+): Promise<CheckedCoverResult> {
+  if (command.type !== "set-cover") {
+    return executeCoverCommand(session, command);
+  }
+  const asset = session.getBook().assets.find((candidate) => candidate.id === command.assetId);
+  if (
+    !asset ||
+    asset.kind !== "image" ||
+    !COVER_MEDIA_TYPES.includes(asset.mediaType) ||
+    command.altText.trim().length === 0
+  ) {
+    // The Slice 1 checks name the problem without reading any bytes.
+    return executeCoverCommand(session, command);
+  }
+
+  const report = await inspectCover(asset, resolver);
+  const error = firstCoverImageError(report);
+  if (error) {
+    return { ok: false, code: error.code, message: error.message, report };
+  }
+  return { ...executeCoverCommand(session, command), report };
+}
+
+function unreadableReport(asset: AssetRef): CoverImageReport {
+  return {
+    assetId: asset.id,
+    issues: [
+      {
+        code: "COVER_SIZE_UNREADABLE",
+        severity: "error",
+        message: "OpenBook could not open this picture. Try adding it to the book again.",
+      },
+    ],
+  };
 }
