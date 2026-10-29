@@ -23,3 +23,4 @@ The agent checked the code: the Design step sets theme and typography only; the 
 ## Outcomes
 
 - Branch `docs/lesson-box-selection-adr`.
+- Merged as PR #192 (merge commit `f64c86a`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed. ADR-0041 accepted; no slice authorized.
