@@ -77,8 +77,11 @@ function serializeBlock(
           `Image block "${block.id}" references unbundled or unresolved asset "${block.assetId}".`,
         );
       }
-      const imageCall = `#figure(\n  image(${quoteTypstString(resolved.relativePath)}),\n  caption: [${serializeInlines(block.caption ?? [])}],\n)\n\n`;
-      return imageCall;
+      // No caption → no caption argument, so Typst prints no empty "Figure N:" label
+      // (the HTML and EPUB engines also omit an empty caption).
+      const caption = block.caption ?? [];
+      const captionArg = hasInlineText(caption) ? `  caption: [${serializeInlines(caption)}],\n` : "";
+      return `#figure(\n  image(${quoteTypstString(resolved.relativePath)}),\n${captionArg})\n\n`;
     }
 
     default: {
@@ -116,6 +119,12 @@ function collectSections(book: Readonly<Book>): StructuralSection[] {
     ...(book.chapters ?? []),
     ...(book.backMatter ?? []),
   ];
+}
+
+function hasInlineText(inlines: readonly InlineSpan[]): boolean {
+  return inlines.some((span) =>
+    span.type === "text" ? span.text.trim().length > 0 : hasInlineText(span.children),
+  );
 }
 
 /**
