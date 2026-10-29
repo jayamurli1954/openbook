@@ -187,6 +187,8 @@ Many manuscripts type “Foreword” in bold Normal text instead of using a head
 | Copyright | `front`, role `copyright` |
 | Publisher's Note, Acknowledgements, About this book · ಪ್ರಕಾಶಕರ ಮಾತು, ಕೃತಜ್ಞತೆಗಳು | `front`, role `custom`, title kept |
 
+A short title (at most 6 words, not ending with “.”, “!” or “?”) that **starts with** a title from the table followed by “for”, “to”, “of”, “:” or a spaced dash (“ - ”, “ – ”, “ — ”) also matches and takes that title's role, keeping its own text: “Preface for Parents” is a `preface` section, “Foreword to the Second Edition” a `foreword` section, “Introduction: How to Use This Book” an `introduction` section. Added on 2026-10-29 with maintainer authorization — see `docs/adr-0040-front-matter-title-variants.md`.
+
 The same rule applies to a Heading 1 whose text matches the table, **but only while no chapter has started yet**: it becomes a `front` section with that role. Once the first non-matching Heading 1 has started a chapter, later Heading 1s stay where the author put them. A chapter titled “Introduction” after the front matter stays a chapter, and “Acknowledgements” at the end stays at the end. Moving such sections into back matter is left to the author in Structure Studio. The word list is a constant in one module so later slices can extend it. The maintainer confirmed the Kannada words on 2026-10-28.
 
 Other content before the first heading:

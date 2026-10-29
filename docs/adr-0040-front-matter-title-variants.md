@@ -1,10 +1,10 @@
-# ADR-0040 follow-up: Front-Matter Title Variants — Proposal
+# ADR-0040 follow-up: Front-Matter Title Variants — Implementation Record
 
-- **Status:** Proposed (no code yet)
+- **Status:** Implemented (Draft PR; merges on maintainer authorization)
 - **Date:** 2026-10-29
 - **Parent architecture:** ADR-0040 — Word (.docx) Import (§4.3 Untagged front matter)
 - **Scope:** Recognise short front-matter titles that start with a known title, such as “Preface for Parents”. Importer only (`packages/importer/src/docx/structure.ts`); no Book Model, UI, or engine change.
-- **Implementation authorization:** Not granted yet. Code needs an explicit maintainer authorization.
+- **Implementation authorization:** Granted for this change only (maintainer, 2026-10-29: “Authorize”, after reviewing the proposal)
 
 ## 1. Problem
 
@@ -57,6 +57,12 @@ Existing importer tests and the desktop Word-import tests (`apps/desktop/src/wor
 
 ## 5. Documents
 
-- ADR-0040 §4.3: add the prefix rule to the paragraph under the table.
-- This file becomes the implementation record when the code lands.
+- ADR-0040 §4.3: the prefix rule is added under the table.
+- This file was the proposal and is now the implementation record.
+
+## 6. Result
+
+`frontMatterRole` (`packages/importer/src/docx/structure.ts`) tries exact matches first, as before; then, unless the line ends like a sentence, a known title followed by a connector. No change was needed for Heading 1: the existing §4.3 path already makes a matching Heading 1 front matter while no chapter has started. Four tests were added (the two book shapes, the connectors including a Kannada title with a colon, and the non-matches); the importer runs 112 tests, all passing, with the existing tests unchanged.
 - No new dependency (INV-D10), no AI (INV-D11); Markdown and text import unchanged (INV-D8).
+
+**Local check with the maintainer's book (ADR-0040 §8).** Run on 2026-10-29 with the maintainer's local copy of the manuscript (28.8 MB) through the built importer; the file was only read and is not committed. Front matter is now: title page, Foreword (6 blocks), **Preface for Parents** (`preface`, 10 blocks), Publisher's Note (5 blocks); 25 chapters, as before. Earlier, the preface's text was inside the Foreword.
