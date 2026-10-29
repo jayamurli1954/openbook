@@ -131,7 +131,7 @@ Other pending items:
 - Phase 1 Metadata Wizard — **ADR-0037 Accepted** (PR #144); Slices 1–3 **done** (PRs #147, #149, #151) — see `docs/adr-0037-closure-reconciliation.md`
 - Phase 1 Cover Wizard (image cover) — **ADR-0038 Accepted** (PR #153); Slice 1 done (PR #163); Slice 2 done (PR #177); Slice 3 done (PR #179); Slice 4 done (PR #181); Slice 5 done (PR #183); Slice 6 done (PR #185); closed — see `docs/PHASE-1-COVER-WIZARD-SELECTION.md`
 - Phase 1 Studio Shell & Guided UX — **ADR-0039 Accepted** (PR #154); Slices 1–7 done; closed (`docs/adr-0039-closure-reconciliation.md`) — see `docs/PHASE-1-STUDIO-SHELL-UX-SELECTION.md`
-- Phase 1 Word (.docx) import with images — **ADR-0040 Accepted** (PR #164); Slices 1–5 done (PRs #166, #168, #170, #172, #174); closed — see `docs/PHASE-1-DOCX-IMPORT-SELECTION.md`
+- Phase 1 Word (.docx) import with images — **ADR-0040 Accepted** (PR #164); Slices 1–5 done (PRs #166, #168, #170, #172, #174); closed; §4.3 front-matter title variants (“Preface for Parents”) added in PR #189 — see `docs/PHASE-1-DOCX-IMPORT-SELECTION.md`
 - Optional: code signing / multi-OS production packaging (explicitly **not** required for Phase 0; see determination §4)
 - AI/Ollama and DTP/page layout (future; must not displace the next Phase 1 domain selection)
 
@@ -166,6 +166,7 @@ Other pending items:
 - `docs/adr-0040-slice-4-docx-import-ui.md` (ADR-0040 Slice 4 record)
 - `docs/adr-0040-slice-5-hardening.md` (ADR-0040 Slice 5 record)
 - `docs/adr-0040-closure-reconciliation.md` (ADR-0040 Slices 1–5 closure)
+- `docs/adr-0040-front-matter-title-variants.md` (ADR-0040 §4.3 follow-up record, PR #189)
 - `docs/adr-0036-closure-reconciliation.md` (ADR-0036 Slices 1–3 closure)
 - `docs/adr-0033-closure-reconciliation.md` (ADR-0033 Slices 1–5 closure)
 - `docs/FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md` (historical post–Gate 10 bridge; superseded for Phase 0 outcome)
