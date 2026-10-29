@@ -1,6 +1,6 @@
 # ADR-0038 Slice 4: EPUB Cover — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #181)
 - **Date:** 2026-10-29
 - **Parent architecture:** ADR-0038 — Phase 1 Cover Wizard Architecture (Image Cover), §2.4 (amends ADR-0010)
 - **Scope:** When the Book has a cover, the EPUB engine packages it as the cover image, adds a generated cover page first in reading order, and adds a `cover` landmark. EPUBCheck must stay clean
