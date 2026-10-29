@@ -22,6 +22,8 @@ export { DirectoryAssetStore } from "./directory-store.js";
 export { AssetRegistry } from "./registry.js";
 export { sha256Hex, synthesizeAssetId } from "./hash.js";
 export { detectAssetType, isKindCompatible } from "./magic.js";
+export { readImageDimensions } from "./image-dimensions.js";
+export type { ImageDimensions } from "./image-dimensions.js";
 export {
   findUnsafeSvgConstructs,
   isSvgMediaType,

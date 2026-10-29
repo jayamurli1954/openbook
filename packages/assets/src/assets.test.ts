@@ -15,6 +15,7 @@ import {
   MemoryAssetStore,
   StoreBackedAssetResolver,
   metadataFileName,
+  readImageDimensions,
   sha256Hex,
   type AssetResolver,
 } from "./index.js";
@@ -312,4 +313,121 @@ test("package has no workflow/importer/publishing/sqlite deps", async () => {
   ) as { dependencies?: Record<string, string> };
   const deps = Object.keys(pkg.dependencies ?? {});
   assert.deepEqual(deps, ["@openbook/book-model"]);
+});
+
+// --- ADR-0038 Slice 2: image dimensions --------------------------------------
+
+function pngHeader(width: number, height: number): Uint8Array {
+  const bytes = new Uint8Array(33);
+  bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+  const view = new DataView(bytes.buffer);
+  view.setUint32(16, width);
+  view.setUint32(20, height);
+  bytes[24] = 8;
+  bytes[25] = 2;
+  return bytes;
+}
+
+function segment(marker: number, payload: readonly number[]): number[] {
+  const length = payload.length + 2;
+  return [0xff, marker, length >> 8, length & 0xff, ...payload];
+}
+
+function exifApp1(orientation: number, little: boolean): number[] {
+  const u16 = (v: number) => (little ? [v & 0xff, v >> 8] : [v >> 8, v & 0xff]);
+  const u32 = (v: number) =>
+    little ? [v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, v >>> 24] : [v >>> 24, (v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff];
+  const tiff = [
+    ...(little ? [0x49, 0x49] : [0x4d, 0x4d]),
+    ...u16(42),
+    ...u32(8),
+    ...u16(1),
+    ...u16(0x0112),
+    ...u16(3),
+    ...u32(1),
+    ...u16(orientation),
+    0,
+    0,
+    ...u32(0),
+  ];
+  return segment(0xe1, [0x45, 0x78, 0x69, 0x66, 0, 0, ...tiff]);
+}
+
+function jpegHeader(
+  width: number,
+  height: number,
+  options: { sof?: number; before?: number[] } = {},
+): Uint8Array {
+  const sof = segment(options.sof ?? 0xc0, [8, height >> 8, height & 0xff, width >> 8, width & 0xff, 1, 1, 0x11, 0]);
+  const jfif = segment(0xe0, [0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0]);
+  const dht = segment(0xc4, [0, 0, 0]);
+  return Uint8Array.from([0xff, 0xd8, ...jfif, ...(options.before ?? []), ...dht, ...sof, 0xff, 0xd9]);
+}
+
+test("readImageDimensions reads PNG IHDR and baseline/progressive JPEG frames", () => {
+  assert.deepEqual(readImageDimensions(PNG_1X1), { format: "png", width: 1, height: 1 });
+  assert.deepEqual(readImageDimensions(pngHeader(1600, 2560)), {
+    format: "png",
+    width: 1600,
+    height: 2560,
+  });
+  assert.deepEqual(readImageDimensions(jpegHeader(841, 1261)), {
+    format: "jpeg",
+    width: 841,
+    height: 1261,
+  });
+  assert.deepEqual(readImageDimensions(jpegHeader(1024, 768, { sof: 0xc2 })), {
+    format: "jpeg",
+    width: 1024,
+    height: 768,
+  });
+});
+
+test("readImageDimensions applies EXIF quarter-turn orientation", () => {
+  for (const little of [true, false]) {
+    for (const orientation of [5, 6, 7, 8]) {
+      assert.deepEqual(
+        readImageDimensions(jpegHeader(4032, 3024, { before: exifApp1(orientation, little) })),
+        { format: "jpeg", width: 3024, height: 4032 },
+        `orientation ${String(orientation)}`,
+      );
+    }
+    for (const orientation of [1, 3]) {
+      assert.deepEqual(
+        readImageDimensions(jpegHeader(4032, 3024, { before: exifApp1(orientation, little) })),
+        { format: "jpeg", width: 4032, height: 3024 },
+      );
+    }
+  }
+});
+
+test("readImageDimensions returns undefined for truncated, malformed, or empty input", () => {
+  const jpeg = jpegHeader(800, 1200);
+  const png = pngHeader(800, 1200);
+  const cases: Uint8Array[] = [
+    new Uint8Array(0),
+    Uint8Array.from([0xff, 0xd8, 0xff]),
+    png.subarray(0, 20),
+    jpeg.subarray(0, jpeg.length - 12),
+    pngHeader(0, 100),
+    jpegHeader(0, 100),
+    Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0xff, 0xff]),
+    Uint8Array.from([0xff, 0xd8, 0x00, 0x00, 0x00, 0x00]),
+    Uint8Array.from([0xff, 0xd8, 0xff, 0xda, 0x00, 0x02]),
+    Uint8Array.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 1, 0, 1, 0]),
+    Uint8Array.from([...exifApp1(6, true)]),
+  ];
+  const broken = Uint8Array.from(png);
+  broken[12] = 0x58;
+  cases.push(broken);
+  for (const [index, bytes] of cases.entries()) {
+    assert.equal(readImageDimensions(bytes), undefined, `case ${String(index)}`);
+  }
+});
+
+test("readImageDimensions never changes the bytes", () => {
+  const bytes = jpegHeader(640, 960, { before: exifApp1(6, true) });
+  const before = Uint8Array.from(bytes);
+  readImageDimensions(bytes);
+  assert.deepEqual(bytes, before);
 });
