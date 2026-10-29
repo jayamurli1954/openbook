@@ -356,7 +356,7 @@ test("runValidation does not write SQLite and does not mutate Book", async () =>
   const payload = JSON.parse(
     [...driver.projectDocuments.values()][0]!.book_payload,
   ) as Record<string, unknown>;
-  assert.equal(payload["schemaVersion"], 1);
+  assert.equal(payload["schemaVersion"], 2);
   assert.equal("diagnostics" in payload, false);
   assert.equal("validationReport" in payload, false);
   assert.equal(saved.projectId, [...driver.projects.keys()][0]);

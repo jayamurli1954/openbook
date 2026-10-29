@@ -36,7 +36,7 @@ function baseBook() {
 test("INV-1: session methods expose a valid Book as sole content model", () => {
   const session = new BookSession({ book: baseBook(), idSeed: "inv1" });
   const book = session.getBook();
-  assert.equal(book.schemaVersion, 1);
+  assert.equal(book.schemaVersion, 2);
   assert.equal(validateBook(book).filter((i) => i.severity === "error").length, 0);
   session.addSection({ matter: "main", title: "Chapter 2" });
   assert.equal(

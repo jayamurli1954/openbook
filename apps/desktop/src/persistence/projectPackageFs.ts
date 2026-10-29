@@ -96,6 +96,8 @@ export interface ProjectPackageOpenResult {
   book: Book;
   assetBindings: Map<string, string>;
   assetStore: DirectoryAssetStore;
+  /** ADR-0041: the package stored this older Book Model version; `book` is upgraded in memory. */
+  upgradedFrom?: 1;
 }
 
 export function packageAssetsDirectory(projectRoot: string): string {
@@ -439,8 +441,10 @@ async function openProjectPackageStrict(
     );
   }
 
+  // Compare the versions as stored on disk; an upgraded Book is version 2 in memory only.
+  const storedBookVersion = bookResult.upgradedFrom ?? bookResult.document.bookModelVersion;
   if (
-    manifestResult.manifest.bookModelVersion !== bookResult.document.bookModelVersion ||
+    manifestResult.manifest.bookModelVersion !== storedBookVersion ||
     bookResult.document.book.schemaVersion !== bookResult.document.bookModelVersion
   ) {
     return fail(
@@ -501,6 +505,7 @@ async function openProjectPackageStrict(
       book: bookResult.document.book,
       assetBindings: packageEntriesToBindings(againstBook.manifest),
       assetStore,
+      ...(bookResult.upgradedFrom ? { upgradedFrom: bookResult.upgradedFrom } : {}),
     },
   };
 }

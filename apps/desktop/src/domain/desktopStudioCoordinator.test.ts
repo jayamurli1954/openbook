@@ -65,7 +65,7 @@ test("constructor starts at IMPORT/idle with a canonical Book and no binding", (
   assert.equal(state.validationReport, null);
   assert.equal(state.selectedSectionId, coordinator.getBook().chapters[0]?.id);
   const book = coordinator.getBook();
-  assert.equal(book.schemaVersion, 1);
+  assert.equal(book.schemaVersion, 2);
   assert.ok(book.chapters.length >= 1);
   assert.ok(!("type" in book && (book as { type?: string }).type === "doc"));
 });
@@ -174,7 +174,7 @@ test("save persists Book not Tiptap JSON", async () => {
   );
   assert.equal(rows.length, 1);
   const payload = JSON.parse(rows[0]!.book_payload) as Record<string, unknown>;
-  assert.equal(payload["schemaVersion"], 1);
+  assert.equal(payload["schemaVersion"], 2);
   assert.ok(Array.isArray(payload["chapters"]));
   assert.notEqual(payload["type"], "doc");
   assert.ok(!("manifest" in payload));
@@ -329,5 +329,53 @@ test("an editor picture without an asset id is dropped with a warning, not turne
     ],
   });
   assert.deepEqual(warnings.map((warning) => warning.code), ["image-without-asset"]);
+  assert.deepEqual(coordinator.getBook().chapters[0]!.blocks.map((block) => block.type), ["paragraph"]);
+});
+
+// --- ADR-0041 Slice 1: lesson boxes survive the Write step ---------------------------
+
+function chapterWithCallouts(coordinator: DesktopStudioCoordinator) {
+  const chapterId = coordinator.getBook().chapters[0]!.id;
+  const blocks: ContentBlock[] = [
+    { type: "paragraph", id: "p1", inlines: [{ type: "text", text: "Story." }] },
+    {
+      type: "callout",
+      id: "c1",
+      title: "What We Learned",
+      inlines: [{ type: "text", text: "Be honest, " }, { type: "strong", children: [{ type: "text", text: "always" }] }, { type: "text", text: "." }],
+    },
+    { type: "callout", id: "c2", title: "ನಾವು ಕಲಿತದ್ದು", inlines: [{ type: "text", text: "ಸತ್ಯವೇ ಬೆಳಕು." }] },
+    { type: "callout", id: "c3", title: "", inlines: [{ type: "text", text: "A box without a title." }] },
+  ];
+  coordinator.getSession().setSectionBlocks(chapterId, blocks);
+  return blocks;
+}
+
+test("lesson boxes keep their title and text through the Write step", () => {
+  const coordinator = freshCoordinator("callout-roundtrip");
+  const before = chapterWithCallouts(coordinator);
+  const doc = coordinator.activeSectionToTipTap().doc;
+  assert.deepEqual(
+    doc.content?.map((node) => node.type),
+    ["paragraph", "openbookCallout", "openbookCallout", "openbookCallout"],
+  );
+  assert.deepEqual(coordinator.applyActiveSectionTipTap(doc), []);
+  for (let round = 0; round < 2; round += 1) {
+    coordinator.applyActiveSectionTipTap(coordinator.activeSectionToTipTap().doc);
+  }
+  assert.deepEqual(withoutIds(coordinator.getBook().chapters[0]!.blocks), withoutIds(before));
+});
+
+test("an emptied lesson box is removed with a warning instead of blocking the edit", () => {
+  const coordinator = freshCoordinator("callout-empty");
+  chapterWithCallouts(coordinator);
+  const warnings = coordinator.applyActiveSectionTipTap({
+    type: "doc",
+    content: [
+      { type: "paragraph", content: [{ type: "text", text: "Story." }] },
+      { type: "openbookCallout", attrs: { title: "  " }, content: [] },
+    ],
+  });
+  assert.deepEqual(warnings.map((warning) => warning.code), ["empty-callout"]);
   assert.deepEqual(coordinator.getBook().chapters[0]!.blocks.map((block) => block.type), ["paragraph"]);
 });

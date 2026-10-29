@@ -11,6 +11,8 @@
  */
 import {
   BOOK_MODEL_SCHEMA_VERSION,
+  SUPPORTED_OLDER_SCHEMA_VERSIONS,
+  upgradeBook,
   validateBook,
   type Book,
 } from "@openbook/book-model";
@@ -268,7 +270,11 @@ export function deserializeProjectFromDto(
     };
   }
 
-  if (document.book_schema_version !== BOOK_MODEL_SCHEMA_VERSION) {
+  // ADR-0041 §6: rows written at an older supported version are upgraded in memory below.
+  const upgradableRow = (SUPPORTED_OLDER_SCHEMA_VERSIONS as readonly number[]).includes(
+    document.book_schema_version,
+  );
+  if (document.book_schema_version !== BOOK_MODEL_SCHEMA_VERSION && !upgradableRow) {
     return {
       ok: false,
       error: {
@@ -313,7 +319,17 @@ export function deserializeProjectFromDto(
     };
   }
 
-  const book = parsedBook as Book;
+  if ((parsedBook as { schemaVersion?: unknown }).schemaVersion !== document.book_schema_version) {
+    return {
+      ok: false,
+      error: {
+        code: "SCHEMA_VERSION_MISMATCH",
+        message: `Book payload schemaVersion does not match book_schema_version ${document.book_schema_version}.`,
+      },
+    };
+  }
+
+  const book = upgradableRow ? upgradeBook(parsedBook).book : (parsedBook as Book);
   const bookIssues = validateBook(book);
   const bookErrors = bookIssues.filter((i) => i.severity === "error");
   if (bookErrors.length > 0) {
@@ -333,7 +349,8 @@ export function deserializeProjectFromDto(
     createdAt: project.created_at,
     updatedAt: project.updated_at,
     schemaVersion: project.schema_version,
-    bookSchemaVersion: document.book_schema_version,
+    // The Book in memory is always the current version; the next save writes it as such.
+    bookSchemaVersion: BOOK_MODEL_SCHEMA_VERSION,
   };
 
   return {

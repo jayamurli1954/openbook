@@ -154,7 +154,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── Word front-matter title variants      [DONE — PR #189; ADR-0040 §4.3]
 ├── Write-step picture fix              [DONE — PR #194]
 ├── Domain selection + ADR-0041 (lesson box) [DONE — PR #192; accepted]
-├── ADR-0041 Slice 1 (model + contract)  [NEXT — awaits authorization]
+├── ADR-0041 Slice 1 (model + contract)  [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]

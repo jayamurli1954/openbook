@@ -9,6 +9,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import { OpenbookImageNode } from "./ui/openbookImageNode";
+import { OpenbookCalloutNode } from "./ui/openbookCalloutNode";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { bookToSemanticDocument } from "@openbook/semantic-document";
 import { nextStage, WORKFLOW_STAGES } from "@openbook/workflow";
@@ -170,6 +171,8 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
         autolink: true,
         defaultProtocol: "https",
       }),
+      // ADR-0041: lesson boxes stay lesson boxes while a chapter is edited (display only for now).
+      OpenbookCalloutNode,
       // Pictures stay pictures in Write; before this they reached the editor as "[image:…]" text.
       OpenbookImageNode.configure({
         resolveImageUrl: async (assetId) => {

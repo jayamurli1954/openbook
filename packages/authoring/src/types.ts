@@ -81,4 +81,5 @@ export const BLOCK_TYPES = [
   "quote",
   "list",
   "image",
+  "callout",
 ] as const;
