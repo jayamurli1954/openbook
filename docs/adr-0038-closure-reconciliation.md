@@ -1,6 +1,6 @@
 # ADR-0038 Cover Wizard (Image Cover) — Closure & Reconciliation
 
-- **Status:** Implementation-complete once Slice 6 merges; closure/reconciliation record
+- **Status:** Implementation-complete (Slice 6 merged in PR #185, `01c0fbc`); closure/reconciliation record
 - **Date:** 2026-10-29
 - **Baseline:** `main` after ADR-0038 Slice 5 status reconcile (PR #184, `21d1e73`) plus Slice 6
 - **Authority:** ADR-0038 — Phase 1 Cover Wizard Architecture (Image Cover)
@@ -22,7 +22,7 @@ This record does not authorize generated or text-on-image covers, cover template
 | 3 | Cover Wizard chrome (Cover step; tidy-up of unused old cover pictures) | Done — PR #179 (status PR #180) |
 | 4 | EPUB cover (`cover-image`, EPUB 2 meta, `cover.xhtml`, `cover` landmark); amends ADR-0010 | Done — PR #181 (status PR #182) |
 | 5 | HTML and PDF cover | Done — PR #183 (status PR #184) |
-| 6 | Hardening, real-book check, closure | This PR |
+| 6 | Hardening, real-book check, PDF language fix, closure | Done — PR #185 (status PR closes the sequence) |
 
 ## 3. Architectural invariants (ADR-0038 §4)
 
@@ -60,7 +60,7 @@ Run locally on 2026-10-29 with the maintainer's KDP Word file (28.8 MB) and its 
 
 ## 6. Kindle Previewer
 
-Not run yet. The maintainer has the exported EPUB of the real book and the steps. Result to be recorded here: whether Kindle shows the cover once or twice.
+Not run by the time of closure. The maintainer has the exported EPUB of the real book and the steps. If Kindle shows the cover twice, the fix is a separately authorized change (keep the `cover-image` marking; drop the cover page from the reading order for Kindle-bound files).
 
 ## 7. Still deferred
 

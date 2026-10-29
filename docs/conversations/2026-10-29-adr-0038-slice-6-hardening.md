@@ -21,5 +21,7 @@ Slices 1–5 merged (PRs #163, #177, #179, #181, #183). The maintainer authorize
 ## Outcomes
 
 - Branch `feat/adr-0038-slice-6-hardening`.
+- Merged as PR #185 (merge commit `01c0fbc`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed. GitHub auto-merge is not enabled for the repository, so the merge waited for the maintainer's "Check and merge" after CI finished.
+- Kindle Previewer: not run by closure.
 - Desktop tests: 514 pass, including the new end-to-end file (four tests).
 - Real-book check: import, cover, Save → Open, book check, EPUB (EPUBCheck clean), HTML, and, after the language fix, PDF (86 pages, cover first, from the book's own `en-US`) all pass.
