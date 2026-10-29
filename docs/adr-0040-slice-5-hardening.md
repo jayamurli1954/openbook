@@ -1,6 +1,6 @@
 # ADR-0040 Slice 5: Word Import Hardening — Implementation Record
 
-- **Status:** Implemented in a Draft PR; merge on explicit authorization
+- **Status:** Implemented on main (PR #174)
 - **Date:** 2026-10-28
 - **Parent architecture:** ADR-0040 — Word (.docx) Import (§8 Slice 5)
 - **Scope:** Fixes found with the maintainer's real manuscript; end-to-end English and Kannada Word books through import, package Save/Open, autosave, Write's add-chapters, and EPUB/HTML/PDF export; harmful files through the studio; the local check with the maintainer's book; closure.

@@ -1,6 +1,6 @@
 # ADR-0040: Word (.docx) Import Architecture
 
-- **Status:** Accepted (PR #164); implementation not authorized
+- **Status:** Accepted (PR #164); Slices 1–5 implemented (PRs #166, #168, #170, #172, #174); sequencing closed — see `docs/adr-0040-closure-reconciliation.md`
 - **Date:** 2026-10-28
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.1 “Import Existing Book”)
 - **Area:** Import / Assets / Desktop / Security boundary
