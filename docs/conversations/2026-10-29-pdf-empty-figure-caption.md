@@ -3,7 +3,7 @@
 - **Date:** 2026-10-29
 - **Participants:** Maintainer + coding agent
 - **Topic:** Stop printing an empty "Figure N:" label under pictures that have no caption
-- **Related:** `docs/adr/0013-*` (PDF engine); `docs/adr-0038-closure-reconciliation.md`
+- **Related:** `docs/adr/0013-pdf-publishing-engine-architecture.md` (PDF engine); `docs/adr-0038-closure-reconciliation.md`
 
 ## Context
 
