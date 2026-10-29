@@ -11,10 +11,15 @@ import type {
   EpubPackageMetadata,
 } from "./types.js";
 import { serializeSectionDocument } from "./xhtml-serializer.js";
+import { serializeCoverDocument } from "./cover-serializer.js";
 import { buildEpubArchive } from "./archive/epub-archive.js";
 import { processBookAssets } from "./assets/asset-pipeline.js";
 
 const DEFAULT_DETERMINISTIC_TIMESTAMP = "2026-01-01T00:00:00Z";
+
+// ADR-0038 §2.4: generated cover page, first in reading order when a cover is set.
+const COVER_PAGE_ID = "cover-page";
+const COVER_PAGE_HREF = "text/cover.xhtml";
 
 const DEFAULT_CSS = `@charset "UTF-8";
 
@@ -148,6 +153,10 @@ export async function buildEpubPackage(
     options?.onDiagnostic,
   );
 
+  // 0.1 Cover picture (ADR-0038); processBookAssets has already packaged it
+  const coverAssetId = book.publishing?.coverAssetId?.trim();
+  const cover = coverAssetId ? assetResult.resolvedImagesByAssetId.get(coverAssetId) : undefined;
+
   // 1. Collect all structural sections in deterministic reading order
   const descriptors: SectionDescriptor[] = [];
 
@@ -197,8 +206,18 @@ export async function buildEpubPackage(
       href: "styles/openbook.css",
       mediaType: "text/css",
     },
-    ...assetResult.manifestItems,
+    ...assetResult.manifestItems.map((item) =>
+      cover && item.id === cover.manifestId ? { ...item, properties: "cover-image" } : item,
+    ),
   ];
+
+  if (cover) {
+    manifest.push({
+      id: COVER_PAGE_ID,
+      href: COVER_PAGE_HREF,
+      mediaType: "application/xhtml+xml",
+    });
+  }
 
   descriptors.forEach((desc) => {
     manifest.push({
@@ -209,7 +228,10 @@ export async function buildEpubPackage(
   });
 
   // 3. Build spine items in reading order
-  const spine: string[] = descriptors.map((desc) => desc.id);
+  const spine: string[] = [
+    ...(cover ? [COVER_PAGE_ID] : []),
+    ...descriptors.map((desc) => desc.id),
+  ];
 
   // 4. Build package metadata projection
   const metadata: EpubPackageMetadata = {
@@ -221,6 +243,7 @@ export async function buildEpubPackage(
     description: book.metadata.description || undefined,
     publisher: book.metadata.publisher || undefined,
     rights: book.metadata.rights || undefined,
+    ...(cover ? { coverImageId: cover.manifestId } : {}),
   };
 
   // 5. Generate package files
@@ -257,6 +280,7 @@ export async function buildEpubPackage(
     language,
     bookTitle,
     sections: navSections,
+    ...(cover ? { coverHref: COVER_PAGE_HREF } : {}),
   });
   files.push({
     path: "EPUB/nav.xhtml",
@@ -277,6 +301,18 @@ export async function buildEpubPackage(
     resolvedImagesMap.set(assetId, {
       xhtmlHref: meta.xhtmlHref,
       altText: meta.asset.altText || "",
+    });
+  }
+
+  if (cover) {
+    files.push({
+      path: `EPUB/${COVER_PAGE_HREF}`,
+      mediaType: "application/xhtml+xml",
+      content: serializeCoverDocument({
+        language,
+        imageHref: cover.xhtmlHref,
+        altText: cover.asset.altText || "",
+      }),
     });
   }
 

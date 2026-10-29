@@ -12,6 +12,8 @@ export interface NavDocumentOptions {
   language: string;
   bookTitle: string;
   sections: NavSectionEntry[];
+  /** Cover page href (ADR-0038); listed as the first landmark, not in the TOC. */
+  coverHref?: string;
 }
 
 /**
@@ -32,6 +34,12 @@ export function serializeNavDocument(options: NavDocumentOptions): string {
 
   // 2. Generate Landmarks based solely on supported Book Model semantics (spine items only)
   const landmarkEntries: string[] = [];
+
+  if (options.coverHref) {
+    landmarkEntries.push(
+      `        <li><a epub:type="cover" href="${escapeXmlAttr(options.coverHref)}">Cover</a></li>`,
+    );
+  }
 
   // Title page landmark (if a section has role 'title-page')
   const titlePageEntry = options.sections.find(

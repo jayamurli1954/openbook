@@ -2391,3 +2391,182 @@ describe("@openbook/epub: EPUB 3.3 Engine Gate 2 (Deterministic OCF ZIP Packagin
     );
   });
 });
+
+describe("@openbook/epub: ADR-0038 Slice 4 (EPUB cover)", () => {
+  const COVER_PNG = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+    "base64",
+  );
+  const COVER_JPEG = Buffer.from(
+    "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=",
+    "base64",
+  );
+  const KN_ALT = "ಬೆಟ್ಟದ ಮೇಲೆ ಪುಟ್ಟ ಕೃಷ್ಣ";
+
+  const coverAsset = (mediaType: "image/jpeg" | "image/png", altText: string): AssetRef => ({
+    id: "asset-cover",
+    kind: "image",
+    fileName: mediaType === "image/png" ? "cover.png" : "cover.jpg",
+    mediaType,
+    altText,
+    licence: "CC0",
+  });
+
+  const resolverFor = (bytes: Uint8Array): AssetResolver => ({
+    resolve: async (asset) => {
+      if (asset.id !== "asset-cover") throw new Error(`Asset not found: ${asset.id}`);
+      return bytes;
+    },
+  });
+
+  function coverBook(
+    options: {
+      language?: "en" | "kn";
+      mediaType?: "image/jpeg" | "image/png";
+      altText?: string;
+      showInChapter?: boolean;
+    } = {},
+  ) {
+    const language = options.language ?? "en";
+    const book = createBook({
+      title: language === "kn" ? "ಪುಟ್ಟ ಕೃಷ್ಣನ ಕಥೆಗಳು" : "Little Krishna Wisdom Stories",
+      authors: ["OpenBook Conformance Team"],
+      language,
+    });
+    book.metadata.identifier = `urn:uuid:5f0c1a2e-0038-4004-8000-00000000000${language === "kn" ? 2 : 1}`;
+    book.metadata.publishedAt = "2026-01-01T00:00:00Z";
+    const altText = options.altText ?? (language === "kn" ? KN_ALT : "A boy on a hill at dawn");
+    book.assets = [coverAsset(options.mediaType ?? "image/jpeg", altText)];
+    book.publishing.coverAssetId = "asset-cover";
+    if (options.showInChapter) {
+      book.chapters[0]!.blocks.push({ type: "image", id: "fig-cover", assetId: "asset-cover", caption: [] });
+    }
+    return book;
+  }
+
+  const fileText = (pkg: Awaited<ReturnType<typeof buildEpubPackage>>, filePath: string): string => {
+    const file = pkg.files.find((entry) => entry.path === filePath);
+    assert.ok(file, `missing ${filePath}`);
+    return typeof file.content === "string" ? file.content : new TextDecoder().decode(file.content);
+  };
+
+  it("marks the cover image, adds the EPUB 2 meta, and puts the cover page first", async () => {
+    const pkg = await buildEpubPackage(coverBook(), { assetResolver: resolverFor(COVER_JPEG) });
+    const opf = fileText(pkg, "EPUB/package.opf");
+
+    const coverItems = pkg.manifest.filter((item) => item.properties === "cover-image");
+    assert.equal(coverItems.length, 1);
+    assert.equal(coverItems[0]!.href, "images/asset-cover.jpg");
+    assert.match(opf, new RegExp(`<meta name="cover" content="${coverItems[0]!.id}" />`));
+    assert.equal(pkg.metadata.coverImageId, coverItems[0]!.id);
+    assert.equal(pkg.spine[0], "cover-page");
+    assert.ok(pkg.manifest.some((item) => item.id === "cover-page" && item.href === "text/cover.xhtml"));
+    assert.ok(pkg.files.some((file) => file.path === "EPUB/images/asset-cover.jpg"));
+  });
+
+  it("generates a cover page with the description as alt text", async () => {
+    const pkg = await buildEpubPackage(coverBook({ language: "kn" }), {
+      assetResolver: resolverFor(COVER_JPEG),
+    });
+    const page = fileText(pkg, "EPUB/text/cover.xhtml");
+    assert.match(page, /<body class="ob-cover" epub:type="cover">/);
+    assert.match(page, /xml:lang="kn" lang="kn"/);
+    assert.ok(page.includes(`<img src="../images/asset-cover.jpg" alt="${KN_ALT}" />`));
+    assert.equal((page.match(/<img /g) ?? []).length, 1);
+  });
+
+  it("lists the cover first in landmarks but not in the table of contents", async () => {
+    const pkg = await buildEpubPackage(coverBook(), { assetResolver: resolverFor(COVER_JPEG) });
+    const nav = fileText(pkg, "EPUB/nav.xhtml");
+    const landmarks = nav.slice(nav.indexOf('epub:type="landmarks"'));
+    const toc = nav.slice(nav.indexOf('epub:type="toc"'), nav.indexOf('epub:type="landmarks"'));
+    assert.match(landmarks, /<ol>\s*<li><a epub:type="cover" href="text\/cover\.xhtml">Cover<\/a><\/li>/);
+    assert.doesNotMatch(toc, /cover\.xhtml/);
+  });
+
+  it("packages a picture shown in a chapter and used as the cover only once", async () => {
+    const pkg = await buildEpubPackage(coverBook({ showInChapter: true }), {
+      assetResolver: resolverFor(COVER_JPEG),
+    });
+    assert.equal(pkg.files.filter((file) => file.path.startsWith("EPUB/images/")).length, 1);
+    assert.equal(pkg.manifest.filter((item) => item.href === "images/asset-cover.jpg").length, 1);
+    assert.match(fileText(pkg, "EPUB/text/ch_001.xhtml"), /\.\.\/images\/asset-cover\.jpg/);
+  });
+
+  it("emits no cover parts when the Book has no cover", async () => {
+    const book = coverBook();
+    delete book.publishing.coverAssetId;
+    book.assets = [];
+    const pkg = await buildEpubPackage(book);
+    const all = pkg.files
+      .map((file) => (typeof file.content === "string" ? file.content : ""))
+      .join("\n");
+    assert.doesNotMatch(all, /cover-image|name="cover"|cover\.xhtml|epub:type="cover"/);
+    assert.equal(pkg.metadata.coverImageId, undefined);
+    assert.ok(!pkg.spine.includes("cover-page"));
+  });
+
+  it("fails closed when the cover names a missing asset or has no resolver", async () => {
+    const missing = coverBook();
+    missing.assets = [];
+    await assert.rejects(
+      buildEpubPackage(missing, { assetResolver: resolverFor(COVER_JPEG) }),
+      (err: unknown) =>
+        err instanceof AssetValidationError &&
+        err.code === "MISSING_ASSET_REFERENCE" &&
+        /Cover references asset/.test(err.message),
+    );
+    await assert.rejects(
+      buildEpubPackage(coverBook()),
+      (err: unknown) => err instanceof AssetResolutionError && err.code === "MISSING_RESOLVER",
+    );
+  });
+
+  it("builds identical bytes for the same Book and cover", async () => {
+    const options = { assetResolver: resolverFor(COVER_PNG), modifiedDate: "2026-01-01T00:00:00Z" };
+    // createBook assigns random section ids, so build the same Book twice.
+    const book = coverBook({ mediaType: "image/png" });
+    const first = await buildEpub(book, options);
+    const second = await buildEpub(structuredClone(book), options);
+    assert.deepEqual(first, second);
+    const entries = Object.keys(unzipSync(first));
+    assert.ok(entries.includes("EPUB/text/cover.xhtml"));
+    assert.ok(entries.includes("EPUB/images/asset-cover.png"));
+  });
+
+  const conformanceCases = [
+    { label: "an English book with a JPEG cover", language: "en", mediaType: "image/jpeg", bytes: COVER_JPEG },
+    { label: "a Kannada book with a JPEG cover", language: "kn", mediaType: "image/jpeg", bytes: COVER_JPEG },
+    { label: "an English book with a PNG cover", language: "en", mediaType: "image/png", bytes: COVER_PNG },
+  ] as const;
+
+  for (const { label, language, mediaType, bytes } of conformanceCases) {
+    it(
+      `validates ${label} with official EPUBCheck 5.3.0: zero errors and zero warnings`,
+      { skip: !hasSpikeRuntime },
+      async () => {
+        const epubBytes = await buildEpub(coverBook({ language, mediaType }), {
+          assetResolver: resolverFor(bytes),
+          modifiedDate: "2026-01-01T00:00:00Z",
+        });
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openbook-cover-epub-"));
+        const tempEpubPath = path.join(tempDir, "cover.epub");
+        try {
+          await fs.writeFile(tempEpubPath, epubBytes);
+          const adapter = new EpubCheckSubprocessAdapter({
+            javaExecutablePath: javaExe,
+            epubcheckJarPath: epubcheckJar,
+          });
+          const report = await adapter.validateEpub(tempEpubPath);
+          assert.equal(report.validatorVersion, "5.3.0");
+          assert.equal(report.isValid, true, JSON.stringify(report.messages, null, 2));
+          assert.equal(report.summary.totalErrors, 0, JSON.stringify(report.messages));
+          assert.equal(report.summary.totalWarnings, 0, JSON.stringify(report.messages));
+          assert.equal(report.summary.totalFatal, 0);
+        } finally {
+          await fs.rm(tempDir, { recursive: true, force: true });
+        }
+      },
+    );
+  }
+});

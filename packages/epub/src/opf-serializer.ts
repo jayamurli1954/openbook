@@ -45,6 +45,11 @@ export function serializeOpfDocument(options: OpfSerializerOptions): string {
     metaLines.push(`    <dc:rights>${escapeXmlText(metadata.rights)}</dc:rights>`);
   }
 
+  // EPUB 2 cover fallback for older readers and conversion tools (ADR-0038)
+  if (metadata.coverImageId) {
+    metaLines.push(`    <meta name="cover" content="${escapeXmlAttr(metadata.coverImageId)}" />`);
+  }
+
   // Mandatory EPUB 3.3 modified timestamp
   metaLines.push(`    <meta property="dcterms:modified">${escapeXmlText(metadata.modified)}</meta>`);
 
