@@ -1,6 +1,6 @@
 # ADR-0038 Slice 1: Cover Model and Contract — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #163)
 - **Date:** 2026-10-23
 - **Parent architecture:** ADR-0038 — Phase 1 Cover Wizard Architecture (Image Cover)
 - **Scope:** `publishing.coverAssetId` in the Book Model, its validation, `BookSession` set/clear cover, and a fail-closed desktop cover port; no chrome
