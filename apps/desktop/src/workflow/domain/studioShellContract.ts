@@ -47,7 +47,10 @@ export interface StudioStepStatus {
   readonly text: string;
 }
 
-/** Cover support arrives with ADR-0038; until then the step is "coming soon". */
+/**
+ * Whether the book has a cover (ADR-0038). The studio passes "none" or "set";
+ * "unavailable" (shown as "coming soon") is kept for callers without cover support.
+ */
 export type StudioCoverState = "unavailable" | "none" | "set";
 
 export interface StudioShellSnapshot {

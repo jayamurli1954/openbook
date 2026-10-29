@@ -199,11 +199,18 @@ export const STUDIO_GUIDE: Readonly<Record<StudioStepId, StudioGuide>> = {
     ],
   },
   cover: {
-    intro: "Adding a cover image is coming soon. You can still publish without one.",
+    intro:
+      "Add the picture readers see in stores. OpenBook checks its size and shape and tells you if it may look blurry.",
     checklist: [
       {
         id: "prepare-image",
         text: "Get a cover image ready: JPEG or PNG, portrait, at least 1600 × 2560 pixels",
+        optional: true,
+      },
+      {
+        id: "add-cover",
+        text: "Add the cover picture and describe it",
+        isDone: (s) => s.cover === "set",
       },
     ],
     tips: [
@@ -212,7 +219,7 @@ export const STUDIO_GUIDE: Readonly<Record<StudioStepId, StudioGuide>> = {
     questions: [
       {
         question: "Can I publish without a cover?",
-        answer: "Yes. Stores will show a plain cover until you add one.",
+        answer: "Yes. Stores will show a plain cover until you add one, and you can add it later.",
       },
       {
         question: "Where can I get a cover?",

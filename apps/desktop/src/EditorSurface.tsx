@@ -30,6 +30,7 @@ import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
 import WritingStudioImageButton from "./ui/WritingStudioImageButton";
 import DesignStudioChoices from "./ui/DesignStudioChoices";
 import MetadataWizardFields from "./ui/MetadataWizardFields";
+import CoverWizard from "./ui/CoverWizard";
 import StructureStudioNavPreview from "./ui/StructureStudioNavPreview";
 import StructureStudioRail from "./ui/StructureStudioRail";
 import StudioShellFrame from "./ui/StudioShellFrame";
@@ -38,6 +39,7 @@ import StudioGuidePanel from "./ui/StudioGuidePanel";
 import StudioStartScreen from "./ui/StudioStartScreen";
 import { createTipTapEditorCommandPort } from "./host/createTipTapEditorCommandPort";
 import { createWritingStudioImagePickPort } from "./host/createWritingStudioImagePickPort";
+import { createCoverImagePickPort } from "./host/createCoverImagePickPort";
 import { createWordFilePickPort } from "./host/createWordFilePickPort";
 import { importWordFile, type WordImportSummary } from "./workflow/domain/wordImport";
 import { createWritingStudioToolbarAdapter } from "./workflow/domain/writingStudioToolbarAdapter";
@@ -45,6 +47,8 @@ import { createWritingStudioQueryAdapter } from "./workflow/domain/writingStudio
 import { createWritingStudioImageAdapter } from "./workflow/domain/writingStudioImageAdapter";
 import { createDesignStudioChoices } from "./workflow/domain/designStudioChoices";
 import { createMetadataWizardFields } from "./workflow/domain/metadataWizardFields";
+import { createCoverWizardFields } from "./workflow/domain/coverWizardFields";
+import { readCover } from "./workflow/domain/coverWizardContract";
 import { createStructureStudioMatterRail } from "./workflow/domain/structureStudioMatterRail";
 import { projectBookNavigation } from "./workflow/domain/structureStudioNavPreview";
 import {
@@ -228,6 +232,19 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     createMetadataWizardFields({
       getBook: () => coordinator.getBook(),
       updateMetadata: (metadata) => coordinator.getSession().updateMetadata(metadata),
+    }),
+  );
+  const [coverFields] = useState(() =>
+    createCoverWizardFields({
+      pick: createCoverImagePickPort(),
+      coordinator: {
+        getBook: () => coordinator.getBook(),
+        getStage: () => coordinator.getState().stage,
+        advanceStage: () => coordinator.advanceStage(),
+        ingestAsset: (input) => coordinator.ingestAsset(input),
+        getAssetResolver: () => coordinator.getAssetResolver(),
+        getSession: () => coordinator.getSession(),
+      },
     }),
   );
 
@@ -582,7 +599,7 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     book: shellBook,
     bookWordCount: writingStudioQuery.getWordCounts().bookWordCount,
     validationReport,
-    cover: "unavailable",
+    cover: readCover(shellBook) ? "set" : "none",
   });
   const shellSteps = deriveStudioStepStatuses(shellSnapshot);
   const activeStepLabel =
@@ -870,9 +887,8 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
         </section>
       ) : null}
       {activeStep === "cover" ? (
-        <section className="studio-step-placeholder" data-testid="studio-step-placeholder">
-          <h2>{activeStepLabel}</h2>
-          <p>Adding a cover image is coming soon. You can still publish without one.</p>
+        <section className="studio-step-panel" aria-label="Cover" data-testid="studio-cover-step">
+          <CoverWizard fields={coverFields} onChanged={refresh} onStatus={reportStatus} />
         </section>
       ) : null}
       {activeStep === "publish" ? (

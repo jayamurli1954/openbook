@@ -1,6 +1,6 @@
 # Phase 1 — Next Domain Selection: Cover Wizard
 
-- **Status:** Selected; ADR-0038 accepted (PR #153); Slice 1 done on main (PR #163, `docs/adr-0038-slice-1-cover-contract.md`); Slice 2 done on main (PR #177, `docs/adr-0038-slice-2-image-checks.md`); later slices not authorized
+- **Status:** Selected; ADR-0038 accepted (PR #153); Slice 1 done on main (PR #163, `docs/adr-0038-slice-1-cover-contract.md`); Slice 2 done on main (PR #177, `docs/adr-0038-slice-2-image-checks.md`); Slice 3 authorized 2026-10-29 and in progress (`docs/adr-0038-slice-3-cover-wizard-chrome.md`); later slices not authorized
 - **Date:** 2026-10-14
 - **Baseline:** `main` at `1ce98ec` (PR #152 — ADR-0037 closure reconcile)
 - **Prior record:** `docs/adr-0037-closure-reconciliation.md`
