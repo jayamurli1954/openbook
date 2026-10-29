@@ -1,6 +1,6 @@
 # ADR-0041 Slice 2: Lesson Boxes in EPUB, HTML, and PDF — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #198)
 - **Date:** 2026-10-29
 - **Parent architecture:** ADR-0041 — Lesson Box (Callout Block) Architecture, §2.4, §7 Slice 2
 - **Scope:** the three publishing engines render callouts as framed boxes, with styles emitted only when a book has a callout; EPUBCheck; no-callout output byte-identical
