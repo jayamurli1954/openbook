@@ -152,6 +152,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0038 Slice 6 (hardening/closure) [DONE — PR #185; sequence closed]
 ├── PDF empty-caption figure fix          [DONE — PR #187]
 ├── Word front-matter title variants      [DONE — PR #189; ADR-0040 §4.3]
+├── Write header section-title fix       [IN PROGRESS — ADR-0039 presentation]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]

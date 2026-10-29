@@ -14,6 +14,7 @@ import {
   buildStudioOutline,
   formatOutlineWords,
   isOutlineChapter,
+  outlineSectionTitle,
 } from "./studioShellOutline.js";
 
 function sampleBook() {
@@ -59,6 +60,35 @@ test("only chapters offer rename and delete in the outline", () => {
   assert.equal(isOutlineChapter(book, book.chapters[0]!.id), true);
   assert.equal(isOutlineChapter(book, book.frontMatter[0]!.id), false);
   assert.equal(isOutlineChapter(book, null), false);
+});
+
+test("the selected-section note names front matter, chapters, and back matter by title", () => {
+  const session = new BookSession({
+    book: createBook({ title: "Little Krishna's Wisdom Stories", language: "en", authors: ["Author"] }),
+    idSeed: "imp-ce3c20b9fe55",
+  });
+  const note = session.addSection({ matter: "front", title: "Publisher’s Note" });
+  const chapter = session.addSection({ matter: "main", title: "The Butter Thief" });
+  const glossary = session.addSection({ matter: "back", title: " Glossary " });
+  const untitled = session.addSection({ matter: "back", title: "  " });
+  const book = session.getBook();
+
+  assert.equal(outlineSectionTitle(book, note.id), "Publisher’s Note");
+  assert.equal(outlineSectionTitle(book, chapter.id), "The Butter Thief");
+  assert.equal(outlineSectionTitle(book, glossary.id), "Glossary");
+  // Never an internal id, even for an untitled or unknown section.
+  for (const id of [untitled.id, "imp-ce3c20b9fe55-s9999", null]) {
+    const title = outlineSectionTitle(book, id);
+    assert.equal(title, "Untitled section");
+    assert.doesNotMatch(title, /imp-|-s\d/);
+  }
+});
+
+test("Write's selection note uses the section title, not a chapter-only lookup or the id", () => {
+  const editor = read("EditorSurface.tsx");
+  const onSelect = editor.slice(editor.indexOf("const onSelectChapter"), editor.indexOf("const onCreateChapter"));
+  assert.match(onSelect, /outlineSectionTitle\(coordinator\.getBook\(\), chapterId\)/);
+  assert.doesNotMatch(onSelect, /listChapters\(\)|\?\? chapterId/);
 });
 
 const repoSrc = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
