@@ -1,6 +1,6 @@
 # ADR-0038: Phase 1 — Cover Wizard Architecture (Image Cover)
 
-- **Status:** Accepted; implementation not authorized
+- **Status:** Accepted (PR #153); Slices 1–6 implemented (PRs #163, #177, #179, #181, #183, and Slice 6); sequencing closed — see `docs/adr-0038-closure-reconciliation.md`
 - **Date:** 2026-10-14
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.7)
 - **Area:** Book Model / Publishing Engines / Desktop / Cover Wizard
@@ -8,7 +8,7 @@
 - **Amends:** ADR-0010 §“cover-specific publishing semantics” exclusion (cover semantics are now in scope for the EPUB engine)
 - **Supersedes:** None
 - **Selection record:** `docs/PHASE-1-COVER-WIZARD-SELECTION.md`
-- **Implementation authorization:** None. This ADR does not authorize a slice.
+- **Implementation authorization:** Each slice was authorized separately (2026-10-23 to 2026-10-29); this ADR itself does not authorize a slice.
 
 ## 1. Context
 

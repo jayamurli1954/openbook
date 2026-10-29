@@ -149,7 +149,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0038 Slice 3 (wizard chrome)      [DONE — PR #179]
 ├── ADR-0038 Slice 4 (EPUB cover)         [DONE — PR #181]
 ├── ADR-0038 Slice 5 (HTML + PDF cover)   [DONE — PR #183]
-├── ADR-0038 Slice 6 (hardening/closure) [NEXT — awaits authorization]
+├── ADR-0038 Slice 6 (hardening/closure) [IN PROGRESS — this PR; closes ADR-0038]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
@@ -191,7 +191,7 @@ Status against the ordered list:
 23. **ADR-0029 Project Package architecture** — **Accepted** (#80). Slices 1–6 **DONE** (#82, #93, #94, #95, #96, #97).
 24. **ADR-0031 Autosave & Crash Recovery** — **Accepted**. Slices 1–5 **DONE** (#98–#102; Slice 5 merge `d51121d`). Sequencing closed. React recover chrome remains separately gated.
 25. **Gate 10 packaging / release readiness** — ADR-0032 **Accepted**. Slices 1–5 **DONE** (PRs #104–#108). `FOUNDATION-READY` declared separately (PR #115).
-26. **Phase 1 MVP studios** — Guided Start (ADR-0033), Writing Studio (ADR-0034), Structure Studio (ADR-0035), and Design Studio (ADR-0036) **DONE** (PRs #117–#143). Metadata Wizard (ADR-0037) **Accepted** (PR #144); Slices 1–3 **DONE** (PRs #147, #149, #151); sequence closed. Cover Wizard (ADR-0038, image cover) **Accepted** (PR #153). Studio Shell & Guided UX (ADR-0039) **Accepted** (PR #154); Slices 1–7 **DONE** (PRs #155–#161); sequence closed. Word `.docx` import with images (ADR-0040) **Accepted** (PR #164); Slice 1 (container reader and limits) **DONE** (PR #166); Slice 2 (text and structure) **DONE** (PR #168); Slice 3 (pictures) **DONE** (PR #170); Slice 4 (desktop import surface) **DONE** (PR #172); Slice 5 (hardening and closure) **DONE** (PR #174); ADR-0040 closed. Cover Wizard Slice 1 (cover model and contract) **DONE** (PR #163); Slice 2 (image checks) **DONE** (PR #177); Slice 3 (wizard chrome) **DONE** (PR #179); Slice 4 (EPUB cover) **DONE** (PR #181); Slice 5 (HTML and PDF cover) **DONE** (PR #183); Slice 6 (hardening and closure) awaits authorization.
+26. **Phase 1 MVP studios** — Guided Start (ADR-0033), Writing Studio (ADR-0034), Structure Studio (ADR-0035), and Design Studio (ADR-0036) **DONE** (PRs #117–#143). Metadata Wizard (ADR-0037) **Accepted** (PR #144); Slices 1–3 **DONE** (PRs #147, #149, #151); sequence closed. Cover Wizard (ADR-0038, image cover) **Accepted** (PR #153). Studio Shell & Guided UX (ADR-0039) **Accepted** (PR #154); Slices 1–7 **DONE** (PRs #155–#161); sequence closed. Word `.docx` import with images (ADR-0040) **Accepted** (PR #164); Slice 1 (container reader and limits) **DONE** (PR #166); Slice 2 (text and structure) **DONE** (PR #168); Slice 3 (pictures) **DONE** (PR #170); Slice 4 (desktop import surface) **DONE** (PR #172); Slice 5 (hardening and closure) **DONE** (PR #174); ADR-0040 closed. Cover Wizard Slice 1 (cover model and contract) **DONE** (PR #163); Slice 2 (image checks) **DONE** (PR #177); Slice 3 (wizard chrome) **DONE** (PR #179); Slice 4 (EPUB cover) **DONE** (PR #181); Slice 5 (HTML and PDF cover) **DONE** (PR #183); Slice 6 (hardening and closure) on this PR; it closes the sequence.
 
 **Current Test Suite State:**
 - **531 / 531 automated tests passing** (0 failures, 0 skipped) across all 12 monorepo packages at `002ecad` (`npm test`, 2026-10-12). Desktop accounts for 377; the remaining 154 are in the `packages/*` workspaces.

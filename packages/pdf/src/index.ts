@@ -26,6 +26,6 @@ export {
   resolveProductionTypstRuntime,
   readBuildEvidence,
 } from "./resolve-typst.js";
-export { serializeBookToTypst, escapeTypstText } from "./typst-serializer.js";
+export { serializeBookToTypst, escapeTypstText, typstLanguage } from "./typst-serializer.js";
 export { compileTypstToPdf } from "./typst-runner.js";
 export { DEFAULT_PDF_PROFILE } from "./default-profile.js";
