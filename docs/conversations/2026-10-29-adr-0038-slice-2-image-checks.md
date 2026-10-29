@@ -22,3 +22,5 @@ Slice 1 merged as PR #163. The agent proposed Slice 2, with one open decision: w
 ## Outcomes
 
 - Branch `feat/adr-0038-slice-2-image-checks`.
+- PR #176 (Slice 1 status) merged first as `aec23c4`, which dropped its edits from this PR's diff.
+- Merged as PR #177 (merge commit `c6b126f`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed.

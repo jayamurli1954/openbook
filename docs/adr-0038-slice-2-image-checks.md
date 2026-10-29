@@ -1,6 +1,6 @@
 # ADR-0038 Slice 2: Cover Image Checks — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #177)
 - **Date:** 2026-10-29
 - **Parent architecture:** ADR-0038 — Phase 1 Cover Wizard Architecture (Image Cover)
 - **Scope:** Read pixel dimensions from PNG and JPEG bytes; size and aspect-ratio warnings; refuse covers whose bytes cannot be read; no chrome
