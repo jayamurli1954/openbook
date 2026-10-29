@@ -60,6 +60,12 @@ function serializeBlock(
     case "quote":
       return `#quote(block: true)[${serializeInlines(block.inlines)}]\n\n`;
 
+    case "callout": {
+      // ADR-0041: a lesson box — a thin rounded frame, title on its own line.
+      const title = block.title.trim() ? `#strong[${escapeTypstText(block.title)}] \\\n` : "";
+      return `#block(width: 100%, inset: (x: 10pt, y: 8pt), radius: 6pt, stroke: 0.75pt + luma(110), breakable: false)[${title}${serializeInlines(block.inlines)}]\n\n`;
+    }
+
     case "list": {
       const marker = block.ordered ? "+" : "-";
       const items = block.items

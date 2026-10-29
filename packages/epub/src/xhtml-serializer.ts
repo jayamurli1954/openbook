@@ -49,6 +49,14 @@ export function serializeBlock(
     case "quote":
       return `      <blockquote${idAttr}><p>${serializeInlines(block.inlines)}</p></blockquote>`;
 
+    case "callout": {
+      // ADR-0041: a lesson box. div + role="note", not <aside>, which some readers turn into pop-up notes.
+      const title = block.title.trim()
+        ? `        <p class="ob-callout-title">${escapeXmlText(block.title)}</p>\n`
+        : "";
+      return `      <div class="ob-callout" role="note"${idAttr}>\n${title}        <p>${serializeInlines(block.inlines)}</p>\n      </div>`;
+    }
+
     case "list": {
       const tag = block.ordered ? "ol" : "ul";
       const items = block.items
