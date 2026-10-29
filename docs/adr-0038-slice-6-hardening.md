@@ -1,6 +1,6 @@
 # ADR-0038 Slice 6: Cover Wizard Hardening and Closure — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #185)
 - **Date:** 2026-10-29
 - **Parent architecture:** ADR-0038 — Phase 1 Cover Wizard Architecture (Image Cover), §3 Slice 6 and §4 invariants
 - **Scope:** End-to-end English and Kannada tests of the whole cover path; a local check with the maintainer's real book; the Kindle Previewer check; closure of the ADR-0038 sequence

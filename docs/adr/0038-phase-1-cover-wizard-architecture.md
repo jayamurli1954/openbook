@@ -1,6 +1,6 @@
 # ADR-0038: Phase 1 — Cover Wizard Architecture (Image Cover)
 
-- **Status:** Accepted (PR #153); Slices 1–6 implemented (PRs #163, #177, #179, #181, #183, and Slice 6); sequencing closed — see `docs/adr-0038-closure-reconciliation.md`
+- **Status:** Accepted (PR #153); Slices 1–6 implemented (PRs #163, #177, #179, #181, #183, #185); sequencing closed — see `docs/adr-0038-closure-reconciliation.md`
 - **Date:** 2026-10-14
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.7)
 - **Area:** Book Model / Publishing Engines / Desktop / Cover Wizard
