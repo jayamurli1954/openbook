@@ -58,6 +58,8 @@ export interface EpubPackageMetadata {
   description?: string;
   publisher?: string;
   rights?: string;
+  /** Manifest id of the cover image (ADR-0038), written as the EPUB 2 cover meta. */
+  coverImageId?: string;
 }
 
 /**

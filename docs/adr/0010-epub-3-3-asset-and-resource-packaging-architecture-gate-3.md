@@ -5,6 +5,7 @@
 * **Decision scope:** EPUB 3.3 Engine Gate 3 — Asset & Resource Packaging
 * **Depends on:** ADR-0006, ADR-0009
 * **Implementation status:** Not authorized by this ADR
+* **Amended by:** ADR-0038 (Cover Wizard). The §“cover-specific publishing semantics” exclusion no longer applies: when `publishing.coverAssetId` is set, the engine packages the cover picture, marks it `cover-image`, adds a generated `text/cover.xhtml` first in the spine, and lists a `cover` landmark (ADR-0038 Slice 4, `docs/adr-0038-slice-4-epub-cover.md`).
 
 ## 1. Context
 
