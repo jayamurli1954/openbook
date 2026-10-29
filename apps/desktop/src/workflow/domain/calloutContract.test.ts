@@ -59,9 +59,10 @@ test("word counts and search text include the callout title and body", () => {
   assert.equal(plainTextFromContentBlock({ ...LESSON, title: "" }), "Honesty makes our heart shine.");
 });
 
-test("until Slice 2, every engine refuses a book with a callout", async () => {
+test("every engine renders a book with a lesson box (ADR-0041 Slice 2)", async () => {
   const book = bookWith([LESSON]);
-  await assert.rejects(buildEpubPackage(book), (err: unknown) => err instanceof Error && err.name === "UnsupportedContentError");
-  await assert.rejects(buildHtml(book), (err: unknown) => err instanceof Error && err.name === "UnsupportedContentError");
-  assert.throws(() => serializeBookToTypst(book), (err: unknown) => err instanceof Error && err.name === "UnsupportedContentError");
+  const chapter = (await buildEpubPackage(book)).files.find((file) => file.path === "EPUB/text/ch_001.xhtml")!;
+  assert.match(String(chapter.content), /<div class="ob-callout" role="note" id="lesson-1">/);
+  assert.match((await buildHtml(book)).html, /<p class="ob-callout-title">What We Learned<\/p>/);
+  assert.match(serializeBookToTypst(book), /#strong\[What We Learned\]/);
 });

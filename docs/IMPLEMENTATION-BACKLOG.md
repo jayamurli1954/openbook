@@ -155,7 +155,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── Write-step picture fix              [DONE — PR #194]
 ├── Domain selection + ADR-0041 (lesson box) [DONE — PR #192; accepted]
 ├── ADR-0041 Slice 1 (model + contract)  [DONE — PR #196; schemaVersion 2]
-├── ADR-0041 Slice 2 (EPUB/HTML/PDF)     [NEXT — awaits authorization]
+├── ADR-0041 Slice 2 (EPUB/HTML/PDF)     [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]

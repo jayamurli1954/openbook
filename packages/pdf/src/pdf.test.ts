@@ -481,3 +481,45 @@ test(
     assert.doesNotMatch(pub.typstSource, /caption:/);
   },
 );
+
+// --- ADR-0041 Slice 2: lesson boxes ----------------------------------------------
+
+function lessonBook(language: "en" | "kn") {
+  const book = loadFixture(language === "kn" ? "kannada-prose.json" : "english-prose.json");
+  book.chapters[0]!.blocks.push(
+    {
+      type: "callout",
+      id: "c1",
+      title: language === "kn" ? "ನಾವು ಕಲಿತದ್ದು" : "What We Learned",
+      inlines: [{ type: "text", text: language === "kn" ? "ಸತ್ಯವೇ ಬೆಳಕು." : "Rule #1: be honest [always] & kind." }],
+    },
+    { type: "callout", id: "c2", title: "", inlines: [{ type: "text", text: "No title here." }] },
+  );
+  return book;
+}
+
+test("serializeBookToTypst frames a lesson box with its title on its own line", () => {
+  const source = serializeBookToTypst(lessonBook("en"));
+  const frame = "#block(width: 100%, inset: (x: 10pt, y: 8pt), radius: 6pt, stroke: 0.75pt + luma(110), breakable: false)[";
+  assert.ok(source.includes(`${frame}#strong[What We Learned] \\\nRule \\#1: be honest \\[always\\] & kind.]`), source);
+  assert.ok(source.includes(`${frame}No title here.]`));
+  assert.equal(source.split(frame).length - 1, 2);
+});
+
+test("serializeBookToTypst emits no lesson-box frame without lesson boxes", () => {
+  assert.doesNotMatch(serializeBookToTypst(loadFixture("english-prose.json")), /breakable: false/);
+});
+
+test(
+  "buildPdf renders English and Kannada lesson boxes deterministically",
+  { skip: !hasRuntime },
+  async () => {
+    for (const language of ["en", "kn"] as const) {
+      const book = lessonBook(language);
+      const first = await buildPdf(book);
+      const second = await buildPdf(structuredClone(book));
+      assert.equal(String.fromCharCode(...first.pdf.subarray(0, 4)), "%PDF", language);
+      assert.equal(sha256(first.pdf), sha256(second.pdf), language);
+    }
+  },
+);
