@@ -22,4 +22,5 @@ After the Save/autosave race fix merged (PR #162), the agent wrote the Slice 1 p
 
 ## Outcomes
 
-- Branch `feat/adr-0038-slice-1-cover-contract`.
+- Branch `feat/adr-0038-slice-1-cover-contract`; brought up to date with `main` after ADR-0040 (merge `6d6833e`).
+- Merged as PR #163 (merge commit `aaa214f`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed.
