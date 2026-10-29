@@ -63,6 +63,10 @@ export interface IBookSession {
 
   addAsset(asset: AssetRef): AssetRef;
   removeAsset(assetId: string): void;
+  /** ADR-0038: set alt text and make the asset the cover, as one undo step. */
+  setCover(assetId: string, altText: string): void;
+  /** ADR-0038: clear the cover; the asset stays on the Book. */
+  clearCover(): void;
 
   markSaved(): void;
   canUndo(): boolean;

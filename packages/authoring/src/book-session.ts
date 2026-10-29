@@ -493,6 +493,32 @@ export class BookSession implements IBookSession {
     });
   }
 
+  setCover(assetId: string, altText: string): void {
+    this.#mutate((candidate) => {
+      const index = candidate.assets.findIndex((existing) => existing.id === assetId);
+      if (index < 0) {
+        throw new InvalidStructureOperationError(
+          `Asset "${assetId}" was not found on this Book.`,
+        );
+      }
+      // validateBook rejects a non-JPEG/PNG asset or blank alt text (ADR-0038 §2.1).
+      const assets = [...candidate.assets];
+      assets[index] = { ...assets[index]!, altText };
+      candidate.assets = assets;
+      candidate.publishing = { ...candidate.publishing, coverAssetId: assetId };
+    });
+  }
+
+  clearCover(): void {
+    this.#mutate((candidate) => {
+      if (candidate.publishing.coverAssetId === undefined) {
+        throw new InvalidStructureOperationError("This Book has no cover to clear.");
+      }
+      const { coverAssetId: _cleared, ...publishing } = candidate.publishing;
+      candidate.publishing = publishing;
+    });
+  }
+
   markSaved(): void {
     this.#isDirty = false;
   }

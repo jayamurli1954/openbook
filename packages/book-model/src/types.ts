@@ -102,6 +102,8 @@ export interface TypographySettings {
 export interface PublishingSettings {
   /** Intended projections. This is not an EPUB/PDF/HTML document. */
   intendedOutputs: PublishingOutput[];
+  /** Asset id of the cover image (ADR-0038). Absent or undefined means no cover. */
+  coverAssetId?: string;
 }
 
 export interface Book {

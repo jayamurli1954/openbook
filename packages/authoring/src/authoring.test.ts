@@ -421,3 +421,62 @@ test("theme and typography updates keep a valid Book and reject bad measures", (
   assert.equal(session.undo(), true);
   assert.equal(session.getBook().typography.bodySizePt, 11);
 });
+
+test("setCover sets alt text and cover in one undo step", () => {
+  const session = new BookSession({ book: baseBook(), idSeed: "cover-set" });
+  session.addAsset({ ...sampleAsset(), altText: "" });
+  session.setCover("asset-cover", "ಪುಸ್ತಕದ ಮುಖಪುಟ");
+  const book = session.getBook();
+  assert.equal(book.publishing.coverAssetId, "asset-cover");
+  assert.equal(book.assets[0]?.altText, "ಪುಸ್ತಕದ ಮುಖಪುಟ");
+
+  assert.equal(session.undo(), true);
+  const undone = session.getBook();
+  assert.equal("coverAssetId" in undone.publishing, false);
+  assert.equal(undone.assets[0]?.altText, "");
+});
+
+test("setCover rejects unknown, non-image, and blank-alt-text assets without change", () => {
+  const session = new BookSession({ book: baseBook(), idSeed: "cover-reject" });
+  session.addAsset(sampleAsset());
+  session.addAsset({ ...sampleAsset("asset-svg"), mediaType: "image/svg+xml" });
+  const before = serializeBook(session.getBook());
+  const rev = session.getState().revision;
+
+  assert.throws(() => session.setCover("missing", "Cover"), InvalidStructureOperationError);
+  assert.throws(
+    () => session.setCover("asset-svg", "Cover"),
+    (err: unknown) =>
+      err instanceof DomainValidationError &&
+      err.issues.some((i) => i.code === "cover-asset-not-image"),
+  );
+  assert.throws(
+    () => session.setCover("asset-cover", "   "),
+    (err: unknown) =>
+      err instanceof DomainValidationError &&
+      err.issues.some((i) => i.code === "cover-alt-text-missing"),
+  );
+  assert.equal(serializeBook(session.getBook()), before);
+  assert.equal(session.getState().revision, rev);
+});
+
+test("the cover asset cannot be removed until the cover is cleared", () => {
+  const session = new BookSession({ book: baseBook(), idSeed: "cover-remove" });
+  session.addAsset(sampleAsset());
+  session.setCover("asset-cover", "Cover");
+  const before = serializeBook(session.getBook());
+  assert.throws(
+    () => session.removeAsset("asset-cover"),
+    (err: unknown) =>
+      err instanceof DomainValidationError &&
+      err.issues.some((i) => i.code === "cover-asset-missing"),
+  );
+  assert.equal(serializeBook(session.getBook()), before);
+
+  session.clearCover();
+  assert.equal("coverAssetId" in session.getBook().publishing, false);
+  assert.equal(session.getBook().assets.length, 1);
+  session.removeAsset("asset-cover");
+  assert.equal(session.getBook().assets.length, 0);
+  assert.throws(() => session.clearCover(), InvalidStructureOperationError);
+});

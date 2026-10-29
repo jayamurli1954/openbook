@@ -1907,6 +1907,8 @@ const SESSION_MUTATORS = new Set([
   "removeBlock",
   "addAsset",
   "removeAsset",
+  "setCover",
+  "clearCover",
   "undo",
   "redo",
 ]);
