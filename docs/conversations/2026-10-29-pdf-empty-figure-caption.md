@@ -18,4 +18,5 @@ A full review of the maintainer's book through OpenBook after ADR-0038 closed sh
 ## Outcomes
 
 - Branch `fix/pdf-empty-figure-caption`.
+- Merged as PR #187 (merge commit `8e9d683`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed.
 - The maintainer's book (with the lesson corrections made in a separate copy of their Word file, outside the repository): 85 pages, 0 "Figure N:" labels.

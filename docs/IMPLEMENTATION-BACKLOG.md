@@ -2,7 +2,7 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-10-14
-- **Reconciled to:** `main` at `01c0fbc` after ADR-0038 closure (#185)
+- **Reconciled to:** `main` at `8e9d683` after the PDF empty-caption fix (#187)
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`, `docs/adr/0029-project-package-filesystem-persistence-architecture.md`.
@@ -150,7 +150,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0038 Slice 4 (EPUB cover)         [DONE — PR #181]
 ├── ADR-0038 Slice 5 (HTML + PDF cover)   [DONE — PR #183]
 ├── ADR-0038 Slice 6 (hardening/closure) [DONE — PR #185; sequence closed]
-├── PDF empty-caption figure fix          [IN PROGRESS — this PR]
+├── PDF empty-caption figure fix          [DONE — PR #187]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
