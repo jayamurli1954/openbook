@@ -22,5 +22,6 @@ Slices 1–3 merged (PRs #163, #177, #179). While preparing Slice 4, the agent f
 ## Outcomes
 
 - Branch `feat/adr-0038-slice-4-epub-cover`.
+- Merged as PR #181 (merge commit `e8ab38f`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed.
 - Local EPUBCheck 5.3.0, zero errors and zero warnings: English JPEG cover, Kannada JPEG cover, English PNG cover (unit tests); the `simple-english` and `kannada-indic` fixtures with the maintainer's real KDP cover (841 × 1261 JPEG).
 - Books without a cover: EPUB bytes identical to `main` for the `simple-english` and `kannada-indic` fixtures and an English book with a chapter picture (compared against a build of `main`'s engine).
