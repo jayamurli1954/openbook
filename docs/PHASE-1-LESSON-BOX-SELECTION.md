@@ -1,11 +1,11 @@
 # Phase 1 — Next Domain Selection: Lesson Box (Callout Block)
 
-- **Status:** Selected; ADR-0041 proposed (this PR); implementation not authorized
+- **Status:** Selected; ADR-0041 accepted (PR #192); implementation not authorized; Slice 1 awaits authorization
 - **Date:** 2026-10-29
 - **Baseline:** `main` at `7058947` (PR #190 — ADR-0040 title variants status reconcile)
 - **Prior records:** `docs/adr-0038-closure-reconciliation.md`; `docs/conversations/2026-10-29-pdf-empty-figure-caption.md`
 - **Selected domain:** a semantic **callout block**, shown as a framed "lesson box" (ROADMAP §3.3 Writing Studio content, §3.5 Basic Design Studio)
-- **Architecture ADR:** ADR-0041 (proposed in this PR). Selection alone does not authorize a slice.
+- **Architecture ADR:** ADR-0041 (accepted in PR #192). Selection alone does not authorize a slice.
 
 ## 1. Why this domain
 
@@ -31,7 +31,7 @@ Positioned text boxes, text placed on pictures, and picture-book page layouts (t
 
 ## 3. What this selection authorizes
 
-1. Propose ADR-0041 Lesson Box (Callout Block) Architecture (this PR).
+1. Accept ADR-0041 Lesson Box (Callout Block) Architecture (PR #192).
 2. Record that the next Phase 1 product domain is the lesson box.
 
 ## 4. What this selection does **not** authorize
