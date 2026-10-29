@@ -117,6 +117,12 @@ export async function processBookAssets(
     }
   }
 
+  // ADR-0038: the cover picture is packaged even when no section shows it.
+  const coverAssetId = book.publishing?.coverAssetId?.trim();
+  if (coverAssetId) {
+    referencedAssetIds.add(coverAssetId);
+  }
+
   if (referencedAssetIds.size === 0) {
     return {
       resolvedImagesByAssetId: new Map(),
@@ -138,7 +144,9 @@ export async function processBookAssets(
     if (!asset) {
       throw new AssetValidationError(
         "MISSING_ASSET_REFERENCE",
-        `Image block references asset "${assetId}", which does not exist in Book.assets.`,
+        assetId === coverAssetId
+          ? `Cover references asset "${assetId}", which does not exist in Book.assets.`
+          : `Image block references asset "${assetId}", which does not exist in Book.assets.`,
         assetId,
       );
     }

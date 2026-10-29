@@ -730,3 +730,93 @@ describe("@openbook/html: Gate 4 HTML Publishing Engine", () => {
     });
   });
 });
+
+describe("@openbook/html: ADR-0038 Slice 5 (HTML cover)", () => {
+  const KN_ALT = "ಬೆಟ್ಟದ ಮೇಲೆ ಪುಟ್ಟ ಕೃಷ್ಣ";
+
+  const coverAsset = (altText: string): AssetRef => ({
+    id: "asset-cover",
+    kind: "image",
+    fileName: "cover.png",
+    mediaType: "image/png",
+    altText,
+    licence: "CC0",
+  });
+
+  const resolver: AssetResolver = {
+    resolve: async (asset) => {
+      if (asset.id !== "asset-cover") throw new Error(`Asset not found: ${asset.id}`);
+      return PNG_BYTES;
+    },
+  };
+
+  function coverBook(options: { altText?: string; showInChapter?: boolean } = {}) {
+    const book = createBook({ title: "ಪುಟ್ಟ ಕೃಷ್ಣನ ಕಥೆಗಳು", authors: ["ಲೇಖಕ"], language: "kn" });
+    book.assets = [coverAsset(options.altText ?? KN_ALT)];
+    book.publishing.coverAssetId = "asset-cover";
+    if (options.showInChapter) {
+      book.chapters[0]!.blocks.push({ type: "image", id: "fig-cover", assetId: "asset-cover", caption: [] });
+    }
+    return book;
+  }
+
+  it("shows the cover first in the article with its description as alt text", async () => {
+    const pub = await buildHtml(coverBook(), { assetResolver: resolver });
+    const figures = pub.html.match(/<figure class="book-cover">/g) ?? [];
+    assert.equal(figures.length, 1);
+    const article = pub.html.indexOf('<article class="book">');
+    const cover = pub.html.indexOf('<figure class="book-cover">');
+    const header = pub.html.indexOf("<header>");
+    assert.ok(article < cover && cover < header, "cover sits before the header");
+    const src = pub.html.match(/<figure class="book-cover"><img src="([^"]+)" alt="([^"]*)"><\/figure>/);
+    assert.ok(src, "cover markup");
+    assert.equal(src[2], KN_ALT);
+    assert.ok(pub.files.some((file) => file.path === src[1]), `packaged ${src[1]}`);
+    assert.match(pub.html, /\.book-cover img \{/);
+  });
+
+  it("keeps the cover out of the table of contents", async () => {
+    const pub = await buildHtml(coverBook(), { assetResolver: resolver });
+    const toc = pub.html.slice(pub.html.indexOf('<nav class="toc"'), pub.html.indexOf("<main>"));
+    assert.doesNotMatch(toc, /book-cover|asset-cover/);
+  });
+
+  it("packages a picture shown in a chapter and used as the cover once", async () => {
+    const pub = await buildHtml(coverBook({ showInChapter: true }), { assetResolver: resolver });
+    const pictures = pub.files.filter((file) => file.path !== "index.html");
+    assert.equal(pictures.length, 1);
+    assert.equal((pub.html.match(new RegExp(pictures[0]!.path.replace(/[.]/g, "\\."), "g")) ?? []).length, 2);
+  });
+
+  it("emits no cover markup or styles without a cover", async () => {
+    const book = coverBook();
+    delete book.publishing.coverAssetId;
+    book.assets = [];
+    const pub = await buildHtml(book);
+    assert.doesNotMatch(pub.html, /book-cover/);
+    assert.equal(pub.files.length, 1);
+  });
+
+  it("fails closed when the cover names a missing asset or has no resolver", async () => {
+    const missing = coverBook();
+    missing.assets = [];
+    await assert.rejects(
+      buildHtml(missing, { assetResolver: resolver }),
+      (err: unknown) =>
+        err instanceof AssetValidationError &&
+        err.code === "MISSING_ASSET_REFERENCE" &&
+        /Cover references asset/.test(err.message),
+    );
+    await assert.rejects(
+      buildHtml(coverBook()),
+      (err: unknown) => err instanceof AssetResolutionError && err.code === "MISSING_RESOLVER",
+    );
+  });
+
+  it("builds identical HTML for the same Book and cover", async () => {
+    const book = coverBook();
+    const first = await buildHtml(book, { assetResolver: resolver });
+    const second = await buildHtml(structuredClone(book), { assetResolver: resolver });
+    assert.equal(first.html, second.html);
+  });
+});

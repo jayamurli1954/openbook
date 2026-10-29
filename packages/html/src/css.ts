@@ -77,3 +77,19 @@ section {
   margin-bottom: 2em;
 }
 `;
+
+/**
+ * Cover styles (ADR-0038), appended only when the Book has a cover so that
+ * books without one keep identical HTML.
+ */
+export const COVER_HTML_CSS = `.book-cover {
+  margin: 0 0 2em;
+  text-align: center;
+}
+
+.book-cover img {
+  max-width: 100%;
+  max-height: 90vh;
+  height: auto;
+}
+`;

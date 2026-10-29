@@ -2,7 +2,7 @@
 
 import type { Book, StructuralSection } from "@openbook/book-model";
 import { processBookAssets } from "./assets/asset-pipeline.js";
-import { DEFAULT_HTML_CSS } from "./css.js";
+import { COVER_HTML_CSS, DEFAULT_HTML_CSS } from "./css.js";
 import { escapeHtmlAttr, escapeHtmlText } from "./html-utils.js";
 import { serializeSection, serializeToc, type TocEntry } from "./html-serializer.js";
 import type { HtmlBuildOptions, HtmlPublication, HtmlPublicationFile } from "./types.js";
@@ -63,6 +63,13 @@ export async function buildHtml(
     });
   }
 
+  // ADR-0038: cover picture first in the article, when the Book has one
+  const coverAssetId = book.publishing?.coverAssetId?.trim();
+  const cover = coverAssetId ? resolvedImages.get(coverAssetId) : undefined;
+  const coverHtml = cover
+    ? `    <figure class="book-cover"><img src="${escapeHtmlAttr(cover.htmlSrc)}" alt="${escapeHtmlAttr(cover.altText)}"></figure>\n`
+    : "";
+
   const sections = collectSections(book);
   const tocEntries: TocEntry[] = sections
     .filter((section) => section.id)
@@ -86,11 +93,11 @@ export async function buildHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtmlText(bookTitle)}</title>
 ${serializeMetaAuthors(book.metadata.authors ?? [])}${descriptionMeta}  <style>
-${DEFAULT_HTML_CSS}  </style>
+${DEFAULT_HTML_CSS}${cover ? `\n${COVER_HTML_CSS}` : ""}  </style>
 </head>
 <body>
   <article class="book">
-    <header>
+${coverHtml}    <header>
       <h1 class="book-title">${escapeHtmlText(bookTitle)}</h1>
 ${serializeAuthors(book.metadata.authors ?? [])}    </header>
 ${serializeToc(tocEntries)}    <main>

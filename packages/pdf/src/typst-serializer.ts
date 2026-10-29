@@ -139,9 +139,19 @@ export function serializeBookToTypst(
     `#show heading: set text(font: (${profile.headingFont.map(quoteTypstString).join(", ")}))`,
     `#set heading(numbering: none)`,
     ``,
-    `= ${escapeTypstText(title)}`,
-    ``,
   ];
+
+  // ADR-0038 §2.4: the cover picture is the first page, scaled to fit without cropping.
+  const coverAssetId = book.publishing?.coverAssetId?.trim();
+  const cover = coverAssetId ? resolvedImages.get(coverAssetId) : undefined;
+  if (cover) {
+    header.push(
+      `#page(margin: 0pt)[#align(center + horizon)[#image(${quoteTypstString(cover.relativePath)}, width: 100%, height: 100%, fit: "contain", alt: ${quoteTypstString(cover.altText)})]]`,
+      ``,
+    );
+  }
+
+  header.push(`= ${escapeTypstText(title)}`, ``);
 
   if (authors) {
     header.push(`#align(center)[${escapeTypstText(authors)}]\n`);
