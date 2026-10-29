@@ -461,6 +461,65 @@ test("front-matter titles count only before the first chapter", async () => {
   assert.deepEqual(book.chapters.map((s) => s.title), ["The Butter Thief", "Acknowledgements"]);
 });
 
+// Shaped like the maintainer's book: a front-matter title that only starts with a known one.
+function prefaceForParents(prefaceStyle?: string): string {
+  return [
+    p(r("Foreword", { b: true })),
+    t("Why I wrote these stories."),
+    prefaceStyle ? t("Preface for Parents", { style: prefaceStyle }) : p(r("Preface for Parents", { b: true })),
+    t("Read one story each night."),
+    p(r("Publisher's Note", { b: true })),
+    t("Printed with care."),
+    t("Story 1: The Butter Thief", { style: "Heading1" }),
+    t("Krishna loved butter."),
+    t("Story 2: The Serpent", { style: "Heading1" }),
+    t("Kaliya lived in the river."),
+  ].join("");
+}
+
+for (const [shape, style] of [["bold Normal text", undefined], ["Heading 1", "Heading1"]] as const) {
+  test(`recognises “Preface for Parents” between Foreword and Publisher's Note (${shape})`, async () => {
+    const { book } = await importBook({ body: prefaceForParents(style) });
+    assert.deepEqual(book.frontMatter.map((s) => [s.role, s.title, s.blocks.map(blockText)]), [
+      ["foreword", "Foreword", ["Why I wrote these stories."]],
+      ["preface", "Preface for Parents", ["Read one story each night."]],
+      ["custom", "Publisher's Note", ["Printed with care."]],
+    ]);
+    assert.deepEqual(book.chapters.map((s) => s.title), ["Story 1: The Butter Thief", "Story 2: The Serpent"]);
+  });
+}
+
+test("recognises front-matter titles followed by for, to, of, a colon, or a dash", async () => {
+  const titles: ReadonlyArray<readonly [string, string]> = [
+    ["Foreword to the Second Edition", "foreword"],
+    ["Introduction: How to Use This Book", "introduction"],
+    ["PREFACE – A Note for Parents", "preface"],
+    ["Preface - For Teachers", "preface"],
+    ["Acknowledgements of Help", "custom"],
+    ["ಮುನ್ನುಡಿ: ಓದುಗರಿಗೆ", "foreword"],
+  ];
+  const body = titles.map(([title]) => p(r(title, { b: true })) + t("Text.")).join("") + t("Chapter One", { style: "Heading1" }) + t("Story.");
+  const { book } = await importBook({ body });
+  assert.deepEqual(book.frontMatter.map((s) => [s.title, s.role]), titles);
+  assert.deepEqual(book.chapters.map((s) => s.title), ["Chapter One"]);
+});
+
+test("does not take sentences, longer lines, or look-alike words as front-matter titles", async () => {
+  const body = [
+    p(r("Foreword", { b: true })),
+    t("Introduction to the stories is short."),
+    t("Prefaces"),
+    t("Introductory notes for parents"),
+    t("Preface for parents who read aloud often"),
+    t("Forewordto everyone"),
+    t("Chapter One", { style: "Heading1" }),
+    t("Preface for Parents"),
+  ].join("");
+  const { book } = await importBook({ body });
+  assert.deepEqual(book.frontMatter.map((s) => [s.role, s.blocks.length]), [["foreword", 5]]);
+  assert.deepEqual(book.chapters.map((s) => [s.title, s.blocks.map(blockText)]), [["Chapter One", ["Preface for Parents"]]]);
+});
+
 test("splits on Heading 2 with the heading-2 strategy, and keeps one chapter with single-chapter", async () => {
   const body = t("Part One", { style: "Heading1" }) + t("A", { style: "Heading2" }) + t("x") + t("B", { style: "Heading2" }) + t("y");
   const h2 = await importBook({ body }, { splitStrategy: "heading-2" });

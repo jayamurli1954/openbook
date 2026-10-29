@@ -17,7 +17,10 @@ import type { DocxParagraph, PictureRef, TextRun } from "./body.js";
  * Heuristics here are deliberately small; every guess is reported so the author can check it.
  */
 
-/** ADR-0040 §4.3. Kannada words confirmed by the maintainer on 2026-10-28. */
+/**
+ * ADR-0040 §4.3. Kannada words confirmed by the maintainer on 2026-10-28. A short title that
+ * starts with one of these (“Preface for Parents”) takes its role (follow-up, 2026-10-29).
+ */
 const FRONT_MATTER_TITLES: ReadonlyArray<readonly [SectionRole, readonly string[]]> = [
   ["foreword", ["foreword", "ಮುನ್ನುಡಿ"]],
   ["preface", ["preface", "ಪೀಠಿಕೆ"]],
@@ -543,11 +546,25 @@ export function normalizeTitle(text: string): string {
     .trim();
 }
 
+/**
+ * What may follow a known title in a longer one: “Preface for Parents”, “Foreword to the Second
+ * Edition”, “Introduction: How to Use This Book”, “Preface – A Note”. Something must follow it.
+ */
+const TITLE_VARIANT_CONNECTOR = /^(?: (?:for|to|of) | ?: ?| [-–—] )\S/u;
+/** A short sentence, not a title. */
+const SENTENCE_END = /[.!?]["'”’)]*\s*$/u;
+
 function frontMatterRole(text: string): SectionRole | undefined {
   if (wordCount(text) > 6) return undefined;
   const normalized = normalizeTitle(text);
   for (const [role, titles] of FRONT_MATTER_TITLES) {
     if (titles.includes(normalized)) return role;
+  }
+  if (SENTENCE_END.test(text)) return undefined;
+  for (const [role, titles] of FRONT_MATTER_TITLES) {
+    for (const title of titles) {
+      if (normalized.startsWith(title) && TITLE_VARIANT_CONNECTOR.test(normalized.slice(title.length))) return role;
+    }
   }
   return undefined;
 }
