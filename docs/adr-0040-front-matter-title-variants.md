@@ -1,6 +1,6 @@
 # ADR-0040 follow-up: Front-Matter Title Variants — Implementation Record
 
-- **Status:** Implemented (Draft PR; merges on maintainer authorization)
+- **Status:** Implemented on main (PR #189)
 - **Date:** 2026-10-29
 - **Parent architecture:** ADR-0040 — Word (.docx) Import (§4.3 Untagged front matter)
 - **Scope:** Recognise short front-matter titles that start with a known title, such as “Preface for Parents”. Importer only (`packages/importer/src/docx/structure.ts`); no Book Model, UI, or engine change.

@@ -24,8 +24,8 @@ While cleaning up the maintainer's children's book *Little Krishna's Wisdom Stor
 
 ## Action items
 
-- Maintainer: re-import the book and check that “Preface for Parents” is its own front section; authorize the merge.
+- Maintainer: re-import the book and check that “Preface for Parents” is its own front section in the desktop app.
 
 ## Outcomes
 
-- Branch `feat/adr-0040-front-matter-title-variants`.
+- Branch `feat/adr-0040-front-matter-title-variants`; merged as PR #189 (`9a4a9ec`) on the maintainer's “Authorize #189”, after CI passed.
