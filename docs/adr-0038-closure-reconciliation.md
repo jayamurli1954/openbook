@@ -50,11 +50,11 @@ Run locally on 2026-10-29 with the maintainer's KDP Word file (28.8 MB) and its 
 | Book check | clean |
 | EPUB | 29.0 MB; EPUBCheck 5.3.0 valid, 0 errors, 0 warnings, 0 fatal; 27 `MISSING_ALT_TEXT` engine notes (the Word file has no picture descriptions) |
 | HTML | 1 cover figure; 28 picture files |
-| PDF | **Failed to compile** — see §5. With the language changed from `en-US` to `en` for the check: 86 pages (85 without the cover); page 1 is the whole cover, page 2 the title page, page 3 the title-page picture from the Word file |
+| PDF | First run failed to compile (§5). After the fix, through the desktop export with the book's own `en-US`: 40.2 MB, 86 pages (85 without the cover); page 1 is the whole cover, page 2 the title page, page 3 the title-page picture from the Word file |
 
 ## 5. Found during this slice
 
-**PDF fails for languages with a region (`en-US`, `en-GB`, `kn-IN`).** The PDF engine passes `metadata.language` straight to Typst's `#set text(lang: …)`, which accepts only a two- or three-letter code. The maintainer's Word file sets `en-US`, so its PDF fails with "expected two or three letter language code". This is not cover-specific: any book whose language carries a region fails, with or without a cover. It predates ADR-0038 (ADR-0013 engine); the Word import made it likely. **Status: reported to the maintainer; fix pending their decision** (see the PR).
+**PDF fails for languages with a region (`en-US`, `en-GB`, `kn-IN`).** The PDF engine passes `metadata.language` straight to Typst's `#set text(lang: …)`, which accepts only a two- or three-letter code. The maintainer's Word file sets `en-US`, so its PDF fails with "expected two or three letter language code". This is not cover-specific: any book whose language carries a region fails, with or without a cover. It predates ADR-0038 (ADR-0013 engine); the Word import made it likely. **Fixed in this PR** at the maintainer's request ("Fix in this PR"): `typstLanguage` passes the primary code as `lang` and a two-letter region as `region` (`en-US` → `lang: "en", region: "US"`); scripts, numeric regions, and variants are dropped, and an unusable tag becomes `und`. Books whose language is already a bare code (`en`, `kn`) get the same Typst source as before. Tested with real renders of an `en-US` and a `kn-IN` book.
 
 **The same picture as cover and on the title page.** The Word import keeps the book's title-page picture in front matter, so setting it as the cover shows it twice in a row in EPUB and PDF. This is a content choice; the author can delete the title-page picture in the Write step.
 

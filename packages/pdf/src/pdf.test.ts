@@ -21,6 +21,7 @@ import {
   resolveProductionTypstRuntime,
   readBuildEvidence,
   serializeBookToTypst,
+  typstLanguage,
   TypstRuntimeError,
   AssetValidationError,
   AssetResolutionError,
@@ -392,5 +393,45 @@ test(
     const pub = await buildPdf(coverBook({ showInChapter: true }), { assetResolver: coverResolver });
     assert.equal(pub.typstSource.split('"assets/cover.png"').length - 1, 2);
     assert.equal(String.fromCharCode(...pub.pdf.subarray(0, 4)), "%PDF");
+  },
+);
+
+// --- Language tags with a region (found by ADR-0038 Slice 6) --------------
+
+test("typstLanguage keeps a bare code and splits a region off", () => {
+  assert.deepEqual(typstLanguage("en"), { lang: "en" });
+  assert.deepEqual(typstLanguage("kn"), { lang: "kn" });
+  assert.deepEqual(typstLanguage("en-US"), { lang: "en", region: "US" });
+  assert.deepEqual(typstLanguage("kn-IN"), { lang: "kn", region: "IN" });
+  assert.deepEqual(typstLanguage("EN_gb"), { lang: "en", region: "GB" });
+  assert.deepEqual(typstLanguage("zh-Hant-TW"), { lang: "zh", region: "TW" });
+  assert.deepEqual(typstLanguage("es-419"), { lang: "es" });
+  assert.deepEqual(typstLanguage("i-klingon"), { lang: "und" });
+  assert.deepEqual(typstLanguage(""), { lang: "und" });
+});
+
+test("serializeBookToTypst writes lang and region separately", () => {
+  const book = loadFixture("english-prose.json");
+  book.metadata.language = "en-US";
+  const source = serializeBookToTypst(book);
+  assert.match(source, /lang: "en", region: "US", fallback: true\)/);
+  assert.doesNotMatch(source, /lang: "en-US"/);
+  book.metadata.language = "en";
+  assert.match(serializeBookToTypst(book), /lang: "en", fallback: true\)/);
+});
+
+test(
+  "buildPdf renders books whose language has a region",
+  { skip: !hasRuntime },
+  async () => {
+    for (const [fixture, tag] of [
+      ["english-prose.json", "en-US"],
+      ["kannada-prose.json", "kn-IN"],
+    ] as const) {
+      const book = loadFixture(fixture);
+      book.metadata.language = tag;
+      const pub = await buildPdf(book);
+      assert.equal(String.fromCharCode(...pub.pdf.subarray(0, 4)), "%PDF", tag);
+    }
   },
 );
