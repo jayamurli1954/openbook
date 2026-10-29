@@ -21,4 +21,5 @@ ADR-0041 was accepted (PR #192) with `schemaVersion` 2 decided. The Slice 1 prop
 ## Outcomes
 
 - Branch `feat/adr-0041-slice-1-callout-model`.
+- Merged as PR #196 (merge commit `04d5e72`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed.
 - Full repository `npm test` passes (desktop 529). Exports: a version-1 and a version-2 copy of the same book give identical EPUB, HTML, Typst source, and PDF for three fixtures; the engines are unchanged in this slice.

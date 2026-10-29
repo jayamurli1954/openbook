@@ -21,7 +21,7 @@ Start with [`PROJECT-CONTEXT.md`](../PROJECT-CONTEXT.md).
 | [Phase 1 Cover Wizard selection](PHASE-1-COVER-WIZARD-SELECTION.md) | Cover Wizard, image cover (ADR-0038 accepted; closed; Slices 1–6 done, PRs #163, #177, #179, #181, #183 and #185) |
 | [Phase 1 Studio Shell & UX selection](PHASE-1-STUDIO-SHELL-UX-SELECTION.md) | Studio shell and guided UX (ADR-0039; Slices 1–7 done; closed) |
 | [Phase 1 Word (.docx) import selection](PHASE-1-DOCX-IMPORT-SELECTION.md) | Word `.docx` import with images (ADR-0040; Slices 1–5 done; closed) |
-| [Phase 1 Lesson box selection](PHASE-1-LESSON-BOX-SELECTION.md) | Lesson box / callout block (ADR-0041 accepted; Slice 1 in progress) |
+| [Phase 1 Lesson box selection](PHASE-1-LESSON-BOX-SELECTION.md) | Lesson box / callout block (ADR-0041 accepted; Slice 1 done, PR #196) |
 | [Foundation closure (post–Gate 10)](FOUNDATION-READINESS-POST-GATE-10-CLOSURE.md) | Historical bridge after Gates 9–10; superseded for Phase 0 outcome by the determination |
 | [Foundation evidence ops selection](FOUNDATION-READINESS-EVIDENCE-OPS-SELECTION.md) | Evidence ops Slices 1–5 complete (PRs #110–#114) |
 | [Implementation backlog](IMPLEMENTATION-BACKLOG.md) | Future work; not an authorization to code |

@@ -1,6 +1,6 @@
 # Phase 1 — Next Domain Selection: Lesson Box (Callout Block)
 
-- **Status:** Selected; ADR-0041 accepted (PR #192); Slice 1 authorized 2026-10-29 and in progress (`docs/adr-0041-slice-1-callout-model.md`)
+- **Status:** Selected; ADR-0041 accepted (PR #192); Slice 1 done on main (PR #196, `docs/adr-0041-slice-1-callout-model.md`); Slice 2 awaits authorization
 - **Date:** 2026-10-29
 - **Baseline:** `main` at `7058947` (PR #190 — ADR-0040 title variants status reconcile)
 - **Prior records:** `docs/adr-0038-closure-reconciliation.md`; `docs/conversations/2026-10-29-pdf-empty-figure-caption.md`
