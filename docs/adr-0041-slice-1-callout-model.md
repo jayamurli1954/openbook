@@ -1,6 +1,6 @@
 # ADR-0041 Slice 1: Callout Model, Schema Version 2, and Contract — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #196)
 - **Date:** 2026-10-29
 - **Parent architecture:** ADR-0041 — Lesson Box (Callout Block) Architecture, §2.1–§2.2, §6, §7 Slice 1
 - **Scope:** the `callout` block in the Book Model and Semantic Document; validation; `schemaVersion` 2 with an explicit 1 → 2 upgrade on every read path; editor round trip; no chrome
