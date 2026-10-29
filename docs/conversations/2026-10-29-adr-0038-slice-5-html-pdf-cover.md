@@ -20,5 +20,6 @@ Slices 1–4 merged (PRs #163, #177, #179, #181). The HTML and PDF asset pipelin
 ## Outcomes
 
 - Branch `feat/adr-0038-slice-5-html-pdf-cover`.
+- Merged as PR #183 (merge commit `eb59f2a`) on 2026-10-29 after the maintainer authorized the merge; all four checks passed.
 - Rendered locally with Typst 0.15.1 using the maintainer's real KDP cover in the `kannada-prose` fixture: the PDF went from 6 to 7 pages; page 1 shows the whole cover uncropped, page 2 is the unchanged title page.
 - Books without a cover: HTML, Typst source, and PDF bytes identical to `main` for `simple-english`, `kannada-indic`, `kannada-prose`, and an English book with a chapter picture (compared against builds of `main`'s engines).
