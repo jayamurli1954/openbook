@@ -44,7 +44,7 @@ type ContentBlock =
 
 - `validateBook` (errors): `callout.title` is a string; `callout.inlines` is an array; a callout with no visible text in both title and body is rejected (`empty-callout`). Ids take part in the existing duplicate-id check.
 - Books without callouts are unaffected.
-- Schema version: see §6.
+- Schema version: bumped to `2` (§6).
 
 ### 2.2 Semantic Document and editor
 
@@ -123,18 +123,18 @@ All three engines emit callout markup and styles **only when the book contains a
 - One look for all boxes until a Design choice exists.
 - Single-paragraph body only.
 
-## 6. Open decision: schema version
+## 6. Decision: schema version
 
 ADR-0006 says schema evolution needs an explicit `schemaVersion` bump. ADR-0038 added an *optional field* without a bump. A new *block type* is different: an OpenBook build from before this ADR would open a book with a callout and then fail at export (`UnsupportedContentError`).
 
 - **Option A — bump to `schemaVersion: 2`** with an identity migration 1 → 2 through the ADR-0029 migration path. Older builds refuse version-2 packages cleanly at Open. Costs: `parseBook`, `validateBook`, `createBook`, package compatibility checks, and test fixtures that pin version 1 all change.
 - **Option B — stay at 1.** Follows the ADR-0038 precedent and costs nothing now. Acceptable only while no OpenBook build has been released to authors; older builds would fail at export, not at Open.
 
-**Recommendation: A**, because ADR-0006 asks for it and the desktop app is already packaged for Windows (ADR-0032), so older builds may exist. The maintainer decides before Slice 1.
+**Decided: Option A** (maintainer, 2026-10-29: "Yes, bump to 2"). Slice 1 bumps `BOOK_MODEL_SCHEMA_VERSION` to `2` and adds an identity 1 → 2 migration through the ADR-0029 migration path, so existing packages open and are saved as version 2. Reason: ADR-0006 asks for a bump on schema evolution, and the desktop app is already packaged for Windows (ADR-0032), so older builds may exist; with the bump they refuse version-2 books at Open instead of failing at export.
 
 ## 7. Implementation sequencing (not authorized here)
 
-1. **Slice 1 — Model and contract:** `callout` in the Book Model and Semantic Document; validation; schema-version decision applied; `BookSession` accepts callouts; editor-adapter round trip; tests. No chrome. Engines still fail closed on callouts.
+1. **Slice 1 — Model and contract:** `callout` in the Book Model and Semantic Document; validation; `schemaVersion` 2 with the identity 1 → 2 migration; `BookSession` accepts callouts; editor-adapter round trip; tests. No chrome. Engines still fail closed on callouts.
 2. **Slice 2 — Publishing:** EPUB, HTML, and PDF callouts with conditional styles; EPUBCheck; no-callout byte-identity checked against `main`.
 3. **Slice 3 — Writing Studio:** the TipTap node, "Make lesson box" and "Back to paragraph", title editing.
 4. **Slice 4 — Book-wide conversion:** "Turn matching paragraphs into lesson boxes" with count preview and one undo step.

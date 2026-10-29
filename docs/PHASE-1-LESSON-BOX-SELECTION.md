@@ -46,7 +46,7 @@ Positioned text boxes, text placed on pictures, and picture-book page layouts (t
 ## 5. Controlled sequence after ADR acceptance
 
 1. Merge this selection + ADR-0041 (Draft PR → CI/DCO → explicit merge authorization).
-2. Maintainer decides the open schema-version question in ADR-0041 §6.
+2. Schema version decided: bump to 2 with an identity migration (ADR-0041 §6, maintainer 2026-10-29).
 3. Maintainer separately authorizes each implementation slice per ADR-0041 §7.
 
 ## 6. Candidates not selected

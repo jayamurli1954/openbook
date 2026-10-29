@@ -17,7 +17,7 @@ The agent checked the code: the Design step sets theme and typography only; the 
 2. Rendered in EPUB, HTML, and PDF; styles only when the book has a callout, so other books stay byte-identical; no background colour, for night modes.
 3. Writing Studio: make, remove, and book-wide convert ("Turn matching paragraphs into lesson boxes"). Import stays unchanged.
 4. Picture-book layouts and positioned text boxes are out of scope (Phase 2).
-5. Open for the maintainer: `schemaVersion` bump (recommended) or not.
+5. `schemaVersion`: the maintainer chose to bump to 2 with an identity 1 → 2 migration ("Yes, bump to 2").
 6. Process: Draft PR → CI/DCO → merge only on the maintainer's authorization; each slice separately authorized.
 
 ## Outcomes
