@@ -116,6 +116,7 @@ import {
   type WorkflowErrorCode,
 } from "../workflow/projectWorkflow.js";
 import {
+  bookAssetsToSemantic,
   bookMetadataToSemantic,
   createDesktopDraftBook,
   listMainChapters,
@@ -850,6 +851,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     }
     const { blocks, warnings } = tipTapJsonToContentBlocks(tipTap, {
       metadata: bookMetadataToSemantic(this.#session.getBook()),
+      assets: bookAssetsToSemantic(this.#session.getBook()),
       sectionId: selected.id,
       sectionTitle: selected.title,
       matter: selected.kind,

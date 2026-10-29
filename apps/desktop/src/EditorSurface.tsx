@@ -8,6 +8,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+import { OpenbookImageNode } from "./ui/openbookImageNode";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { bookToSemanticDocument } from "@openbook/semantic-document";
 import { nextStage, WORKFLOW_STAGES } from "@openbook/workflow";
@@ -168,6 +169,21 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
         openOnClick: false,
         autolink: true,
         defaultProtocol: "https",
+      }),
+      // Pictures stay pictures in Write; before this they reached the editor as "[image:…]" text.
+      OpenbookImageNode.configure({
+        resolveImageUrl: async (assetId) => {
+          const asset = coordinator.getBook().assets.find((candidate) => candidate.id === assetId);
+          if (!asset) return undefined;
+          try {
+            const bytes = await coordinator.getAssetResolver().resolve(asset);
+            return URL.createObjectURL(new Blob([bytes as BlobPart], { type: asset.mediaType }));
+          } catch {
+            return undefined;
+          }
+        },
+        describeImage: (assetId) =>
+          coordinator.getBook().assets.find((candidate) => candidate.id === assetId)?.altText ?? "",
       }),
     ],
     content: coordinator.activeSectionToTipTap().doc,
