@@ -150,6 +150,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0038 Slice 4 (EPUB cover)         [DONE — PR #181]
 ├── ADR-0038 Slice 5 (HTML + PDF cover)   [DONE — PR #183]
 ├── ADR-0038 Slice 6 (hardening/closure) [DONE — PR #185; sequence closed]
+├── PDF empty-caption figure fix          [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]

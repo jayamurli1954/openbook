@@ -11,6 +11,7 @@ import {
   parseBook,
   validateBook,
   type AssetRef,
+  type InlineSpan,
   type StructuralSection,
 } from "@openbook/book-model";
 import {
@@ -433,5 +434,50 @@ test(
       const pub = await buildPdf(book);
       assert.equal(String.fromCharCode(...pub.pdf.subarray(0, 4)), "%PDF", tag);
     }
+  },
+);
+
+// --- Pictures without a caption get no "Figure N:" label -------------------
+
+function pictureBook(caption: InlineSpan[]) {
+  const book = createBook({ title: "Pictures", language: "en", withOpeningChapter: false });
+  book.metadata.publishedAt = "2026-09-04";
+  book.assets = [{ id: "dot", kind: "image", fileName: "dot.png", mediaType: "image/png", altText: "Dot", licence: "test" }];
+  book.chapters = [
+    {
+      id: "c1",
+      kind: "main",
+      role: "chapter",
+      title: "Chapter",
+      blocks: [{ type: "image", id: "i1", assetId: "dot", caption }],
+    },
+  ];
+  return book;
+}
+
+const dotImages = new Map([
+  ["dot", { asset: { id: "dot", kind: "image" as const, fileName: "dot.png", mediaType: "image/png", altText: "Dot", licence: "test" }, fileName: "dot.png", relativePath: "assets/dot.png", content: TINY_PNG, altText: "Dot" }],
+]);
+
+test("a picture with no caption, or only spaces, gets no caption argument", () => {
+  for (const caption of [[], [{ type: "text" as const, text: "   " }], [{ type: "emphasis" as const, children: [] }]]) {
+    const source = serializeBookToTypst(pictureBook(caption), dotImages);
+    assert.match(source, /#figure\(\n  image\("assets\/dot\.png"\),\n\)/);
+    assert.doesNotMatch(source, /caption:/);
+  }
+});
+
+test("a picture with a caption keeps it", () => {
+  const source = serializeBookToTypst(pictureBook([{ type: "text", text: "A pixel." }]), dotImages);
+  assert.match(source, /caption: \[A pixel\.\],/);
+});
+
+test(
+  "buildPdf renders pictures without captions",
+  { skip: !hasRuntime },
+  async () => {
+    const pub = await buildPdf(pictureBook([]), { assetResolver: { resolve: async () => TINY_PNG } });
+    assert.equal(String.fromCharCode(...pub.pdf.subarray(0, 4)), "%PDF");
+    assert.doesNotMatch(pub.typstSource, /caption:/);
   },
 );
