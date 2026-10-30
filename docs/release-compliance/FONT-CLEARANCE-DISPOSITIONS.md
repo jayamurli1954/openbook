@@ -34,6 +34,12 @@ Verified upstream OFL URLs (2026-09-22):
 - https://raw.githubusercontent.com/google/fonts/main/ofl/notoserif/OFL.txt
 - https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/OFL.txt
 
+Added 2026-10-30 (`docs/book-test-fixes-proposal.md`, Part B; OFL URLs checked that day):
+
+- https://raw.githubusercontent.com/google/fonts/main/ofl/notoserif/OFL.txt (Noto Serif Italic, same directory as Noto Serif)
+- https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/OFL.txt (Noto Sans Italic, same directory as Noto Sans)
+- https://raw.githubusercontent.com/google/fonts/main/ofl/notoemoji/OFL.txt (Noto Emoji; copyright Google LLC)
+
 ## 3. Font-by-font dispositions
 
 | Component | Inventory file | SHA-256 | Status | Redistribution |
@@ -42,6 +48,9 @@ Verified upstream OFL URLs (2026-09-22):
 | Noto Sans Kannada | `NotoSansKannada[wdth,wght].ttf` | `cca4f3b3a8cb12fb261f1b43baf5d2f7f59d90fe123d41f0065ed3a183997ec9` | **confirmed** | **conditional** (OFL 1.1) |
 | Noto Serif | `NotoSerif[wdth,wght].ttf` | `4d8e6761424656867019081a1a01336f3cb086982682698714054fc33f782713` | **confirmed** | **conditional** (OFL 1.1) |
 | Noto Sans | `NotoSans[wdth,wght].ttf` | `bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d` | **confirmed** | **conditional** (OFL 1.1) |
+| Noto Serif Italic | `NotoSerif-Italic[wdth,wght].ttf` | `e87acbc6c0efd0d9a20d6a8cbbda2b266c14be3a3a6f5af8ec9d7b2460570ad1` | **confirmed** | **conditional** (OFL 1.1) |
+| Noto Sans Italic | `NotoSans-Italic[wdth,wght].ttf` | `58e6e0ebd1931b29a365aa2d3e2ee9a9e831a3af7cf3ad1462d4e72154f0b291` | **confirmed** | **conditional** (OFL 1.1) |
+| Noto Emoji | `NotoEmoji[wght].ttf` | `de6c18832938afc99caf132b39d6a30a19bac7f2e812e28db2535b4608d27551` | **confirmed** | **conditional** (OFL 1.1) |
 
 ## 4. Shipping conditions (must remain true)
 

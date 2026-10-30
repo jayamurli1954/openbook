@@ -152,6 +152,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0038 Slice 6 (hardening/closure) [DONE — PR #185; sequence closed]
 ├── PDF empty-caption figure fix          [DONE — PR #187]
 ├── Word front-matter title variants      [DONE — PR #189; ADR-0040 §4.3]
+├── Book-test fixes (fonts, line breaks, picture size) [IN PROGRESS — this PR]
 ├── Write-step picture fix              [DONE — PR #194]
 ├── Domain selection + ADR-0041 (lesson box) [DONE — PR #192; accepted]
 ├── ADR-0041 Slice 1 (model + contract)  [DONE — PR #196; schemaVersion 2]

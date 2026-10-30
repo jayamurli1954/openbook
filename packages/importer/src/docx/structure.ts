@@ -445,11 +445,12 @@ class SectionBuilder {
       section.blocks.push({ type: "heading", id: this.#ids.nextBlockId(), level, inlines: plain(inlines) });
       return;
     }
-    if (p.styleClass.kind === "quote") {
-      section.blocks.push({ type: "quote", id: this.#ids.nextBlockId(), inlines });
-      return;
+    // A line break in body text starts a new paragraph; a table cell keeps it as a space (§4.5).
+    const lines = p.inTable ? [p.runs] : splitAtLineBreaks(p.runs);
+    for (const line of lines) {
+      const type = p.styleClass.kind === "quote" ? "quote" : "paragraph";
+      section.blocks.push({ type, id: this.#ids.nextBlockId(), inlines: lines.length === 1 ? inlines : toInlines(line) });
     }
-    section.blocks.push({ type: "paragraph", id: this.#ids.nextBlockId(), inlines });
   }
 
   #start(list: StructuralSection[], kind: StructuralSection["kind"], role: SectionRole, title: string): void {
@@ -527,6 +528,17 @@ function markSpan(run: { text: string; bold: boolean; italic: boolean }): Inline
   if (run.italic) span = { type: "emphasis", children: [span] };
   if (run.bold) span = { type: "strong", children: [span] };
   return span;
+}
+
+/** Runs split at line breaks; lines with no text are dropped, so no empty paragraph is made. */
+function splitAtLineBreaks(runs: readonly TextRun[]): Array<readonly TextRun[]> {
+  const lines: TextRun[][] = [[]];
+  for (const run of runs) {
+    if (run.lineBreak) lines.push([]);
+    else lines[lines.length - 1]!.push(run);
+  }
+  const kept = lines.filter((line) => line.some((run) => run.text.trim() !== ""));
+  return kept.length > 0 ? kept : [runs];
 }
 
 /** Headings carry their text; Word's bold on a heading is appearance, not meaning. */

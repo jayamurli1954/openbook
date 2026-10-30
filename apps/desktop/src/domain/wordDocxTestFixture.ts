@@ -89,7 +89,8 @@ export function para(content: string): string {
   return `<w:p>${content}</w:p>`;
 }
 
-export function wordDocx(body: string): Uint8Array {
+/** `emf` replaces the Word drawing's bytes (the asset pipeline refuses EMF whatever its size). */
+export function wordDocx(body: string, options: { emf?: Uint8Array } = {}): Uint8Array {
   return storedZip({
     "[Content_Types].xml":
       `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
@@ -105,7 +106,7 @@ export function wordDocx(body: string): Uint8Array {
       `<Relationship Id="rId21" Type="${R_NS}/image" Target="media/image2.emf"/></Relationships>`,
     "word/document.xml": `<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="${W_NS}" xmlns:r="${R_NS}"><w:body>${body}</w:body></w:document>`,
     "word/media/image1.png": PNG_BYTES,
-    "word/media/image2.emf": EMF_BYTES,
+    "word/media/image2.emf": options.emf ?? EMF_BYTES,
   });
 }
 
