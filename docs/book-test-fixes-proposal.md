@@ -1,6 +1,6 @@
 # Fixes Found Testing *Little Krishna's Wisdom Stories* — Implementation Record
 
-- **Status:** Implemented (Draft PR; merges on maintainer authorization)
+- **Status:** Implemented on main (PR #200)
 - **Date:** 2026-10-30
 - **Parent architecture:** ADR-0013 (PDF engine, §6 fonts), ADR-0040 (Word import, §4.5 and §4.6)
 - **Scope:** Four OpenBook fixes found by running the maintainer's book through import → book check → EPUB (EPUBCheck) → HTML → PDF on `main` (`67505b9`). No Book Model change.

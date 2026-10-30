@@ -2,7 +2,7 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-10-14
-- **Reconciled to:** `main` at `e75eba0` after ADR-0041 Slice 2 (#198)
+- **Reconciled to:** `main` at `ba61892` after the book-test fixes (#200)
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`, `docs/adr/0029-project-package-filesystem-persistence-architecture.md`.
@@ -152,7 +152,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0038 Slice 6 (hardening/closure) [DONE — PR #185; sequence closed]
 ├── PDF empty-caption figure fix          [DONE — PR #187]
 ├── Word front-matter title variants      [DONE — PR #189; ADR-0040 §4.3]
-├── Book-test fixes (fonts, line breaks, picture size) [IN PROGRESS — this PR]
+├── Book-test fixes (fonts, line breaks, picture size) [DONE — PR #200]
 ├── Write-step picture fix              [DONE — PR #194]
 ├── Domain selection + ADR-0041 (lesson box) [DONE — PR #192; accepted]
 ├── ADR-0041 Slice 1 (model + contract)  [DONE — PR #196; schemaVersion 2]
