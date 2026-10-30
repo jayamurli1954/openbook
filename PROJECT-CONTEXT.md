@@ -168,6 +168,7 @@ Other pending items:
 - `docs/adr-0040-slice-5-hardening.md` (ADR-0040 Slice 5 record)
 - `docs/adr-0040-closure-reconciliation.md` (ADR-0040 Slices 1–5 closure)
 - `docs/adr-0040-front-matter-title-variants.md` (ADR-0040 §4.3 follow-up record, PR #189)
+- `docs/book-test-fixes-proposal.md` (fixes found testing the maintainer's book: PDF fonts, Word line breaks, picture-size warning; PR #200)
 - `docs/PHASE-1-LESSON-BOX-SELECTION.md` (selected Phase 1 lesson box domain)
 - `docs/adr/0041-lesson-box-callout-block-architecture.md`
 - `docs/adr-0036-closure-reconciliation.md` (ADR-0036 Slices 1–3 closure)

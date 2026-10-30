@@ -28,4 +28,5 @@ After PR #189 (front-matter title variants), the maintainer asked what OpenBook 
 
 ## Outcomes
 
-- Branch `fix/book-test-fixes`.
+- Branch `fix/book-test-fixes`; merged as PR #200 (`ba61892`) on the maintainer's “Authorize #200”, after CI passed.
+- To get the new fonts locally, the main checkout's PDF runtime must be rebuilt (`node scripts/pdf/build-runtime.mjs`).
