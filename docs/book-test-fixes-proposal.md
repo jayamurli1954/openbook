@@ -1,10 +1,10 @@
-# Fixes Found Testing *Little Krishna's Wisdom Stories* — Proposal
+# Fixes Found Testing *Little Krishna's Wisdom Stories* — Implementation Record
 
-- **Status:** Proposed (no code yet)
+- **Status:** Implemented (Draft PR; merges on maintainer authorization)
 - **Date:** 2026-10-30
 - **Parent architecture:** ADR-0013 (PDF engine, §6 fonts), ADR-0040 (Word import, §4.5 and §4.6)
 - **Scope:** Four OpenBook fixes found by running the maintainer's book through import → book check → EPUB (EPUBCheck) → HTML → PDF on `main` (`67505b9`). No Book Model change.
-- **Implementation authorization:** Not granted yet. Each part below needs an explicit maintainer authorization.
+- **Implementation authorization:** Granted for Parts A and B, including the emoji font (maintainer, 2026-10-30: “Authorize A and B”, after reviewing the proposal)
 
 ## 1. What the test showed
 
@@ -26,7 +26,7 @@ The “What We Learned” box drawn with ╭──╮ characters is already cove
 
 The PDF font lists depend on the book's language:
 
-- `kn…`: `("Noto Serif Kannada", "Noto Serif")` and `("Noto Sans Kannada", "Noto Sans")` — **unchanged**, so Kannada PDFs stay byte-identical;
+- `kn…`: `("Noto Serif Kannada", "Noto Serif")` and `("Noto Sans Kannada", "Noto Sans")` — unchanged by A1 (B2 adds Noto Emoji at the end of every list, so the Typst source of a Kannada book gains that one name);
 - any other language: `("Noto Serif", "Noto Serif Kannada")` and `("Noto Sans", "Noto Sans Kannada")`. Kannada words inside an English book still get the Kannada font (Typst falls back per character).
 
 English PDFs change (digits and punctuation now match the words). Change in `packages/pdf/src/default-profile.ts` and `typst-serializer.ts`.
@@ -69,3 +69,15 @@ Work: download each file once to record its SHA-256 and size in `inventory.json`
 - Shrinking or converting pictures automatically (would change the author's pictures; a later decision).
 - Using the title-page line as the subtitle.
 - Fixes in the Word file itself (repeated paragraphs, quote marks, the “Back Cover” text inside Story 25, the Foreword's different book name).
+- Using the Design step's font choices in the PDF. The PDF engine reads only `DEFAULT_PDF_PROFILE`, not `book.typography`; found during this work and left for a separate decision.
+
+## 6. Result
+
+- **A1** `pdfFontLists` (`packages/pdf/src/default-profile.ts`) orders the fonts by language; `typst-serializer.ts` uses it.
+- **A2** The body walker marks Word line breaks (`w:br` without a type, `w:cr`) on the run (`TextRun.lineBreak`); `SectionBuilder` splits body paragraphs and quotes there. Headings, list items, captions and table cells keep a space. ADR-0040 §4.5 updated.
+- **A3** `largePicturesIssue` (`DOCX_LARGE_PICTURES`, warning): over 10 MB in total or any picture over 1 MB (1 MB = 1,048,576 bytes, as elsewhere in the app). The desktop coordinator recounts it, like the alt-text warning, when it refuses pictures.
+- **B** `NotoSerif-Italic[wdth,wght].ttf` (2,448,496 bytes), `NotoSans-Italic[wdth,wght].ttf` (2,322,640) and `NotoEmoji[wght].ttf` (1,982,596) pinned in `inventory.json`, with font clearance and evidence-inventory entries; Noto Emoji is last in every font list. ADR-0013 §6 updated. `build-runtime.mjs` downloaded and verified all seven fonts.
+
+Tests: PDF (font order for English and Kannada; new pins; a real Typst build embeds Noto Serif Italic and Noto Emoji and no Kannada font for an English book), importer (line breaks split and kept; the warning above and below its limits), desktop (a refused large picture leaves no warning). All 12 workspaces' `npm test` pass (importer 115, PDF 31, desktop 530).
+
+**Local check with the maintainer's book.** Import: “With warmth and blessings,” / “The Publisher” and “With affection and gratitude,” / “The Publisher” are now separate lines; the summary adds “Your 27 pictures add up to 27.4 MB, and 10 are over 1 MB…”. Book check clean; EPUBCheck 5.3.0: 0 errors, 0 warnings. PDF (85 pages): the Foreword, Preface and the bold-italic “Value:” lines print in italics; “Story 1:” matches its title; fonts embedded are Noto Serif (regular and italic), Noto Sans and Noto Emoji, with no Kannada font. The drawn box in Stories 1–2 still breaks apart in the PDF; that is ADR-0041's lesson box.

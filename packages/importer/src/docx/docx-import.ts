@@ -93,6 +93,8 @@ export function importDocx(
       body.counts.automaticAltText,
     );
     if (withoutAlt) issues.push(withoutAlt);
+    const large = largePicturesIssue(images.map((image) => image.bytes.byteLength));
+    if (large) issues.push(large);
 
     if (structure.altTextConflicts > 0) {
       issues.push({
@@ -134,6 +136,32 @@ export function picturesWithoutAltTextIssue(count: number, automatic = 0): Impor
     code: PICTURES_WITHOUT_ALT_TEXT,
     severity: "warning",
     message: `${plural(count, "picture")} ${count === 1 ? "has" : "have"} no description (alt text) for readers who use screen readers.${automaticNote} Add descriptions in Word (right-click a picture › View Alt Text) and import again; ebook stores may ask for them.`,
+  };
+}
+
+export const LARGE_PICTURES = "DOCX_LARGE_PICTURES";
+
+const MEGABYTE = 1024 * 1024;
+const LARGE_PICTURES_TOTAL_BYTES = 10 * MEGABYTE;
+const LARGE_PICTURE_BYTES = MEGABYTE;
+
+/**
+ * One warning when the pictures together, or any one of them, are large: a large ebook costs
+ * the author a delivery fee on each sale in some stores. Callers that later drop pictures
+ * rebuild it with the pictures that remain.
+ */
+export function largePicturesIssue(sizes: readonly number[]): ImportIssue | undefined {
+  const total = sizes.reduce((sum, size) => sum + size, 0);
+  const over = sizes.filter((size) => size > LARGE_PICTURE_BYTES).length;
+  if (total <= LARGE_PICTURES_TOTAL_BYTES && over === 0) return undefined;
+  const megabytes = `${(total / MEGABYTE).toFixed(1)} MB`;
+  const count = sizes.length === 1 ? "Your picture is" : `Your ${plural(sizes.length, "picture")} add up to`;
+  const overNote =
+    over === 0 || sizes.length === 1 ? "" : `, and ${over === sizes.length ? "every one" : over} ${over === 1 ? "is" : "are"} over 1 MB`;
+  return {
+    code: LARGE_PICTURES,
+    severity: "warning",
+    message: `${count} ${megabytes}${overNote}. Large pictures make the ebook large, and Kindle charges a delivery fee by file size on each sale. In Word, use File › Compress Pictures, or save large PNG pictures as JPEG, then import again.`,
   };
 }
 

@@ -60,7 +60,9 @@ import type { ValidationReport, ValidatorService } from "@openbook/validator";
 import {
   IMPORTED_IMAGE_PLACEHOLDER_PREFIX,
   ImportService,
+  LARGE_PICTURES,
   PICTURES_WITHOUT_ALT_TEXT,
+  largePicturesIssue,
   picturesWithoutAltTextIssue,
   type ImportedImagePayload,
   type ImportIssue,
@@ -1830,17 +1832,16 @@ async function ingestImportedImages(
 
   const rejected = [...resolved.values()].filter((asset) => asset === null).length;
   // The importer counted pictures without a description before any were refused; recount the kept ones.
+  const kept = images.filter((image) => resolved.get(image.placeholderId));
   const recount =
-    rejected === 0
-      ? undefined
-      : picturesWithoutAltTextIssue(
-          images.filter((image) => resolved.get(image.placeholderId) && image.altText.trim() === "").length,
-        );
+    rejected === 0 ? undefined : picturesWithoutAltTextIssue(kept.filter((image) => image.altText.trim() === "").length);
+  const largeRecount = rejected === 0 ? undefined : largePicturesIssue(kept.map((image) => image.bytes.byteLength));
   const issues: ImportIssue[] =
     rejected === 0
       ? []
       : [
           ...(recount ? [recount] : []),
+          ...(largeRecount ? [largeRecount] : []),
           {
             code: "DOCX_PICTURES_REJECTED",
             severity: "warning",
@@ -1858,7 +1859,7 @@ async function ingestImportedImages(
     },
     newAssets,
     issues,
-    replacesCodes: rejected === 0 ? [] : [PICTURES_WITHOUT_ALT_TEXT],
+    replacesCodes: rejected === 0 ? [] : [PICTURES_WITHOUT_ALT_TEXT, LARGE_PICTURES],
   };
 }
 

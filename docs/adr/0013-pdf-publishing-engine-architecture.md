@@ -120,6 +120,7 @@ Kannada (ಕನ್ನಡ) typographic correctness was empirically verified again
 - **Embedding & Subsetting:** Typst embeds subsetted OpenType CIDFontType0/2 fonts with standard 6-character subset prefixes and full `/ToUnicode` CMaps directly into the PDF byte stream. Output text is fully searchable and selectable in compliant PDF viewers.
 - **Font Isolation:** Typst CLI must be invoked with `--ignore-system-fonts` and `--font-path <DIR>`. System fonts are completely ignored, guaranteeing cross-platform layout identity.
 - **Preferred Initial Kannada Font:** **Noto Serif Kannada** (for body text) and **Noto Sans Kannada** (for headings and tables), distributed under the **SIL Open Font License 1.1 (OFL-1.1)**.
+- **Font order and added fonts (2026-10-30, `docs/book-test-fixes-proposal.md`):** the Kannada fonts come first only for Kannada books; other books list Noto Serif / Noto Sans first, so their digits and punctuation come from the Latin fonts. Noto Serif Italic and Noto Sans Italic are bundled so emphasis prints in italics, and the monochrome Noto Emoji (OFL-1.1) is last in every list. All are pinned in `packages/pdf/packaging/inventory.json`.
 
 ## 7. Injected AssetResolver Boundary
 

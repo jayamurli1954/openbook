@@ -215,7 +215,8 @@ Each drop adds one `info` issue so the summary can say “Your typed table of co
 | `w:i` (italic), or Emphasis | `emphasis` |
 | `w:hyperlink` with an **external** relationship whose target is `http:`, `https:`, or `mailto:` | `link` with that `href`. The target string is copied; it is **never fetched** |
 | `w:hyperlink` with any other scheme, or an internal `w:anchor` | plain text (no cross-reference model yet) |
-| `w:tab`, `w:br` (line break inside a paragraph) | a space; soft line breaks inside poems are kept as separate paragraphs only when the author used paragraph marks |
+| `w:tab` | a space |
+| `w:br`, `w:cr` (line break inside a paragraph, Shift+Enter) | in body text and quotes, a new paragraph with the same style and formatting (no empty paragraphs); in headings, list items, captions and table cells, a space. Changed on 2026-10-30 with maintainer authorization — see `docs/book-test-fixes-proposal.md` |
 | `w:sym`, `w:noBreakHyphen`, `w:softHyphen` | the Unicode character, a non-breaking hyphen, or nothing |
 | Underline, strike, colour, highlight, font, size, spacing, small caps, superscript/subscript | dropped |
 

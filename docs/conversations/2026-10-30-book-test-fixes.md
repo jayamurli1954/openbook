@@ -14,11 +14,18 @@ After PR #189 (front-matter title variants), the maintainer asked what OpenBook 
 1. Propose first; the proposal does not authorize code.
 2. Part A (font order by language, line breaks as new paragraphs, a large-picture warning) needs no download. Part B (italic fonts, optional emoji font) adds pinned fonts and is authorized separately.
 3. The drawn “What We Learned” box is left to ADR-0041.
+4. The maintainer wrote “Authorize A and B” (2026-10-30), including the emoji font; both parts were implemented.
+5. The worktree had no `node_modules`, so desktop tests first resolved `@openbook/*` from the main checkout; `npm ci` in the worktree fixed that before the final test run.
+6. Process: Draft PR → CI/DCO → merge only on an explicit maintainer authorization such as “Authorize #NN”.
 
 ## Open questions
 
-- Authorize Part A, Part B, or both? Include the emoji font (B2)?
+- Should the PDF use the Design step's font choices (`book.typography`)? Today it uses only the default profile.
 
 ## Action items
 
-- Maintainer: review the proposal.
+- Maintainer: compress the book's pictures in Word; re-import and check the PDF's italics and signature lines in the desktop app.
+
+## Outcomes
+
+- Branch `fix/book-test-fixes`.
