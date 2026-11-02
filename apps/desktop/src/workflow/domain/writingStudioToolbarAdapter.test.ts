@@ -11,7 +11,9 @@ import {
   type WritingStudioEditorCommandPort,
 } from "./writingStudioToolbarAdapter.js";
 
-function createRecordingEditor(): {
+function createRecordingEditor(
+  lessonBox: { toggle: "made" | "unmade" | "refused"; inBox: boolean } = { toggle: "made", inBox: true },
+): {
   readonly port: WritingStudioEditorCommandPort;
   readonly calls: string[];
 } {
@@ -34,6 +36,14 @@ function createRecordingEditor(): {
     },
     toggleBlockquote: () => {
       calls.push("toggleBlockquote");
+    },
+    toggleLessonBox: (title) => {
+      calls.push(`toggleLessonBox:${title}`);
+      return lessonBox.toggle;
+    },
+    setLessonBoxTitle: (title) => {
+      calls.push(`setLessonBoxTitle:${title}`);
+      return lessonBox.inBox;
     },
     setLink: (href) => {
       calls.push(`setLink:${href}`);
@@ -65,6 +75,8 @@ test("maps every contract toolbar command onto the TipTap command port", () => {
     "toggle-bullet-list": "toggleBulletList",
     "toggle-ordered-list": "toggleOrderedList",
     "toggle-blockquote": "toggleBlockquote",
+    "toggle-lesson-box": "toggleLessonBox:What We Learned",
+    "set-lesson-box-title": "setLessonBoxTitle:Remember",
     "set-link": "setLink:https://example.org",
     "unset-link": "unsetLink",
     undo: "undo",
@@ -74,7 +86,13 @@ test("maps every contract toolbar command onto the TipTap command port", () => {
   for (const command of WRITING_STUDIO_TOOLBAR_COMMANDS) {
     calls.length = 0;
     const args =
-      command === "set-link" ? { href: "https://example.org" } : undefined;
+      command === "set-link"
+        ? { href: "https://example.org" }
+        : command === "toggle-lesson-box"
+          ? { title: "  What We Learned " }
+          : command === "set-lesson-box-title"
+            ? { title: "Remember" }
+            : undefined;
     const result = executeWritingStudioToolbarCommand(port, command, args);
     assert.equal(result.ok, true);
     assert.deepEqual(calls, [expected[command]]);
@@ -130,4 +148,22 @@ test("adapter surface stays free of BookSession and TipTap persistence", () => {
     Object.prototype.hasOwnProperty.call(adapter, "persistTipTap"),
     false,
   );
+});
+
+test("lesson-box commands report refusals in plain language (ADR-0041 Slice 3)", () => {
+  const outside = createRecordingEditor({ toggle: "refused", inBox: false });
+  const toggle = executeWritingStudioToolbarCommand(outside.port, "toggle-lesson-box", { title: "What We Learned" });
+  assert.equal(toggle.ok, false);
+  if (!toggle.ok) {
+    assert.equal(toggle.code, "NOT_A_PARAGRAPH");
+    assert.equal(toggle.message, "Put the cursor in a paragraph to make a lesson box.");
+  }
+  const title = executeWritingStudioToolbarCommand(outside.port, "set-lesson-box-title", { title: "T" });
+  assert.equal(title.ok, false);
+  if (!title.ok) assert.equal(title.code, "NOT_IN_LESSON_BOX");
+
+  const inside = createRecordingEditor({ toggle: "unmade", inBox: true });
+  assert.equal(executeWritingStudioToolbarCommand(inside.port, "toggle-lesson-box", { title: "X" }).ok, true);
+  assert.equal(executeWritingStudioToolbarCommand(inside.port, "set-lesson-box-title", { title: "" }).ok, true);
+  assert.deepEqual(inside.calls, ["toggleLessonBox:X", "setLessonBoxTitle:"]);
 });

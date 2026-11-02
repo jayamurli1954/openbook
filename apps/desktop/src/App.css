@@ -1811,3 +1811,23 @@ dd {
   margin-bottom: 0.35em;
   font-weight: 700;
 }
+
+/* ADR-0041 Slice 3: Box title field in the Write toolbar */
+.writing-studio-box-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin-left: 0.5em;
+  font-size: 0.85rem;
+  color: var(--ob-ink-muted);
+}
+
+.writing-studio-box-title input {
+  font: inherit;
+  width: 12em;
+  padding: 0.2em 0.45em;
+  border: 1px solid var(--ob-border-strong);
+  border-radius: var(--ob-radius);
+  background: var(--ob-surface);
+  color: var(--ob-ink);
+}

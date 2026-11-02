@@ -24,6 +24,10 @@ export interface WritingStudioEditorCommandPort {
   toggleBulletList(): void;
   toggleOrderedList(): void;
   toggleBlockquote(): void;
+  /** ADR-0041: paragraph → lesson box, or lesson box → paragraph; "refused" elsewhere. */
+  toggleLessonBox(title: string): "made" | "unmade" | "refused";
+  /** ADR-0041: change the title of the lesson box at the cursor; false when not in a box. */
+  setLessonBoxTitle(title: string): boolean;
   setLink(href: string): void;
   unsetLink(): void;
   undo(): void;
@@ -33,7 +37,9 @@ export interface WritingStudioEditorCommandPort {
 export type WritingStudioToolbarErrorCode =
   | "UNKNOWN_COMMAND"
   | "LINK_HREF_REQUIRED"
-  | "EDITOR_UNAVAILABLE";
+  | "EDITOR_UNAVAILABLE"
+  | "NOT_A_PARAGRAPH"
+  | "NOT_IN_LESSON_BOX";
 
 export type WritingStudioToolbarResult =
   | { readonly ok: true; readonly command: WritingStudioToolbarCommand }
@@ -127,6 +133,28 @@ export function executeWritingStudioToolbarCommand(
     case "toggle-blockquote":
       editor.toggleBlockquote();
       return { ok: true, command };
+    case "toggle-lesson-box": {
+      const title = typeof args?.title === "string" ? args.title.trim() : "";
+      if (editor.toggleLessonBox(title) === "refused") {
+        return {
+          ok: false,
+          code: "NOT_A_PARAGRAPH",
+          message: "Put the cursor in a paragraph to make a lesson box.",
+        };
+      }
+      return { ok: true, command };
+    }
+    case "set-lesson-box-title": {
+      const title = typeof args?.title === "string" ? args.title : "";
+      if (!editor.setLessonBoxTitle(title)) {
+        return {
+          ok: false,
+          code: "NOT_IN_LESSON_BOX",
+          message: "Put the cursor in a lesson box to change its title.",
+        };
+      }
+      return { ok: true, command };
+    }
     case "set-link": {
       const href = typeof args?.href === "string" ? args.href.trim() : "";
       if (href.length === 0) {

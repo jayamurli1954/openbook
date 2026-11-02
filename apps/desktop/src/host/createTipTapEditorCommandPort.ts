@@ -3,6 +3,8 @@
  * Bind a live TipTap Editor to the Writing Studio editor command port.
  */
 import type { Editor } from "@tiptap/core";
+// Brings the lesson-box command types (setLessonBox, unsetLessonBox, setLessonBoxTitle) into scope.
+import type {} from "../ui/openbookCalloutNode";
 import type {
   WritingStudioEditorCommandPort,
   WritingStudioHeadingLevel,
@@ -29,6 +31,17 @@ export function createTipTapEditorCommandPort(
     },
     toggleBlockquote: () => {
       editor.chain().focus().toggleBlockquote().run();
+    },
+    toggleLessonBox: (title: string) => {
+      if (editor.isActive("openbookCallout")) {
+        return editor.chain().focus().unsetLessonBox().run() ? "unmade" : "refused";
+      }
+      return editor.chain().focus().setLessonBox(title).run() ? "made" : "refused";
+    },
+    setLessonBoxTitle: (title: string) => {
+      if (!editor.isActive("openbookCallout")) return false;
+      // No focus(): the title field keeps the keyboard while the author types.
+      return editor.commands.setLessonBoxTitle(title);
     },
     setLink: (href: string) => {
       editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
