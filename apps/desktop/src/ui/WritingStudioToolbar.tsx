@@ -10,12 +10,21 @@ import {
   type WritingStudioToolbarCommand,
 } from "../workflow/domain/writingStudioContract.js";
 import type { IWritingStudioToolbarAdapter } from "../workflow/domain/writingStudioToolbarAdapter.js";
+import { DEFAULT_LESSON_BOX_TITLE } from "../workflow/domain/lessonBoxEditing.js";
 
 export interface WritingStudioToolbarProps {
   readonly toolbar: IWritingStudioToolbarAdapter;
   readonly disabled?: boolean;
   /** Optional href prompt for set-link (defaults to window.prompt). */
   readonly promptLinkHref?: () => string | null;
+  /** ADR-0041: title a new lesson box starts with (the last one used in the book). */
+  readonly newLessonBoxTitle?: string;
+  /** ADR-0041: title of the lesson box at the cursor, or null when the cursor isn't in one. */
+  readonly lessonBoxTitle?: string | null;
+  /** Called after the author changes a box title, so the next new box can reuse it. */
+  readonly onLessonBoxTitleChange?: (title: string) => void;
+  /** Plain-language message when a command can't run where the cursor is. */
+  readonly onStatus?: (message: string, kind: "ok" | "error") => void;
 }
 
 const COMMAND_LABELS: Record<WritingStudioToolbarCommand, string> = {
@@ -30,13 +39,16 @@ const COMMAND_LABELS: Record<WritingStudioToolbarCommand, string> = {
   "toggle-bullet-list": "Bullets",
   "toggle-ordered-list": "Numbers",
   "toggle-blockquote": "Quote",
+  "toggle-lesson-box": "Lesson box",
+  "set-lesson-box-title": "Box title",
   "set-link": "Link",
   "unset-link": "Unlink",
   undo: "Undo",
   redo: "Redo",
 };
 
-/** Product chrome order — contract still enumerates the full command set. */
+/** Product chrome order — contract still enumerates the full command set.
+ * "set-lesson-box-title" is the Box title field, not a button. */
 const TOOLBAR_ORDER: readonly WritingStudioToolbarCommand[] = [
   "toggle-bold",
   "toggle-italic",
@@ -49,6 +61,7 @@ const TOOLBAR_ORDER: readonly WritingStudioToolbarCommand[] = [
   "toggle-bullet-list",
   "toggle-ordered-list",
   "toggle-blockquote",
+  "toggle-lesson-box",
   "set-link",
   "unset-link",
   "undo",
@@ -69,6 +82,10 @@ export default function WritingStudioToolbar({
   toolbar,
   disabled = false,
   promptLinkHref = defaultPromptLinkHref,
+  newLessonBoxTitle = DEFAULT_LESSON_BOX_TITLE,
+  lessonBoxTitle = null,
+  onLessonBoxTitleChange,
+  onStatus,
 }: WritingStudioToolbarProps) {
   const onCommand = (command: WritingStudioToolbarCommand) => {
     if (command === "set-link") {
@@ -77,7 +94,21 @@ export default function WritingStudioToolbar({
       toolbar.executeCommand(command, { href });
       return;
     }
+    if (command === "toggle-lesson-box") {
+      const result = toolbar.executeCommand(command, { title: newLessonBoxTitle });
+      if (!result.ok) onStatus?.(result.message, "error");
+      return;
+    }
     toolbar.executeCommand(command);
+  };
+
+  const onTitleChange = (title: string) => {
+    const result = toolbar.executeCommand("set-lesson-box-title", { title });
+    if (!result.ok) {
+      onStatus?.(result.message, "error");
+      return;
+    }
+    if (title.trim()) onLessonBoxTitleChange?.(title.trim());
   };
 
   return (
@@ -102,6 +133,20 @@ export default function WritingStudioToolbar({
           </button>
         );
       })}
+      {lessonBoxTitle !== null ? (
+        <label className="writing-studio-box-title" data-testid="writing-studio-box-title">
+          Box title
+          <input
+            type="text"
+            aria-label="Box title"
+            data-testid="writing-studio-box-title-input"
+            value={lessonBoxTitle}
+            placeholder="No title"
+            disabled={disabled}
+            onChange={(event) => onTitleChange(event.target.value)}
+          />
+        </label>
+      ) : null}
     </div>
   );
 }

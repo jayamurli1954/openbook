@@ -51,6 +51,7 @@ import { createDesignStudioChoices } from "./workflow/domain/designStudioChoices
 import { createMetadataWizardFields } from "./workflow/domain/metadataWizardFields";
 import { createCoverWizardFields } from "./workflow/domain/coverWizardFields";
 import { readCover } from "./workflow/domain/coverWizardContract";
+import { lastLessonBoxTitle } from "./workflow/domain/lessonBoxEditing";
 import { createStructureStudioMatterRail } from "./workflow/domain/structureStudioMatterRail";
 import { projectBookNavigation } from "./workflow/domain/structureStudioNavPreview";
 import {
@@ -120,6 +121,9 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   const [activeStep, setActiveStep] = useState<StudioStepId>("write");
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  // ADR-0041 Slice 3: the box at the cursor (null when not in one) and the title the next box starts with.
+  const [lessonBoxTitle, setLessonBoxTitle] = useState<string | null>(null);
+  const [chosenLessonBoxTitle, setChosenLessonBoxTitle] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(true);
   /** ADR-0039 Slice 6: the app opens on the start screen. */
   const [view, setView] = useState<"start" | "studio">("start");
@@ -337,6 +341,24 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     editor.on("update", onUpdate);
     return () => {
       editor.off("update", onUpdate);
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const followCursor = () => {
+      setLessonBoxTitle(
+        editor.isActive("openbookCallout")
+          ? String(editor.getAttributes("openbookCallout").title ?? "")
+          : null,
+      );
+    };
+    followCursor();
+    editor.on("selectionUpdate", followCursor);
+    editor.on("transaction", followCursor);
+    return () => {
+      editor.off("selectionUpdate", followCursor);
+      editor.off("transaction", followCursor);
     };
   }, [editor]);
 
@@ -975,6 +997,10 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
             <WritingStudioToolbar
               toolbar={writingStudioToolbar}
               disabled={!editor}
+              newLessonBoxTitle={chosenLessonBoxTitle ?? lastLessonBoxTitle(coordinator.getBook())}
+              lessonBoxTitle={lessonBoxTitle}
+              onLessonBoxTitleChange={setChosenLessonBoxTitle}
+              onStatus={reportStatus}
             />
             <div className="writing-studio-media-row">
               <WritingStudioImageButton

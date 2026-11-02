@@ -82,6 +82,8 @@ export type WritingStudioToolbarCommand =
   | "toggle-bullet-list"
   | "toggle-ordered-list"
   | "toggle-blockquote"
+  | "toggle-lesson-box"
+  | "set-lesson-box-title"
   | "set-link"
   | "unset-link"
   | "undo"
@@ -100,6 +102,8 @@ export const WRITING_STUDIO_TOOLBAR_COMMANDS: readonly WritingStudioToolbarComma
     "toggle-bullet-list",
     "toggle-ordered-list",
     "toggle-blockquote",
+    "toggle-lesson-box",
+    "set-lesson-box-title",
     "set-link",
     "unset-link",
     "undo",
@@ -133,6 +137,8 @@ export interface WritingStudioSearchHit {
 
 export interface WritingStudioToolbarCommandArgs {
   readonly href?: string;
+  /** Lesson-box title: the new box's title, or the edited title (ADR-0041 Slice 3). */
+  readonly title?: string;
 }
 
 /** Shape-only port — TipTap/editor execution is a later slice. */

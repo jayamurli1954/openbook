@@ -63,6 +63,7 @@ export const STUDIO_GUIDE: Readonly<Record<StudioStepId, StudioGuide>> = {
       "Draft first, polish later. Getting words down matters more than getting them perfect.",
       "Chapters come from the outline on the left. Use Heading only for sections inside a chapter.",
       "Focus hides everything except your page.",
+      "Put a lesson or tip in a box: click in its paragraph, then Lesson box.",
     ],
     questions: [
       {
