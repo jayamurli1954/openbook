@@ -1,6 +1,6 @@
 # ADR-0041 Slice 4: Turn Labelled Paragraphs into Lesson Boxes — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #204)
 - **Date:** 2026-11-02
 - **Parent architecture:** ADR-0041 — Lesson Box (Callout Block) Architecture, §2.3 (book-wide action), §4 invariant 6, §7 Slice 4
 - **Scope:** one Write-step action that finds every paragraph starting with a label (e.g. "What We Learned:"), shows how many and where, and turns them all into lesson boxes as one undoable change

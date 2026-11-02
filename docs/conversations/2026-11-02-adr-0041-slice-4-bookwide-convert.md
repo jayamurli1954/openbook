@@ -21,6 +21,7 @@ Slice 3 (PR #202) lets an author box lessons one at a time. Books imported from 
 ## Outcomes
 
 - Branch `feat/adr-0041-slice-4-bookwide-convert`.
+- Merged as PR #204 (merge commit `5d0d354`) on 2026-11-02 after the maintainer authorized the merge; all four checks passed.
 - Desktop `npm test` passes (541); authoring tests pass; the app builds.
 - Real-book check (local, not committed): `Little_Krishnas_Wisdom_cleaned.docx` imported; the prefilled label "What We Learned:" found 25 matches and converted them in one revision to 25 boxes titled "What We Learned"; one undo restored the book exactly; the EPUB passed EPUBCheck 5.3.0 with no messages and holds 25 `ob-callout` boxes.
 - Checked in the running app (Vite, browser pane): Find listed 2 matches (a bold label and a lowercase one, not "Remember:"); converting showed both boxes in the open chapter with "Turned 2 paragraphs into lesson boxes." and Undo; Undo restored the paragraphs exactly; after converting again, typing in the editor removed the Undo button; "Moral:" gave "No paragraphs start with “Moral:”."
