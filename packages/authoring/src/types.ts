@@ -53,6 +53,10 @@ export interface IBookSession {
   updateTypography(typography: TypographySettings): void;
 
   setSectionBlocks(sectionId: string, blocks: readonly ContentBlock[]): void;
+  /** ADR-0041 Slice 4: several sections' blocks as one change (one undo step). */
+  replaceSectionsBlocks(
+    changes: readonly { readonly sectionId: string; readonly blocks: readonly ContentBlock[] }[],
+  ): void;
   insertBlock(
     sectionId: string,
     atIndex: number,

@@ -29,6 +29,7 @@ import PublishStep from "./ui/PublishStep";
 import GuidedStartWizard from "./ui/GuidedStartWizard";
 import WritingStudioToolbar from "./ui/WritingStudioToolbar";
 import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
+import LessonBoxConversionPanel from "./ui/LessonBoxConversionPanel";
 import WritingStudioImageButton from "./ui/WritingStudioImageButton";
 import DesignStudioChoices from "./ui/DesignStudioChoices";
 import MetadataWizardFields from "./ui/MetadataWizardFields";
@@ -1034,6 +1035,13 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
               queryAdapter={writingStudioQuery}
               sectionId={studio.selectedSectionId}
               onSelectHit={(hit) => onSelectChapter(hit.sectionId)}
+            />
+            <LessonBoxConversionPanel
+              getBook={() => coordinator.getBook()}
+              session={coordinator.getSession()}
+              onBeforeChange={flushEditorIntoSession}
+              onChanged={loadSectionIntoEditor}
+              onStatus={reportStatus}
             />
             <EditorContent editor={editor} />
           </div>

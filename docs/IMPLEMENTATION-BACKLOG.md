@@ -158,7 +158,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0041 Slice 1 (model + contract)  [DONE — PR #196; schemaVersion 2]
 ├── ADR-0041 Slice 2 (EPUB/HTML/PDF)     [DONE — PR #198]
 ├── ADR-0041 Slice 3 (Write controls)    [DONE — PR #202]
-├── ADR-0041 Slice 4 (book-wide convert) [NEXT — awaits authorization]
+├── ADR-0041 Slice 4 (book-wide convert) [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]

@@ -1910,6 +1910,7 @@ const SESSION_MUTATORS = new Set([
   "updateSectionRole",
   "updateMetadata",
   "setSectionBlocks",
+  "replaceSectionsBlocks",
   "insertBlock",
   "updateBlock",
   "removeBlock",
