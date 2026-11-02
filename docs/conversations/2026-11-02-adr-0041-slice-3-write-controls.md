@@ -21,5 +21,6 @@ Slices 1–2 (PRs #196, #198) put the callout in the Book and in every export. T
 ## Outcomes
 
 - Branch `feat/adr-0041-slice-3-write-controls`.
+- Merged as PR #202 (merge commit `a9340a4`) on 2026-11-02 after the maintainer authorized the merge; all four checks passed.
 - Full repository `npm test` passes (desktop 536).
 - Checked in the running app (Vite, browser pane): made a box (default title, field shown), typed a new title in the field (box follows each keystroke, field keeps focus), Enter at the end made a paragraph below, the button turned the box back into a paragraph with bold "Our Lesson: ", Undo restored the box, a second box started with "Our Lesson", the button was refused in a heading with the plain message, and Backspace in an empty box turned it back into a paragraph.

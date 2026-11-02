@@ -2,7 +2,7 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-10-14
-- **Reconciled to:** `main` at `ba61892` after the book-test fixes (#200)
+- **Reconciled to:** `main` at `a9340a4` after ADR-0041 Slice 3 (#202)
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`, `docs/adr/0029-project-package-filesystem-persistence-architecture.md`.
@@ -157,7 +157,8 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── Domain selection + ADR-0041 (lesson box) [DONE — PR #192; accepted]
 ├── ADR-0041 Slice 1 (model + contract)  [DONE — PR #196; schemaVersion 2]
 ├── ADR-0041 Slice 2 (EPUB/HTML/PDF)     [DONE — PR #198]
-├── ADR-0041 Slice 3 (Write controls)    [IN PROGRESS — this PR]
+├── ADR-0041 Slice 3 (Write controls)    [DONE — PR #202]
+├── ADR-0041 Slice 4 (book-wide convert) [NEXT — awaits authorization]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
