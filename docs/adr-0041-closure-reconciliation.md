@@ -1,6 +1,6 @@
 # ADR-0041 Lesson Box (Callout Block) — Closure & Reconciliation
 
-- **Status:** Implementation-complete with Slice 5 (this PR); closure/reconciliation record
+- **Status:** Implementation-complete (Slice 5 merged in PR #206, `92674f4`); closure/reconciliation record
 - **Date:** 2026-11-02
 - **Baseline:** `main` after ADR-0041 Slice 4 status reconcile (PR #205, `60b2947`) plus Slice 5; pre-ADR-0041 `main` is `4a06d32`
 - **Authority:** ADR-0041 — Lesson Box (Callout Block) Architecture
@@ -27,7 +27,7 @@ This record does not authorize:
 | 2 | Publishing: EPUB, HTML, and PDF boxes; styles only when a book has a box | Done — PR #198 (status PR #199) |
 | 3 | Write controls: Lesson box button, Box title field, node commands | Done — PR #202 (status PR #203) |
 | 4 | Book-wide conversion: Write panel, `BookSession.replaceSectionsBlocks` | Done — PR #204 (status PR #205) |
-| 5 | Hardening: English and Kannada end to end, panel styling, real-book check, closure | Done — this PR |
+| 5 | Hardening: English and Kannada end to end, panel styling, real-book check, closure | Done — PR #206 (status PR closes the sequence) |
 
 ## 3. Architectural invariants (ADR-0041 §4)
 

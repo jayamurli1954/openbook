@@ -27,6 +27,7 @@ Slices 1–4 (PRs #196, #198, #202, #204) were each tested on their own. The pro
 ## Outcomes
 
 - Branch `feat/adr-0041-slice-5-hardening`.
+- Merged as PR #206 (merge commit `92674f4`) on 2026-11-02 after the maintainer authorized the merge; all four checks passed. ADR-0041 is closed.
 - The new end-to-end tests pass (3), and the full repository `npm test` passes.
 - **Real-book check:**
   - 25 lessons were converted into 25 boxes, and Save → Open gave an identical Book.
