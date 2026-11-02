@@ -1,6 +1,6 @@
 # ADR-0041 Slice 5: Lesson Box Hardening and Closure — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #206)
 - **Date:** 2026-11-02
 - **Parent architecture:** ADR-0041 — Lesson Box (Callout Block) Architecture, §4 invariants, §7 Slice 5
 - **Scope:** End-to-end English and Kannada tests of the whole lesson-box path; the maintainer's cleaned book with its 25 lessons converted in the app's own flow; the Kindle Previewer check; small Write-panel fixes; closure of the ADR-0041 sequence
