@@ -1,6 +1,6 @@
 # ADR-0041 Slice 3: Lesson Box Controls in Write — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #202)
 - **Date:** 2026-11-02
 - **Parent architecture:** ADR-0041 — Lesson Box (Callout Block) Architecture, §2.3, §7 Slice 3
 - **Scope:** Write-step controls to make a lesson box from a paragraph, edit its title, and turn it back into a paragraph; no book-wide conversion (Slice 4)
