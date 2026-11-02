@@ -360,6 +360,25 @@ dd {
   background: #fafafa;
 }
 
+.lesson-box-conversion {
+  margin: 0 0 0.65rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #ddd;
+  background: #fafafa;
+}
+
+.lesson-box-conversion-heading {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+}
+
+.lesson-box-conversion-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
 .writing-studio-word-count {
   margin: 0 0 0.4rem;
 }

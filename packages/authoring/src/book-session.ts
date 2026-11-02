@@ -356,35 +356,65 @@ export class BookSession implements IBookSession {
   }
 
   setSectionBlocks(sectionId: string, blocks: readonly ContentBlock[]): void {
+    this.#mutate((candidate) => this.#replaceSectionBlocks(candidate, sectionId, blocks));
+  }
+
+  /**
+   * ADR-0041 Slice 4: replace the blocks of several sections as one change — one undo step,
+   * validated once, all or nothing.
+   */
+  replaceSectionsBlocks(
+    changes: readonly { readonly sectionId: string; readonly blocks: readonly ContentBlock[] }[],
+  ): void {
     this.#mutate((candidate) => {
-      if (!Array.isArray(blocks)) {
-        throw new InvalidStructureOperationError("blocks must be an array.");
+      if (!Array.isArray(changes) || changes.length === 0) {
+        throw new InvalidStructureOperationError("At least one section change is required.");
       }
-      for (const block of blocks) {
-        if (!isContentBlock(block)) {
+      const seen = new Set<string>();
+      for (const change of changes) {
+        if (seen.has(change.sectionId)) {
           throw new InvalidStructureOperationError(
-            `Unsupported or invalid content block type.`,
+            `Section "${change.sectionId}" appears more than once.`,
           );
         }
+        seen.add(change.sectionId);
+        this.#replaceSectionBlocks(candidate, change.sectionId, change.blocks);
       }
-      const located = findSection(candidate, sectionId);
-      const occupied = collectCanonicalIds(candidate);
-      // Section's current block IDs will be replaced; free them for reallocation.
-      for (const block of located.section.blocks) {
-        occupied.delete(block.id);
-      }
-      const assigned =
-        blocks.length > 0
-          ? blocks.map((b) => this.#assignBlockId(b, occupied))
-          : [emptyParagraph(this.#ids.allocateUnique("block", occupied))];
-      const key = matterKey(located.matter);
-      const list = [...candidate[key]];
-      list[located.index] = {
-        ...located.section,
-        blocks: assigned,
-      };
-      candidate[key] = list;
     });
+  }
+
+  #replaceSectionBlocks(
+    candidate: Book,
+    sectionId: string,
+    blocks: readonly ContentBlock[],
+  ): void {
+    if (!Array.isArray(blocks)) {
+      throw new InvalidStructureOperationError("blocks must be an array.");
+    }
+    for (const block of blocks) {
+      if (!isContentBlock(block)) {
+        throw new InvalidStructureOperationError(
+          `Unsupported or invalid content block type.`,
+        );
+      }
+    }
+    const located = findSection(candidate, sectionId);
+    const occupied = collectCanonicalIds(candidate);
+    // Section's current block IDs will be replaced; free them for reallocation.
+    for (const block of located.section.blocks) {
+      occupied.delete(block.id);
+    }
+    const assigned =
+      blocks.length > 0
+        ? blocks.map((b) => this.#assignBlockId(b, occupied))
+        : [emptyParagraph(this.#ids.allocateUnique("block", occupied))];
+    const key = matterKey(located.matter);
+    const list = [...candidate[key]];
+    list[located.index] = {
+      ...located.section,
+      blocks: assigned,
+    };
+    candidate[key] = list;
   }
 
   insertBlock(
