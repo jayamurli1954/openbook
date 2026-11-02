@@ -118,6 +118,8 @@ test("the Write step has a panel to find labelled paragraphs and box them, with 
   assert.match(panel, /replaceSectionsBlocks/);
   assert.match(panel, /data-testid="lesson-box-conversion-label"/);
   assert.match(panel, /Turn into lesson boxes/);
+  assert.match(panel, /className="studio-btn lesson-box-conversion-convert"/);
+  assert.match(read("App.css"), /\.lesson-box-conversion-row input\[type="text"\] \{/);
   const editor = read("EditorSurface.tsx");
   assert.match(editor, /<LessonBoxConversionPanel/);
   for (const message of [

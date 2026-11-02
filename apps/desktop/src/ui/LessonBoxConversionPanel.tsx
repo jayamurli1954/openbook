@@ -124,7 +124,7 @@ export default function LessonBoxConversionPanel({
             {matches.length > LISTED_MATCHES ? (
               <p className="detail">{`and ${matches.length - LISTED_MATCHES} more`}</p>
             ) : null}
-            <button type="button" className="studio-btn" data-testid="lesson-box-conversion-convert" onClick={convert}>
+            <button type="button" className="studio-btn lesson-box-conversion-convert" data-testid="lesson-box-conversion-convert" onClick={convert}>
               Turn into lesson boxes
             </button>
           </div>
@@ -132,7 +132,7 @@ export default function LessonBoxConversionPanel({
       ) : null}
 
       {message ? (
-        <p className="note" role="status" data-testid="lesson-box-conversion-result">
+        <p className="note lesson-box-conversion-result" role="status" data-testid="lesson-box-conversion-result">
           {message}{" "}
           {canUndo ? (
             <button type="button" data-testid="lesson-box-conversion-undo" onClick={undo}>
