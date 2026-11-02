@@ -1,6 +1,6 @@
 # ADR-0041: Lesson Box (Callout Block) Architecture
 
-- **Status:** Accepted (PR #192); implementation not authorized
+- **Status:** Accepted (PR #192); Slices 1–5 implemented (PRs #196, #198, #202, #204, and the Slice 5 PR); sequencing closed — see `docs/adr-0041-closure-reconciliation.md`
 - **Date:** 2026-10-29
 - **Phase:** ROADMAP Phase 1 — MVP Guided Book Creation (§3.3 Writing Studio, §3.5 Basic Design Studio)
 - **Area:** Book Model / Semantic Document / Authoring / Writing Studio / Publishing Engines
