@@ -21,6 +21,36 @@ const DEFAULT_DETERMINISTIC_TIMESTAMP = "2026-01-01T00:00:00Z";
 const COVER_PAGE_ID = "cover-page";
 const COVER_PAGE_HREF = "text/cover.xhtml";
 
+/**
+ * ADR-0041 lesson boxes. The frame uses currentColor so it follows the reader's text colour in
+ * night and sepia modes; no background or text colour is set.
+ */
+const CALLOUT_CSS = `.ob-callout {
+  margin: 1.2em 0;
+  padding: 0.6em 1em;
+  border: 1.5px solid currentColor;
+  border-radius: 0.6em;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.ob-callout p {
+  margin: 0;
+  text-align: left;
+}
+
+.ob-callout .ob-callout-title {
+  margin-bottom: 0.3em;
+  font-weight: bold;
+}
+`;
+
+function bookHasCallouts(book: Readonly<Book>): boolean {
+  return [...(book.frontMatter ?? []), ...(book.chapters ?? []), ...(book.backMatter ?? [])].some((section) =>
+    (section.blocks ?? []).some((block) => block.type === "callout"),
+  );
+}
+
 const DEFAULT_CSS = `@charset "UTF-8";
 
 /* OpenBook EPUB 3.3 Default Accessible Stylesheet */
@@ -292,7 +322,8 @@ export async function buildEpubPackage(
   files.push({
     path: "EPUB/styles/openbook.css",
     mediaType: "text/css",
-    content: DEFAULT_CSS,
+    // Lesson-box rules only when needed, so books without them keep identical bytes (ADR-0041).
+    content: bookHasCallouts(book) ? `${DEFAULT_CSS}\n${CALLOUT_CSS}` : DEFAULT_CSS,
   });
 
   // 5.6 Content documents (EPUB/text/*.xhtml)

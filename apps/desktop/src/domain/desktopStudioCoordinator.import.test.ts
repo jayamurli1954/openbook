@@ -425,3 +425,17 @@ test("same idSeed yields deterministic imported section IDs in new-project mode"
     b.getBook().chapters.map((c) => c.id),
   );
 });
+
+test("a large picture refused by the asset pipeline does not count towards the size warning", async () => {
+  const coordinator = freshCoordinator("docx-large-recount");
+  const largeEmf = new Uint8Array(2 * 1024 * 1024);
+  const bytes = wordDocx(chapter("Story") + para(wordPicture("rId20", "Krishna")) + para(wordPicture("rId21", "Drawing")), {
+    emf: largeEmf,
+  });
+  const imported = await new ImportService().import({ format: "docx", bytes });
+  assert.ok(imported.issues.some((issue) => issue.code === "DOCX_LARGE_PICTURES"), "the importer counts the large drawing");
+
+  const result = await coordinator.importContent({ format: "docx", bytes });
+  assert.ok(result.issues.some((issue) => issue.code === "DOCX_PICTURES_REJECTED"));
+  assert.ok(!result.issues.some((issue) => issue.code === "DOCX_LARGE_PICTURES"), "the refused drawing is not in the book");
+});

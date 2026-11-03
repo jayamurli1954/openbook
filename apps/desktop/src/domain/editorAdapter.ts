@@ -260,6 +260,32 @@ function tipTapBlockToSemantic(
         id: createId("q"),
         inlines: flattenBlockquoteInlines(node.content, warnings, path),
       };
+    case "openbookCallout": {
+      // ADR-0041: a lesson box. One with neither a title nor text is dropped, not kept empty.
+      const title = typeof node.attrs?.title === "string" ? node.attrs.title : "";
+      const inlines = tipTapInlineContentToInlines(node.content, warnings, path);
+      const hasText = inlines.some((span) => span.type !== "text" || span.text.trim() !== "");
+      if (!title.trim() && !hasText) {
+        warn(warnings, "empty-callout", "Empty lesson box removed", path);
+        return null;
+      }
+      return { type: "callout", id: createId("callout"), title, inlines };
+    }
+    case "openbookImage": {
+      // A Book image block carried through the editor unchanged (asset id + caption).
+      const assetId = node.attrs?.assetId;
+      if (typeof assetId !== "string" || assetId.trim() === "") {
+        warn(warnings, "image-without-asset", "Picture without an asset id ignored", path);
+        return null;
+      }
+      const caption = node.attrs?.caption;
+      return {
+        type: "image",
+        id: createId("img"),
+        assetId,
+        caption: Array.isArray(caption) ? (structuredClone(caption) as SemanticInline[]) : [],
+      };
+    }
     case "bulletList":
     case "orderedList": {
       const items: SemanticInline[][] = [];
@@ -420,8 +446,8 @@ function inlinesToTipTapContent(inlines: SemanticInline[]): TipTapNodeJSON[] {
 
 function semanticBlockToTipTap(
   block: SemanticBlock,
-  warnings: EditorConversionWarning[],
-  path: string,
+  _warnings: EditorConversionWarning[],
+  _path: string,
 ): TipTapNodeJSON | null {
   switch (block.type) {
     case "paragraph":
@@ -458,23 +484,18 @@ function semanticBlockToTipTap(
           ],
         })),
       };
-    case "image": {
-      warn(
-        warnings,
-        "unsupported-sdm-block",
-        "image block mapped to paragraph placeholder (no Image extension in first editor)",
-        path,
-      );
-      const caption = inlinesToTipTapContent(block.caption);
-      const prefix: TipTapNodeJSON = {
-        type: "text",
-        text: `[image:${block.assetId}]`,
-      };
+    case "callout":
       return {
-        type: "paragraph",
-        content: caption.length > 0 ? [prefix, { type: "text", text: " " }, ...caption] : [prefix],
+        type: "openbookCallout",
+        attrs: { title: block.title },
+        content: inlinesToTipTapContent(block.inlines),
       };
-    }
+    case "image":
+      // The editor's openbookImage node keeps the picture; it is never turned into text.
+      return {
+        type: "openbookImage",
+        attrs: { assetId: block.assetId, caption: structuredClone(block.caption) },
+      };
     default: {
       const _exhaustive: never = block;
       return _exhaustive;

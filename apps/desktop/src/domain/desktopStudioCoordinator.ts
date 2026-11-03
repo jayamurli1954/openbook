@@ -60,7 +60,9 @@ import type { ValidationReport, ValidatorService } from "@openbook/validator";
 import {
   IMPORTED_IMAGE_PLACEHOLDER_PREFIX,
   ImportService,
+  LARGE_PICTURES,
   PICTURES_WITHOUT_ALT_TEXT,
+  largePicturesIssue,
   picturesWithoutAltTextIssue,
   type ImportedImagePayload,
   type ImportIssue,
@@ -116,6 +118,7 @@ import {
   type WorkflowErrorCode,
 } from "../workflow/projectWorkflow.js";
 import {
+  bookAssetsToSemantic,
   bookMetadataToSemantic,
   createDesktopDraftBook,
   listMainChapters,
@@ -331,6 +334,8 @@ export interface OpenFromProjectPackageResult {
   projectRoot: string;
   recovered: boolean;
   restoredFrom?: string;
+  /** ADR-0041: the package stored this older Book Model version; it is rewritten at the next Save. */
+  upgradedFrom?: 1;
 }
 
 export class DesktopStudioError extends Error {
@@ -850,6 +855,7 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     }
     const { blocks, warnings } = tipTapJsonToContentBlocks(tipTap, {
       metadata: bookMetadataToSemantic(this.#session.getBook()),
+      assets: bookAssetsToSemantic(this.#session.getBook()),
       sectionId: selected.id,
       sectionTitle: selected.title,
       matter: selected.kind,
@@ -1087,6 +1093,9 @@ export class DesktopStudioCoordinator implements IDesktopStudioCoordinator {
     };
     if (restoredFrom !== undefined) {
       result.restoredFrom = restoredFrom;
+    }
+    if (opened.value.upgradedFrom !== undefined) {
+      result.upgradedFrom = opened.value.upgradedFrom;
     }
     return result;
   }
@@ -1823,17 +1832,16 @@ async function ingestImportedImages(
 
   const rejected = [...resolved.values()].filter((asset) => asset === null).length;
   // The importer counted pictures without a description before any were refused; recount the kept ones.
+  const kept = images.filter((image) => resolved.get(image.placeholderId));
   const recount =
-    rejected === 0
-      ? undefined
-      : picturesWithoutAltTextIssue(
-          images.filter((image) => resolved.get(image.placeholderId) && image.altText.trim() === "").length,
-        );
+    rejected === 0 ? undefined : picturesWithoutAltTextIssue(kept.filter((image) => image.altText.trim() === "").length);
+  const largeRecount = rejected === 0 ? undefined : largePicturesIssue(kept.map((image) => image.bytes.byteLength));
   const issues: ImportIssue[] =
     rejected === 0
       ? []
       : [
           ...(recount ? [recount] : []),
+          ...(largeRecount ? [largeRecount] : []),
           {
             code: "DOCX_PICTURES_REJECTED",
             severity: "warning",
@@ -1851,7 +1859,7 @@ async function ingestImportedImages(
     },
     newAssets,
     issues,
-    replacesCodes: rejected === 0 ? [] : [PICTURES_WITHOUT_ALT_TEXT],
+    replacesCodes: rejected === 0 ? [] : [PICTURES_WITHOUT_ALT_TEXT, LARGE_PICTURES],
   };
 }
 
@@ -1902,6 +1910,7 @@ const SESSION_MUTATORS = new Set([
   "updateSectionRole",
   "updateMetadata",
   "setSectionBlocks",
+  "replaceSectionsBlocks",
   "insertBlock",
   "updateBlock",
   "removeBlock",

@@ -820,3 +820,32 @@ describe("@openbook/html: ADR-0038 Slice 5 (HTML cover)", () => {
     assert.equal(first.html, second.html);
   });
 });
+
+describe("@openbook/html: ADR-0041 Slice 2 (lesson boxes)", () => {
+  const lessonBook = () => {
+    const book = createBook({ title: "Lessons", language: "en", authors: ["A"] });
+    book.chapters[0]!.blocks = [
+      { type: "callout", id: "c1", title: "What <We> Learned", inlines: [{ type: "text", text: "Be honest & kind." }] },
+      { type: "callout", id: "c2", title: "", inlines: [{ type: "text", text: "ನಾವು ಕಲಿತದ್ದು." }] },
+    ];
+    return book;
+  };
+
+  it("renders lesson boxes like the EPUB engine, escaped, title on its own line", async () => {
+    const pub = await buildHtml(lessonBook());
+    assert.ok(
+      pub.html.includes(
+        '      <div class="ob-callout" role="note" id="c1">\n        <p class="ob-callout-title">What &lt;We&gt; Learned</p>\n        <p>Be honest &amp; kind.</p>\n      </div>',
+      ),
+      pub.html,
+    );
+    assert.ok(pub.html.includes('<div class="ob-callout" role="note" id="c2">\n        <p>ನಾವು ಕಲಿತದ್ದು.</p>'));
+    const toc = pub.html.slice(pub.html.indexOf('<nav class="toc"'), pub.html.indexOf("<main>"));
+    assert.doesNotMatch(toc, /ob-callout|We&gt; Learned/);
+  });
+
+  it("adds lesson-box styles only when the book has a lesson box", async () => {
+    assert.match((await buildHtml(lessonBook())).html, /\.ob-callout \{[^}]*currentColor/);
+    assert.doesNotMatch((await buildHtml(createBook({ title: "Plain", language: "en" }))).html, /ob-callout/);
+  });
+});

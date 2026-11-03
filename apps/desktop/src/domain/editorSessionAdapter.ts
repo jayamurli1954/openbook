@@ -10,6 +10,7 @@ import { createBook, type Book, type ContentBlock } from "@openbook/book-model";
 import {
   bookToSemanticDocument,
   semanticDocumentToBook,
+  type SemanticDocument,
   type SemanticDocumentMetadata,
   type SemanticMatterKind,
 } from "@openbook/semantic-document";
@@ -75,6 +76,8 @@ export type TipTapToBlocksOptions = {
   matter: SemanticMatterKind;
   role: string;
   createId?: (prefix: string) => string;
+  /** The Book's assets, so image blocks coming back from the editor resolve. */
+  assets?: SemanticDocument["assets"];
 };
 
 /**
@@ -129,4 +132,9 @@ export function bookMetadataToSemantic(
   book: Book,
 ): SemanticDocumentMetadata {
   return bookToSemanticDocument(book).metadata;
+}
+
+/** The Book's assets in Semantic Document form, for editor → Book conversion. */
+export function bookAssetsToSemantic(book: Book): SemanticDocument["assets"] {
+  return bookToSemanticDocument(book).assets;
 }

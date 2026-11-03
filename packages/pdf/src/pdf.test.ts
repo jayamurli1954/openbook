@@ -87,6 +87,24 @@ test("escapeTypstText preserves Kannada and escapes markup metacharacters", () =
   assert.equal(escapeTypstText("a#b*c"), "a\\#b\\*c");
 });
 
+test("Kannada fonts come first only for Kannada books, so English digits match their words", () => {
+  const kannada = serializeBookToTypst(loadFixture("kannada-prose.json"));
+  assert.match(kannada, /#set text\(font: \("Noto Serif Kannada", "Noto Serif", "Noto Emoji"\)/);
+  assert.match(kannada, /#show heading: set text\(font: \("Noto Sans Kannada", "Noto Sans", "Noto Emoji"\)\)/);
+  for (const name of ["english-prose.json", "mixed-english-kannada.json"]) {
+    const typst = serializeBookToTypst(loadFixture(name));
+    assert.match(typst, /#set text\(font: \("Noto Serif", "Noto Serif Kannada", "Noto Emoji"\)/, name);
+    assert.match(typst, /#show heading: set text\(font: \("Noto Sans", "Noto Sans Kannada", "Noto Emoji"\)\)/, name);
+  }
+});
+
+test("inventory pins italic Noto Serif and Noto Sans, and Noto Emoji", () => {
+  const inventory = JSON.parse(fs.readFileSync(inventoryPath, "utf8"));
+  for (const file of ["NotoSerif-Italic[wdth,wght].ttf", "NotoSans-Italic[wdth,wght].ttf", "NotoEmoji[wght].ttf"]) {
+    assert.match(inventory.fonts.files[file]?.sha256 ?? "", /^[0-9a-f]{64}$/, file);
+  }
+});
+
 test("serializeBookToTypst emits deterministic Typst for bake-off fixtures", () => {
   const book = loadFixture("kannada-prose.json");
   const a = serializeBookToTypst(book);
@@ -281,6 +299,34 @@ test(
       "%PDF",
     );
     assert.match(pub.typstSource, /image\("assets\/dot\.png"\)/);
+  },
+);
+
+test(
+  "buildPdf prints italics with the italic fonts and emoji with Noto Emoji",
+  { skip: !hasRuntime },
+  async () => {
+    const book = createBook({ title: "Fonts", language: "en", withOpeningChapter: false });
+    book.metadata.publishedAt = "2026-10-30";
+    book.chapters = [
+      {
+        id: "c1",
+        kind: "main",
+        role: "chapter",
+        title: "Story 1: The Chariot",
+        blocks: [
+          { type: "paragraph", id: "p1", inlines: [{ type: "emphasis", children: [{ type: "text", text: "Dear Parents," }] }] },
+          { type: "paragraph", id: "p2", inlines: [{ type: "text", text: "What We Learned 🌟" }] },
+        ],
+      },
+    ];
+    const pub = await buildPdf(book);
+    const fonts = new Set(
+      [...Buffer.from(pub.pdf).toString("latin1").matchAll(/\/BaseFont\s*\/[A-Z]{6}\+([A-Za-z0-9-]+)/g)].map((m) => m[1] ?? ""),
+    );
+    assert.ok(fonts.has("NotoSerif-Italic"), `fonts: ${[...fonts].join(", ")}`);
+    assert.ok([...fonts].some((name) => name.startsWith("NotoEmoji")), `fonts: ${[...fonts].join(", ")}`);
+    assert.ok(![...fonts].some((name) => name.includes("Kannada")), "an English book takes digits from the Latin fonts");
   },
 );
 
@@ -479,5 +525,47 @@ test(
     const pub = await buildPdf(pictureBook([]), { assetResolver: { resolve: async () => TINY_PNG } });
     assert.equal(String.fromCharCode(...pub.pdf.subarray(0, 4)), "%PDF");
     assert.doesNotMatch(pub.typstSource, /caption:/);
+  },
+);
+
+// --- ADR-0041 Slice 2: lesson boxes ----------------------------------------------
+
+function lessonBook(language: "en" | "kn") {
+  const book = loadFixture(language === "kn" ? "kannada-prose.json" : "english-prose.json");
+  book.chapters[0]!.blocks.push(
+    {
+      type: "callout",
+      id: "c1",
+      title: language === "kn" ? "ನಾವು ಕಲಿತದ್ದು" : "What We Learned",
+      inlines: [{ type: "text", text: language === "kn" ? "ಸತ್ಯವೇ ಬೆಳಕು." : "Rule #1: be honest [always] & kind." }],
+    },
+    { type: "callout", id: "c2", title: "", inlines: [{ type: "text", text: "No title here." }] },
+  );
+  return book;
+}
+
+test("serializeBookToTypst frames a lesson box with its title on its own line", () => {
+  const source = serializeBookToTypst(lessonBook("en"));
+  const frame = "#block(width: 100%, inset: (x: 10pt, y: 8pt), radius: 6pt, stroke: 0.75pt + luma(110), breakable: false)[";
+  assert.ok(source.includes(`${frame}#strong[What We Learned] \\\nRule \\#1: be honest \\[always\\] & kind.]`), source);
+  assert.ok(source.includes(`${frame}No title here.]`));
+  assert.equal(source.split(frame).length - 1, 2);
+});
+
+test("serializeBookToTypst emits no lesson-box frame without lesson boxes", () => {
+  assert.doesNotMatch(serializeBookToTypst(loadFixture("english-prose.json")), /breakable: false/);
+});
+
+test(
+  "buildPdf renders English and Kannada lesson boxes deterministically",
+  { skip: !hasRuntime },
+  async () => {
+    for (const language of ["en", "kn"] as const) {
+      const book = lessonBook(language);
+      const first = await buildPdf(book);
+      const second = await buildPdf(structuredClone(book));
+      assert.equal(String.fromCharCode(...first.pdf.subarray(0, 4)), "%PDF", language);
+      assert.equal(sha256(first.pdf), sha256(second.pdf), language);
+    }
   },
 );

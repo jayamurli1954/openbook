@@ -193,7 +193,7 @@ function kannadaDoc(): SemanticDocument {
 test("English semantic document maps to a valid Book with partitioned matter", () => {
   const doc = englishDoc();
   const book = semanticDocumentToBook(doc);
-  assert.equal(book.schemaVersion, 1);
+  assert.equal(book.schemaVersion, 2);
   assert.equal(book.metadata.title, "OpenBook Semantic Contract");
   assert.equal(book.metadata.language, "en");
   assert.equal(book.frontMatter.length, 1);

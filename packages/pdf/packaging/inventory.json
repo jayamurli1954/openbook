@@ -92,6 +92,24 @@
         "role": "heading-latin",
         "url": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf",
         "sha256": "bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d"
+      },
+      "NotoSerif-Italic[wdth,wght].ttf": {
+        "family": "Noto Serif",
+        "role": "body-latin-italic",
+        "url": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notoserif/NotoSerif-Italic%5Bwdth%2Cwght%5D.ttf",
+        "sha256": "e87acbc6c0efd0d9a20d6a8cbbda2b266c14be3a3a6f5af8ec9d7b2460570ad1"
+      },
+      "NotoSans-Italic[wdth,wght].ttf": {
+        "family": "Noto Sans",
+        "role": "heading-latin-italic",
+        "url": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosans/NotoSans-Italic%5Bwdth%2Cwght%5D.ttf",
+        "sha256": "58e6e0ebd1931b29a365aa2d3e2ee9a9e831a3af7cf3ad1462d4e72154f0b291"
+      },
+      "NotoEmoji[wght].ttf": {
+        "family": "Noto Emoji",
+        "role": "emoji",
+        "url": "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf",
+        "sha256": "de6c18832938afc99caf132b39d6a30a19bac7f2e812e28db2535b4608d27551"
       }
     }
   },

@@ -2,7 +2,7 @@
 
 import type { Book, StructuralSection } from "@openbook/book-model";
 import { processBookAssets } from "./assets/asset-pipeline.js";
-import { COVER_HTML_CSS, DEFAULT_HTML_CSS } from "./css.js";
+import { CALLOUT_HTML_CSS, COVER_HTML_CSS, DEFAULT_HTML_CSS } from "./css.js";
 import { escapeHtmlAttr, escapeHtmlText } from "./html-utils.js";
 import { serializeSection, serializeToc, type TocEntry } from "./html-serializer.js";
 import type { HtmlBuildOptions, HtmlPublication, HtmlPublicationFile } from "./types.js";
@@ -66,6 +66,10 @@ export async function buildHtml(
   // ADR-0038: cover picture first in the article, when the Book has one
   const coverAssetId = book.publishing?.coverAssetId?.trim();
   const cover = coverAssetId ? resolvedImages.get(coverAssetId) : undefined;
+  // ADR-0041: lesson-box styles only when the book has a lesson box.
+  const hasCallouts = collectSections(book).some((section) =>
+    section.blocks.some((block) => block.type === "callout"),
+  );
   const coverHtml = cover
     ? `    <figure class="book-cover"><img src="${escapeHtmlAttr(cover.htmlSrc)}" alt="${escapeHtmlAttr(cover.altText)}"></figure>\n`
     : "";
@@ -93,7 +97,7 @@ export async function buildHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtmlText(bookTitle)}</title>
 ${serializeMetaAuthors(book.metadata.authors ?? [])}${descriptionMeta}  <style>
-${DEFAULT_HTML_CSS}${cover ? `\n${COVER_HTML_CSS}` : ""}  </style>
+${DEFAULT_HTML_CSS}${cover ? `\n${COVER_HTML_CSS}` : ""}${hasCallouts ? `\n${CALLOUT_HTML_CSS}` : ""}  </style>
 </head>
 <body>
   <article class="book">

@@ -66,6 +66,13 @@ function mapBlock(block: SemanticBlock): ContentBlock {
         id: block.id,
         inlines: block.inlines.map(mapInline),
       };
+    case "callout":
+      return {
+        type: "callout",
+        id: block.id,
+        title: block.title,
+        inlines: block.inlines.map(mapInline),
+      };
     case "list":
       return {
         type: "list",

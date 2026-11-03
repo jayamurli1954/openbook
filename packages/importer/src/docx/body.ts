@@ -31,6 +31,8 @@ export interface TextRun {
   readonly bold: boolean;
   readonly italic: boolean;
   readonly href?: string;
+  /** A line break inside the paragraph (Shift+Enter); its text is a space. */
+  readonly lineBreak?: true;
   /** Appearance, for chapter-title detection only: includes the paragraph style. */
   readonly looksBold: boolean;
   readonly size: number;
@@ -375,7 +377,7 @@ class BodyWalker {
     const hidden = direct.hidden ?? character.hidden ?? ctx.paragraphRun.hidden ?? false;
     let hiddenCounted = false;
 
-    const emit = (text: string): void => {
+    const emit = (text: string, lineBreak = false): void => {
       if (!this.#textAllowed()) return;
       if (hidden) {
         if (!hiddenCounted && text.trim() !== "") {
@@ -386,7 +388,15 @@ class BodyWalker {
       }
       const fieldHref = this.#fieldHref();
       const link = fieldHref === undefined ? href : fieldHref ?? undefined;
-      ctx.runs.push({ text, bold, italic, looksBold, size, ...(link !== undefined ? { href: link } : {}) });
+      ctx.runs.push({
+        text,
+        bold,
+        italic,
+        looksBold,
+        size,
+        ...(link !== undefined ? { href: link } : {}),
+        ...(lineBreak ? { lineBreak: true as const } : {}),
+      });
     };
 
     for (const child of xmlChildElements(r)) {
@@ -402,8 +412,10 @@ class BodyWalker {
           break;
         case "tab":
         case "ptab":
-        case "cr":
           emit(" ");
+          break;
+        case "cr":
+          emit(" ", true);
           break;
         case "br": {
           const type = wAttr(child, "type");
@@ -412,7 +424,7 @@ class BodyWalker {
             if (hasText) ctx.breakAfter = true;
             else ctx.breakBefore = true;
           } else if (type !== "column") {
-            emit(" ");
+            emit(" ", true);
           }
           break;
         }

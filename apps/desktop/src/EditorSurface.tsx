@@ -8,6 +8,8 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+import { OpenbookImageNode } from "./ui/openbookImageNode";
+import { OpenbookCalloutNode } from "./ui/openbookCalloutNode";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { bookToSemanticDocument } from "@openbook/semantic-document";
 import { nextStage, WORKFLOW_STAGES } from "@openbook/workflow";
@@ -27,6 +29,7 @@ import PublishStep from "./ui/PublishStep";
 import GuidedStartWizard from "./ui/GuidedStartWizard";
 import WritingStudioToolbar from "./ui/WritingStudioToolbar";
 import WritingStudioFindPanel from "./ui/WritingStudioFindPanel";
+import LessonBoxConversionPanel from "./ui/LessonBoxConversionPanel";
 import WritingStudioImageButton from "./ui/WritingStudioImageButton";
 import DesignStudioChoices from "./ui/DesignStudioChoices";
 import MetadataWizardFields from "./ui/MetadataWizardFields";
@@ -49,6 +52,7 @@ import { createDesignStudioChoices } from "./workflow/domain/designStudioChoices
 import { createMetadataWizardFields } from "./workflow/domain/metadataWizardFields";
 import { createCoverWizardFields } from "./workflow/domain/coverWizardFields";
 import { readCover } from "./workflow/domain/coverWizardContract";
+import { lastLessonBoxTitle } from "./workflow/domain/lessonBoxEditing";
 import { createStructureStudioMatterRail } from "./workflow/domain/structureStudioMatterRail";
 import { projectBookNavigation } from "./workflow/domain/structureStudioNavPreview";
 import {
@@ -122,6 +126,9 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
   const [activeStep, setActiveStep] = useState<StudioStepId>("write");
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  // ADR-0041 Slice 3: the box at the cursor (null when not in one) and the title the next box starts with.
+  const [lessonBoxTitle, setLessonBoxTitle] = useState<string | null>(null);
+  const [chosenLessonBoxTitle, setChosenLessonBoxTitle] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(true);
   /** ADR-0039 Slice 6: the app opens on the start screen. */
   const [view, setView] = useState<"start" | "studio">("start");
@@ -172,6 +179,23 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
         openOnClick: false,
         autolink: true,
         defaultProtocol: "https",
+      }),
+      // ADR-0041: lesson boxes stay lesson boxes while a chapter is edited (display only for now).
+      OpenbookCalloutNode,
+      // Pictures stay pictures in Write; before this they reached the editor as "[image:…]" text.
+      OpenbookImageNode.configure({
+        resolveImageUrl: async (assetId) => {
+          const asset = coordinator.getBook().assets.find((candidate) => candidate.id === assetId);
+          if (!asset) return undefined;
+          try {
+            const bytes = await coordinator.getAssetResolver().resolve(asset);
+            return URL.createObjectURL(new Blob([bytes as BlobPart], { type: asset.mediaType }));
+          } catch {
+            return undefined;
+          }
+        },
+        describeImage: (assetId) =>
+          coordinator.getBook().assets.find((candidate) => candidate.id === assetId)?.altText ?? "",
       }),
     ],
     content: coordinator.activeSectionToTipTap().doc,
@@ -322,6 +346,24 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
     editor.on("update", onUpdate);
     return () => {
       editor.off("update", onUpdate);
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const followCursor = () => {
+      setLessonBoxTitle(
+        editor.isActive("openbookCallout")
+          ? String(editor.getAttributes("openbookCallout").title ?? "")
+          : null,
+      );
+    };
+    followCursor();
+    editor.on("selectionUpdate", followCursor);
+    editor.on("transaction", followCursor);
+    return () => {
+      editor.off("selectionUpdate", followCursor);
+      editor.off("transaction", followCursor);
     };
   }, [editor]);
 
@@ -958,6 +1000,10 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
             <WritingStudioToolbar
               toolbar={writingStudioToolbar}
               disabled={!editor}
+              newLessonBoxTitle={chosenLessonBoxTitle ?? lastLessonBoxTitle(coordinator.getBook())}
+              lessonBoxTitle={lessonBoxTitle}
+              onLessonBoxTitleChange={setChosenLessonBoxTitle}
+              onStatus={reportStatus}
             />
             <div className="writing-studio-media-row">
               <WritingStudioImageButton
@@ -991,6 +1037,13 @@ export default function EditorSurface({ diagnostics }: EditorSurfaceProps = {}) 
               queryAdapter={writingStudioQuery}
               sectionId={studio.selectedSectionId}
               onSelectHit={(hit) => onSelectChapter(hit.sectionId)}
+            />
+            <LessonBoxConversionPanel
+              getBook={() => coordinator.getBook()}
+              session={coordinator.getSession()}
+              onBeforeChange={flushEditorIntoSession}
+              onChanged={loadSectionIntoEditor}
+              onStatus={reportStatus}
             />
             <EditorContent editor={editor} />
           </div>

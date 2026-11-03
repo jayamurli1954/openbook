@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { Book } from "./types.js";
+import { upgradeBook } from "./upgrade-book.js";
 
 export function serializeBook(book: Book): string {
   return `${JSON.stringify(book, null, 2)}\n`;
@@ -10,12 +11,8 @@ export function parseBook(json: string): Book {
   if (!isRecord(value)) {
     throw new Error("Book JSON must be an object.");
   }
-  if (value.schemaVersion !== 1) {
-    throw new Error(
-      `Unsupported schemaVersion ${String(value.schemaVersion)}. OpenBook currently reads schemaVersion 1 only.`,
-    );
-  }
-  return value as unknown as Book;
+  // Older versions are upgraded in memory (ADR-0041 §6); anything else is refused.
+  return upgradeBook(value).book;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -4,7 +4,13 @@ import test from "node:test";
 import * as assert from "node:assert/strict";
 import { strToU8, zipSync, type Zippable } from "fflate";
 import { validateBook, type Book, type ContentBlock, type InlineSpan } from "@openbook/book-model";
-import { IMPORTED_IMAGE_PLACEHOLDER_PREFIX, ImportService, type ImportOptions, type ImportResult } from "../index.js";
+import {
+  IMPORTED_IMAGE_PLACEHOLDER_PREFIX,
+  ImportService,
+  largePicturesIssue,
+  type ImportOptions,
+  type ImportResult,
+} from "../index.js";
 import { contentsLineKeys, stripTitleNumbering } from "./structure.js";
 
 // --- document builder ----------------------------------------------------------------------
@@ -143,6 +149,8 @@ interface DocxSpec {
   readonly core?: CoreProps;
   readonly comments?: boolean;
   readonly styles?: string | null;
+  /** Replaces word/media/image1.png. */
+  readonly image1?: Uint8Array;
 }
 
 function makeDocx(spec: DocxSpec): Uint8Array {
@@ -195,7 +203,7 @@ function makeDocx(spec: DocxSpec): Uint8Array {
   if (spec.comments) files["word/comments.xml"] = XML + `<w:comments xmlns:w="${W}"/>`;
   const zippable: Zippable = {};
   for (const [name, value] of Object.entries(files)) zippable[name] = strToU8(value);
-  zippable["word/media/image1.png"] = PNG;
+  zippable["word/media/image1.png"] = spec.image1 ?? PNG;
   zippable["word/media/image2.jpeg"] = JPEG;
   zippable["word/media/my%20drawing.png"] = PNG;
   zippable["word/media/image3.svg"] = strToU8(`<svg xmlns="http://www.w3.org/2000/svg"/>`);
@@ -518,6 +526,64 @@ test("does not take sentences, longer lines, or look-alike words as front-matter
   const { book } = await importBook({ body });
   assert.deepEqual(book.frontMatter.map((s) => [s.role, s.blocks.length]), [["foreword", 5]]);
   assert.deepEqual(book.chapters.map((s) => [s.title, s.blocks.map(blockText)]), [["Chapter One", ["Preface for Parents"]]]);
+});
+
+test("warns when pictures are large, and not when they are small", async () => {
+  const MB = 1024 * 1024;
+  assert.equal(largePicturesIssue([300_000, 400_000]), undefined);
+  assert.match(largePicturesIssue([2 * MB, 300_000, 1.5 * MB])!.message, /^Your 3 pictures add up to 3\.8 MB, and 2 are over 1 MB\. .*Compress Pictures/);
+  assert.match(largePicturesIssue(Array.from({ length: 12 }, () => 0.9 * MB))!.message, /^Your 12 pictures add up to 10\.8 MB\. /);
+  assert.match(largePicturesIssue([1.2 * MB])!.message, /^Your picture is 1\.2 MB\. /);
+
+  // Bytes that do not compress, so the file is not mistaken for a ZIP bomb.
+  const big = new Uint8Array(1.5 * MB);
+  for (let i = 0, seed = 1; i < big.length; i += 1) big[i] = (seed = (seed * 1103515245 + 12345) >>> 0) >>> 24;
+  big.set(PNG);
+  const body = t("Chapter One", { style: "Heading1" }) + p(pictureRun({ alt: "Krishna" }));
+  const { result } = await importBook({ body, image1: big });
+  const issue = result.issues.find((entry) => entry.code === "DOCX_LARGE_PICTURES");
+  assert.equal(issue?.severity, "warning");
+  assert.match(issue!.message, /^Your picture is 1\.5 MB\./);
+  const small = await importBook({ body });
+  assert.ok(!codes(small.result).includes("DOCX_LARGE_PICTURES"));
+});
+
+const lineBreak = `<w:r><w:br/></w:r>`;
+
+test("a line break inside a paragraph starts a new paragraph, keeping its formatting", async () => {
+  const body = [
+    t("Chapter One", { style: "Heading1" }),
+    p(r("With warmth and blessings,", { i: true }) + lineBreak + r("The Publisher", { b: true, i: true })),
+    p(lineBreak + r("Roses are red,") + lineBreak + lineBreak + r("violets are blue.") + `<w:r><w:cr/></w:r>`),
+    t("A quote line", { style: "Quote" }).replace("</w:p>", `${lineBreak}${r("and its second line")}</w:p>`),
+  ].join("");
+  const { book } = await importBook({ body });
+  const blocks = book.chapters[0]!.blocks;
+  assert.deepEqual(
+    blocks.map((block) => [block.type, blockText(block)]),
+    [
+      ["paragraph", "With warmth and blessings,"],
+      ["paragraph", "The Publisher"],
+      ["paragraph", "Roses are red,"],
+      ["paragraph", "violets are blue."],
+      ["quote", "A quote line"],
+      ["quote", "and its second line"],
+    ],
+  );
+  assert.deepEqual(paragraphInlines(blocks[1]), [
+    { type: "strong", children: [{ type: "emphasis", children: [{ type: "text", text: "The Publisher" }] }] },
+  ]);
+});
+
+test("a line break stays a space in headings, list items, captions, and table cells", async () => {
+  const body = [
+    p(r("The Butter") + lineBreak + r("Thief"), { style: "Heading1" }),
+    p(r("first") + lineBreak + r("item"), { numId: 1 }),
+    `<w:tbl><w:tr><w:tc>${p(r("cell") + lineBreak + r("text"))}</w:tc></w:tr></w:tbl>`,
+  ].join("");
+  const { book } = await importBook({ body });
+  assert.equal(book.chapters[0]!.title, "The Butter Thief");
+  assert.deepEqual(book.chapters[0]!.blocks.map(blockText), ["first item", "cell text"]);
 });
 
 test("splits on Heading 2 with the heading-2 strategy, and keeps one chapter with single-chapter", async () => {

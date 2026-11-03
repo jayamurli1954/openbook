@@ -134,7 +134,7 @@ test("save/open round-trip preserves English and Kannada chapter content", async
   assert.equal(built.ok, true);
   if (!built.ok) return;
   assert.notEqual((built.value.book as { type?: string }).type, "doc");
-  assert.equal(built.value.book.schemaVersion, 1);
+  assert.equal(built.value.book.schemaVersion, 2);
   assert.ok(!("manifest" in built.value.book));
 
   const opened = await openBookProject({

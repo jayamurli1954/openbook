@@ -93,3 +93,26 @@ export const COVER_HTML_CSS = `.book-cover {
   height: auto;
 }
 `;
+
+/**
+ * Lesson-box styles (ADR-0041), appended only when the Book has a lesson box. The frame
+ * follows the text colour; no background is set.
+ */
+export const CALLOUT_HTML_CSS = `.ob-callout {
+  margin: 1.2em 0;
+  padding: 0.6em 1em;
+  border: 1.5px solid currentColor;
+  border-radius: 0.6em;
+  break-inside: avoid;
+}
+
+.ob-callout p {
+  margin: 0;
+  text-align: left;
+}
+
+.ob-callout .ob-callout-title {
+  margin-bottom: 0.3em;
+  font-weight: bold;
+}
+`;

@@ -2570,3 +2570,80 @@ describe("@openbook/epub: ADR-0038 Slice 4 (EPUB cover)", () => {
     );
   }
 });
+
+describe("@openbook/epub: ADR-0041 Slice 2 (lesson boxes)", () => {
+  const lessonBook = (language: "en" | "kn") => {
+    const book = createBook({ title: language === "kn" ? "ಪಾಠಗಳು" : "Lessons", language, authors: ["A"] });
+    book.metadata.identifier = `urn:uuid:5f0c1a2e-0041-4002-8000-00000000001${language === "kn" ? 2 : 1}`;
+    book.chapters[0]!.blocks = [
+      { type: "paragraph", id: "p1", inlines: [{ type: "text", text: "Once upon a time." }] },
+      {
+        type: "callout",
+        id: "c1",
+        title: language === "kn" ? "ನಾವು ಕಲಿತದ್ದು" : "What We Learned",
+        inlines: [{ type: "text", text: language === "kn" ? "ಸತ್ಯವೇ ಬೆಳಕು." : 'Be honest & kind, even when "no one" <watches>.' }],
+      },
+      { type: "callout", id: "c2", title: "", inlines: [{ type: "text", text: "No title here." }] },
+    ];
+    return book;
+  };
+
+  const text = (pkg: Awaited<ReturnType<typeof buildEpubPackage>>, filePath: string) => {
+    const file = pkg.files.find((f) => f.path === filePath)!;
+    return typeof file.content === "string" ? file.content : new TextDecoder().decode(file.content);
+  };
+
+  it("renders a lesson box with its title on its own line, escaped", async () => {
+    const pkg = await buildEpubPackage(lessonBook("en"));
+    const chapter = text(pkg, "EPUB/text/ch_001.xhtml");
+    assert.ok(
+      chapter.includes(
+        '      <div class="ob-callout" role="note" id="c1">\n        <p class="ob-callout-title">What We Learned</p>\n        <p>Be honest &amp; kind, even when &quot;no one&quot; &lt;watches&gt;.</p>\n      </div>',
+      ),
+      chapter,
+    );
+    assert.ok(chapter.includes('<div class="ob-callout" role="note" id="c2">\n        <p>No title here.</p>'));
+    assert.doesNotMatch(chapter, /<aside/);
+    assert.doesNotMatch(text(pkg, "EPUB/nav.xhtml"), /What We Learned/);
+  });
+
+  it("adds the lesson-box styles only when a book has a lesson box", async () => {
+    const withBoxes = text(await buildEpubPackage(lessonBook("en")), "EPUB/styles/openbook.css");
+    assert.match(withBoxes, /\.ob-callout \{/);
+    assert.match(withBoxes, /border: 1\.5px solid currentColor;/);
+    assert.doesNotMatch(withBoxes, /\.ob-callout[^}]*background/);
+    const plain = createBook({ title: "Plain", language: "en" });
+    assert.doesNotMatch(text(await buildEpubPackage(plain), "EPUB/styles/openbook.css"), /ob-callout/);
+  });
+
+  it("builds identical bytes for the same book with lesson boxes", async () => {
+    const book = lessonBook("kn");
+    const options = { modifiedDate: "2026-01-01T00:00:00Z" };
+    assert.deepEqual(await buildEpub(book, options), await buildEpub(structuredClone(book), options));
+  });
+
+  for (const language of ["en", "kn"] as const) {
+    it(
+      `validates ${language === "en" ? "an English" : "a Kannada"} book with lesson boxes with official EPUBCheck 5.3.0: zero errors and zero warnings`,
+      { skip: !hasSpikeRuntime },
+      async () => {
+        const bytes = await buildEpub(lessonBook(language), { modifiedDate: "2026-01-01T00:00:00Z" });
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openbook-callout-epub-"));
+        const epubPath = path.join(tempDir, "lessons.epub");
+        try {
+          await fs.writeFile(epubPath, bytes);
+          const report = await new EpubCheckSubprocessAdapter({
+            javaExecutablePath: javaExe,
+            epubcheckJarPath: epubcheckJar,
+          }).validateEpub(epubPath);
+          assert.equal(report.validatorVersion, "5.3.0");
+          assert.equal(report.isValid, true, JSON.stringify(report.messages, null, 2));
+          assert.equal(report.summary.totalErrors, 0, JSON.stringify(report.messages));
+          assert.equal(report.summary.totalWarnings, 0, JSON.stringify(report.messages));
+        } finally {
+          await fs.rm(tempDir, { recursive: true, force: true });
+        }
+      },
+    );
+  }
+});

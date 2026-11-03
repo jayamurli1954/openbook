@@ -5,7 +5,7 @@
  * This module validates package metadata only. It does not read/write files,
  * perform Save/Open, run migrations, or define a second canonical document.
  */
-import { BOOK_MODEL_SCHEMA_VERSION } from "@openbook/book-model";
+import { BOOK_MODEL_SCHEMA_VERSION, SUPPORTED_OLDER_SCHEMA_VERSIONS } from "@openbook/book-model";
 
 export const PROJECT_PACKAGE_VERSION = 1 as const;
 export const OPENBOOK_APPLICATION_NAME = "OpenBook" as const;
@@ -125,7 +125,10 @@ export function validateProjectPackageManifest(input: unknown): ManifestValidati
   if (manifest.packageVersion > PROJECT_PACKAGE_VERSION || manifest.bookModelVersion > BOOK_MODEL_SCHEMA_VERSION) {
     return { compatibility: "unsupported-future-version", errors: [{ code: "UNSUPPORTED_FUTURE_VERSION", message: "Manifest declares a package or Book Model version newer than this reader supports." }], manifest };
   }
-  if (manifest.packageVersion < PROJECT_PACKAGE_VERSION || manifest.bookModelVersion < BOOK_MODEL_SCHEMA_VERSION) {
+  // ADR-0041 §6: an older Book Model version that `upgradeBook` reads is not a migration; the Book is
+  // upgraded in memory and the package is rewritten at the next Save.
+  const upgradableBook = (SUPPORTED_OLDER_SCHEMA_VERSIONS as readonly number[]).includes(manifest.bookModelVersion);
+  if (manifest.packageVersion < PROJECT_PACKAGE_VERSION || (manifest.bookModelVersion < BOOK_MODEL_SCHEMA_VERSION && !upgradableBook)) {
     return { compatibility: "migration-required", errors: [{ code: "MIGRATION_REQUIRED", message: "Manifest uses a recognized older package or Book Model version and requires migration." }], manifest };
   }
   return { compatibility: "compatible", errors: [], manifest };

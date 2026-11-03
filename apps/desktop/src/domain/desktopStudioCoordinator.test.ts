@@ -65,7 +65,7 @@ test("constructor starts at IMPORT/idle with a canonical Book and no binding", (
   assert.equal(state.validationReport, null);
   assert.equal(state.selectedSectionId, coordinator.getBook().chapters[0]?.id);
   const book = coordinator.getBook();
-  assert.equal(book.schemaVersion, 1);
+  assert.equal(book.schemaVersion, 2);
   assert.ok(book.chapters.length >= 1);
   assert.ok(!("type" in book && (book as { type?: string }).type === "doc"));
 });
@@ -174,7 +174,7 @@ test("save persists Book not Tiptap JSON", async () => {
   );
   assert.equal(rows.length, 1);
   const payload = JSON.parse(rows[0]!.book_payload) as Record<string, unknown>;
-  assert.equal(payload["schemaVersion"], 1);
+  assert.equal(payload["schemaVersion"], 2);
   assert.ok(Array.isArray(payload["chapters"]));
   assert.notEqual(payload["type"], "doc");
   assert.ok(!("manifest" in payload));
@@ -255,4 +255,127 @@ test("coordinator source stays headless and Slice 5 scoped", () => {
 
 test("DomainValidationError remains the BookSession rollback diagnostic", () => {
   assert.equal(DomainValidationError.name, "DomainValidationError");
+});
+
+// --- Pictures must survive the Write step ---------------------------------------
+// Showing a chapter in Write loads it into the editor and immediately writes the editor's
+// content back (EditorSurface onUpdate). Pictures used to come back as "[image:…]" text.
+
+function chapterWithPictures(coordinator: DesktopStudioCoordinator) {
+  const session = coordinator.getSession();
+  const chapterId = coordinator.getBook().chapters[0]!.id;
+  session.addAsset({ id: "asset-pic", kind: "image", fileName: "p.png", mediaType: "image/png", altText: "A boy", licence: "" });
+  session.addAsset({ id: "asset-kn", kind: "image", fileName: "k.png", mediaType: "image/png", altText: "ಕೃಷ್ಣ", licence: "" });
+  const blocks: ContentBlock[] = [
+    { type: "paragraph", id: "p1", inlines: [{ type: "text", text: "Before." }] },
+    { type: "image", id: "i1", assetId: "asset-pic", caption: [] },
+    {
+      type: "image",
+      id: "i2",
+      assetId: "asset-kn",
+      caption: [{ type: "text", text: "ಬೆಟ್ಟದ " }, { type: "emphasis", children: [{ type: "text", text: "ಮೇಲೆ" }] }],
+    },
+    { type: "paragraph", id: "p2", inlines: [{ type: "text", text: "After." }] },
+  ];
+  session.setSectionBlocks(chapterId, blocks);
+  return blocks;
+}
+
+const withoutIds = (blocks: readonly ContentBlock[]) =>
+  blocks.map((block) => {
+    const { id: _id, ...rest } = block;
+    return rest;
+  });
+
+test("showing a chapter in Write keeps its pictures, asset ids, and captions", () => {
+  const coordinator = freshCoordinator("pictures-roundtrip");
+  const before = chapterWithPictures(coordinator);
+
+  const doc = coordinator.activeSectionToTipTap().doc;
+  assert.deepEqual(
+    doc.content?.map((node) => node.type),
+    ["paragraph", "openbookImage", "openbookImage", "paragraph"],
+  );
+  assert.equal(JSON.stringify(doc).includes("[image:"), false);
+
+  const warnings = coordinator.applyActiveSectionTipTap(doc);
+  assert.deepEqual(warnings, []);
+  const after = coordinator.getBook().chapters[0]!.blocks;
+  assert.deepEqual(withoutIds(after), withoutIds(before));
+});
+
+test("pictures survive repeated Write round trips and a text edit beside them", () => {
+  const coordinator = freshCoordinator("pictures-repeat");
+  const before = chapterWithPictures(coordinator);
+  for (let round = 0; round < 3; round += 1) {
+    coordinator.applyActiveSectionTipTap(coordinator.activeSectionToTipTap().doc);
+  }
+  const doc = coordinator.activeSectionToTipTap().doc;
+  doc.content![0] = { type: "paragraph", content: [{ type: "text", text: "Edited." }] };
+  coordinator.applyActiveSectionTipTap(doc);
+  const after = coordinator.getBook().chapters[0]!.blocks;
+  assert.deepEqual(withoutIds(after.slice(1)), withoutIds(before.slice(1)));
+  assert.equal(after.filter((block) => block.type === "image").length, 2);
+});
+
+test("an editor picture without an asset id is dropped with a warning, not turned into text", () => {
+  const coordinator = freshCoordinator("pictures-bad");
+  chapterWithPictures(coordinator);
+  const warnings = coordinator.applyActiveSectionTipTap({
+    type: "doc",
+    content: [
+      { type: "paragraph", content: [{ type: "text", text: "Text." }] },
+      { type: "openbookImage", attrs: { assetId: "", caption: [] } },
+    ],
+  });
+  assert.deepEqual(warnings.map((warning) => warning.code), ["image-without-asset"]);
+  assert.deepEqual(coordinator.getBook().chapters[0]!.blocks.map((block) => block.type), ["paragraph"]);
+});
+
+// --- ADR-0041 Slice 1: lesson boxes survive the Write step ---------------------------
+
+function chapterWithCallouts(coordinator: DesktopStudioCoordinator) {
+  const chapterId = coordinator.getBook().chapters[0]!.id;
+  const blocks: ContentBlock[] = [
+    { type: "paragraph", id: "p1", inlines: [{ type: "text", text: "Story." }] },
+    {
+      type: "callout",
+      id: "c1",
+      title: "What We Learned",
+      inlines: [{ type: "text", text: "Be honest, " }, { type: "strong", children: [{ type: "text", text: "always" }] }, { type: "text", text: "." }],
+    },
+    { type: "callout", id: "c2", title: "ನಾವು ಕಲಿತದ್ದು", inlines: [{ type: "text", text: "ಸತ್ಯವೇ ಬೆಳಕು." }] },
+    { type: "callout", id: "c3", title: "", inlines: [{ type: "text", text: "A box without a title." }] },
+  ];
+  coordinator.getSession().setSectionBlocks(chapterId, blocks);
+  return blocks;
+}
+
+test("lesson boxes keep their title and text through the Write step", () => {
+  const coordinator = freshCoordinator("callout-roundtrip");
+  const before = chapterWithCallouts(coordinator);
+  const doc = coordinator.activeSectionToTipTap().doc;
+  assert.deepEqual(
+    doc.content?.map((node) => node.type),
+    ["paragraph", "openbookCallout", "openbookCallout", "openbookCallout"],
+  );
+  assert.deepEqual(coordinator.applyActiveSectionTipTap(doc), []);
+  for (let round = 0; round < 2; round += 1) {
+    coordinator.applyActiveSectionTipTap(coordinator.activeSectionToTipTap().doc);
+  }
+  assert.deepEqual(withoutIds(coordinator.getBook().chapters[0]!.blocks), withoutIds(before));
+});
+
+test("an emptied lesson box is removed with a warning instead of blocking the edit", () => {
+  const coordinator = freshCoordinator("callout-empty");
+  chapterWithCallouts(coordinator);
+  const warnings = coordinator.applyActiveSectionTipTap({
+    type: "doc",
+    content: [
+      { type: "paragraph", content: [{ type: "text", text: "Story." }] },
+      { type: "openbookCallout", attrs: { title: "  " }, content: [] },
+    ],
+  });
+  assert.deepEqual(warnings.map((warning) => warning.code), ["empty-callout"]);
+  assert.deepEqual(coordinator.getBook().chapters[0]!.blocks.map((block) => block.type), ["paragraph"]);
 });

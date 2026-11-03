@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { Book, DomainIssue, StructuralSection } from "./types.js";
+import { BOOK_MODEL_SCHEMA_VERSION } from "./types.js";
+import type { Book, ContentBlock, DomainIssue, InlineSpan, StructuralSection } from "./types.js";
 
 // The authoring Book must stay format-neutral. None of these EPUB packaging,
 // container, or navigation keys may appear on a Book object; publishing engines
@@ -18,7 +19,7 @@ const EPUB_AUTHORING_LEAK_KEYS = [
 export function validateBook(book: Book): DomainIssue[] {
   const issues: DomainIssue[] = [];
 
-  if (book.schemaVersion !== 1) {
+  if (book.schemaVersion !== BOOK_MODEL_SCHEMA_VERSION) {
     issues.push({
       code: "schema-version",
       severity: "error",
@@ -65,7 +66,9 @@ export function validateBook(book: Book): DomainIssue[] {
       const sectionPath = `${prefix}[${String(index)}]`;
       noteId(section.id, `${sectionPath}.id`);
       for (const [blockIndex, block] of section.blocks.entries()) {
-        noteId(block.id, `${sectionPath}.blocks[${String(blockIndex)}].id`);
+        const blockPath = `${sectionPath}.blocks[${String(blockIndex)}]`;
+        noteId(block.id, `${blockPath}.id`);
+        if (block.type === "callout") issues.push(...validateCallout(block, blockPath));
       }
     }
   };
@@ -137,4 +140,27 @@ function validateCover(book: Book): DomainIssue[] {
     });
   }
   return issues;
+}
+
+// ADR-0041 §2.1: a callout has a plain-text title, a body of inline spans, and some visible text.
+function validateCallout(
+  block: Extract<ContentBlock, { type: "callout" }>,
+  path: string,
+): DomainIssue[] {
+  if (typeof block.title !== "string") {
+    return [{ code: "callout-title-not-text", severity: "error", message: "A lesson box title must be text.", path: `${path}.title` }];
+  }
+  if (!Array.isArray(block.inlines)) {
+    return [{ code: "callout-inlines-not-array", severity: "error", message: "A lesson box needs text.", path: `${path}.inlines` }];
+  }
+  if (!block.title.trim() && !hasInlineText(block.inlines)) {
+    return [{ code: "empty-callout", severity: "error", message: "A lesson box has no title and no text.", path }];
+  }
+  return [];
+}
+
+function hasInlineText(inlines: readonly InlineSpan[]): boolean {
+  return inlines.some((span) =>
+    span.type === "text" ? span.text.trim().length > 0 : hasInlineText(span.children ?? []),
+  );
 }

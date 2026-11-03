@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /** Increment when a breaking Book Model change ships with a migration. */
-export const BOOK_MODEL_SCHEMA_VERSION = 1 as const;
+export const BOOK_MODEL_SCHEMA_VERSION = 2 as const;
+
+/** Older versions `upgradeBook` reads. Version 1 differs only in lacking `callout` (ADR-0041). */
+export const SUPPORTED_OLDER_SCHEMA_VERSIONS = [1] as const;
 
 export type BookModelSchemaVersion = typeof BOOK_MODEL_SCHEMA_VERSION;
 
@@ -56,7 +59,9 @@ export type ContentBlock =
   | { type: "heading"; id: string; level: 1 | 2 | 3 | 4 | 5 | 6; inlines: InlineSpan[] }
   | { type: "quote"; id: string; inlines: InlineSpan[] }
   | { type: "list"; id: string; ordered: boolean; items: InlineSpan[][] }
-  | { type: "image"; id: string; assetId: string; caption: InlineSpan[] };
+  | { type: "image"; id: string; assetId: string; caption: InlineSpan[] }
+  /** ADR-0041: a set-apart note shown framed, e.g. "What We Learned". Empty title = no title line. */
+  | { type: "callout"; id: string; title: string; inlines: InlineSpan[] };
 
 export interface StructuralSection {
   id: string;

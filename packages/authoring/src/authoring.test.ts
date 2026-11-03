@@ -36,7 +36,7 @@ function baseBook() {
 test("INV-1: session methods expose a valid Book as sole content model", () => {
   const session = new BookSession({ book: baseBook(), idSeed: "inv1" });
   const book = session.getBook();
-  assert.equal(book.schemaVersion, 1);
+  assert.equal(book.schemaVersion, 2);
   assert.equal(validateBook(book).filter((i) => i.severity === "error").length, 0);
   session.addSection({ matter: "main", title: "Chapter 2" });
   assert.equal(
@@ -479,4 +479,37 @@ test("the cover asset cannot be removed until the cover is cleared", () => {
   session.removeAsset("asset-cover");
   assert.equal(session.getBook().assets.length, 0);
   assert.throws(() => session.clearCover(), InvalidStructureOperationError);
+});
+
+test("replaceSectionsBlocks changes several sections as one undo step, all or nothing", () => {
+  const session = new BookSession({ book: baseBook(), idSeed: "batch" });
+  const second = session.addSection({ matter: "main", title: "Two" });
+  const firstId = session.getBook().chapters[0]!.id;
+  const before = serializeBook(session.getBook());
+  const revision = session.getState().revision;
+
+  session.replaceSectionsBlocks([
+    { sectionId: firstId, blocks: [{ type: "callout", id: "c1", title: "What We Learned", inlines: [{ type: "text", text: "One." }] }] },
+    { sectionId: second.id, blocks: [{ type: "callout", id: "c2", title: "ನಾವು ಕಲಿತದ್ದು", inlines: [{ type: "text", text: "ಎರಡು." }] }] },
+  ]);
+  assert.equal(session.getState().revision, revision + 1);
+  assert.equal(session.getBook().chapters[0]!.blocks[0]!.type, "callout");
+  assert.equal(session.getBook().chapters[1]!.blocks[0]!.type, "callout");
+  assert.equal(session.undo(), true);
+  assert.equal(serializeBook(session.getBook()), before);
+
+  assert.throws(
+    () =>
+      session.replaceSectionsBlocks([
+        { sectionId: firstId, blocks: [{ type: "paragraph", id: "ok", inlines: [] }] },
+        { sectionId: second.id, blocks: [{ type: "callout", id: "bad", title: " ", inlines: [] }] },
+      ]),
+    DomainValidationError,
+  );
+  assert.equal(serializeBook(session.getBook()), before, "a rejected batch changes nothing");
+  assert.throws(() => session.replaceSectionsBlocks([]), InvalidStructureOperationError);
+  assert.throws(
+    () => session.replaceSectionsBlocks([{ sectionId: firstId, blocks: [] }, { sectionId: firstId, blocks: [] }]),
+    InvalidStructureOperationError,
+  );
 });

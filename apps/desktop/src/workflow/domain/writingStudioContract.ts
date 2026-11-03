@@ -82,6 +82,8 @@ export type WritingStudioToolbarCommand =
   | "toggle-bullet-list"
   | "toggle-ordered-list"
   | "toggle-blockquote"
+  | "toggle-lesson-box"
+  | "set-lesson-box-title"
   | "set-link"
   | "unset-link"
   | "undo"
@@ -100,6 +102,8 @@ export const WRITING_STUDIO_TOOLBAR_COMMANDS: readonly WritingStudioToolbarComma
     "toggle-bullet-list",
     "toggle-ordered-list",
     "toggle-blockquote",
+    "toggle-lesson-box",
+    "set-lesson-box-title",
     "set-link",
     "unset-link",
     "undo",
@@ -133,6 +137,8 @@ export interface WritingStudioSearchHit {
 
 export interface WritingStudioToolbarCommandArgs {
   readonly href?: string;
+  /** Lesson-box title: the new box's title, or the edited title (ADR-0041 Slice 3). */
+  readonly title?: string;
 }
 
 /** Shape-only port — TipTap/editor execution is a later slice. */
@@ -187,6 +193,8 @@ export function countWordsFromContentBlock(block: ContentBlock): number {
     case "heading":
     case "quote":
       return countWordsFromInlineSpans(block.inlines);
+    case "callout":
+      return countWordsFromInlineSpans([{ type: "text", text: block.title }, ...block.inlines]);
     case "list":
       return block.items.reduce(
         (sum, item) => sum + countWordsFromInlineSpans(item),
@@ -313,6 +321,8 @@ export function plainTextFromContentBlock(block: ContentBlock): string {
     case "heading":
     case "quote":
       return plainTextFromInlineSpans(block.inlines);
+    case "callout":
+      return [block.title, plainTextFromInlineSpans(block.inlines)].filter((part) => part.trim()).join(" ");
     case "list":
       return block.items
         .map((item) => plainTextFromInlineSpans(item))

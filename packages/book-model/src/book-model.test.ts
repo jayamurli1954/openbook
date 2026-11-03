@@ -10,8 +10,10 @@ import {
   createBook,
   parseBook,
   serializeBook,
+  upgradeBook,
   validateBook,
   type Book,
+  type ContentBlock,
 } from "./index.js";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -78,16 +80,16 @@ test("serialize/parse round-trip preserves Kannada text", () => {
   assert.equal(block.inlines[0] && block.inlines[0].type === "text" ? block.inlines[0].text : "", "ನಮಸ್ಕಾರ. ಇದು ಪರೀಕ್ಷೆ.");
 });
 
-test("English and Kannada fixture files parse as schema v1", () => {
+test("version-1 English and Kannada fixture files parse and upgrade to the current version", () => {
   const en = parseBook(readFileSync(join(repoRoot, "tests/fixtures/simple-english.json"), "utf8"));
   const kn = parseBook(readFileSync(join(repoRoot, "tests/fixtures/kannada-indic.json"), "utf8"));
-  assert.equal(en.schemaVersion, 1);
+  assert.equal(en.schemaVersion, BOOK_MODEL_SCHEMA_VERSION);
   assert.equal(kn.metadata.language, "kn");
   assert.equal(validateBook(en).filter((i) => i.severity === "error").length, 0);
   assert.equal(validateBook(kn).filter((i) => i.severity === "error").length, 0);
 });
 
-test("PDF bake-off fixtures parse as schema v1 Book Models with no domain errors", () => {
+test("version-1 PDF bake-off fixtures upgrade to the current version with no domain errors", () => {
   const names = [
     "english-prose.json",
     "kannada-prose.json",
@@ -108,7 +110,7 @@ test("PDF bake-off fixtures parse as schema v1 Book Models with no domain errors
     const book = parseBook(
       readFileSync(join(repoRoot, "tests/fixtures/pdf-bakeoff", name), "utf8"),
     );
-    assert.equal(book.schemaVersion, 1, `${name} schemaVersion`);
+    assert.equal(book.schemaVersion, BOOK_MODEL_SCHEMA_VERSION, `${name} schemaVersion`);
     assert.equal(
       validateBook(book).filter((i) => i.severity === "error").length,
       0,
@@ -239,4 +241,72 @@ test("a cover with blank alt text is a domain error", () => {
   assert.deepEqual(coverCodes(bookWithCoverAsset({ altText: "  " })), [
     "cover-alt-text-missing:error",
   ]);
+});
+
+// --- ADR-0041 Slice 1: callout block and schema version 2 ----------------------
+
+test("BOOK_MODEL_SCHEMA_VERSION is 2 and createBook uses it", () => {
+  assert.equal(BOOK_MODEL_SCHEMA_VERSION, 2);
+  assert.equal(createBook({ language: "en" }).schemaVersion, 2);
+});
+
+test("upgradeBook turns a version-1 Book into version 2 and changes nothing else", () => {
+  const v2 = createBook({ language: "kn", title: "ಪುಟ್ಟ ಕೃಷ್ಣ" });
+  const v1 = { ...structuredClone(v2), schemaVersion: 1 };
+  const before = JSON.stringify(v1);
+  const upgraded = upgradeBook(v1);
+  assert.equal(upgraded.upgradedFrom, 1);
+  assert.deepEqual(upgraded.book, v2);
+  assert.equal(JSON.stringify(v1), before, "input not mutated");
+  assert.deepEqual(validateBook(v1 as Book).filter((i) => i.code === "schema-version").length, 1);
+
+  const same = upgradeBook(v2);
+  assert.equal(same.upgradedFrom, undefined);
+  assert.equal(same.book, v2);
+  for (const version of [0, 3, 99, "2", undefined]) {
+    assert.throws(() => upgradeBook({ ...v2, schemaVersion: version }), /Unsupported schemaVersion/);
+  }
+  assert.throws(() => upgradeBook([]), /must be an object/);
+});
+
+test("parseBook reads versions 1 and 2 and returns version 2", () => {
+  const book = createBook({ language: "en", title: "Versions" });
+  assert.equal(parseBook(JSON.stringify({ ...book, schemaVersion: 1 })).schemaVersion, 2);
+  assert.equal(parseBook(serializeBook(book)).schemaVersion, 2);
+});
+
+function withBlock(block: ContentBlock): Book {
+  const book = createBook({ language: "kn", title: "ಕಥೆ" });
+  book.chapters[0]!.blocks = [block];
+  return book;
+}
+
+const calloutCodes = (book: Book) =>
+  validateBook(book).filter((i) => i.code.includes("callout")).map((i) => i.code);
+
+test("a callout with a title and Kannada text is valid and round-trips", () => {
+  const block: ContentBlock = {
+    type: "callout",
+    id: "lesson-1",
+    title: "ನಾವು ಕಲಿತದ್ದು",
+    inlines: [{ type: "text", text: "ಸತ್ಯವು " }, { type: "strong", children: [{ type: "text", text: "ಬೆಳಕು" }] }],
+  };
+  const book = withBlock(block);
+  assert.deepEqual(calloutCodes(book), []);
+  assert.deepEqual(parseBook(serializeBook(book)).chapters[0]!.blocks[0], block);
+});
+
+test("a callout needs a text title, an inline array, and some visible text", () => {
+  const base = { type: "callout" as const, id: "c", title: "What We Learned", inlines: [] };
+  assert.deepEqual(calloutCodes(withBlock(base)), [], "title alone is enough");
+  assert.deepEqual(calloutCodes(withBlock({ ...base, title: "", inlines: [{ type: "text", text: "Be kind." }] })), []);
+  assert.deepEqual(calloutCodes(withBlock({ ...base, title: "  ", inlines: [{ type: "text", text: " " }] })), ["empty-callout"]);
+  assert.deepEqual(calloutCodes(withBlock({ ...base, title: 7 as unknown as string })), ["callout-title-not-text"]);
+  assert.deepEqual(calloutCodes(withBlock({ ...base, inlines: "x" as unknown as [] })), ["callout-inlines-not-array"]);
+});
+
+test("callout ids take part in the duplicate-id check", () => {
+  const book = withBlock({ type: "callout", id: "dup", title: "T", inlines: [] });
+  book.chapters[0]!.blocks.push({ type: "paragraph", id: "dup", inlines: [] });
+  assert.equal(validateBook(book).some((i) => i.code === "duplicate-id"), true);
 });

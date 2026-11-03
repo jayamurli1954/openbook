@@ -29,7 +29,7 @@ export interface ProjectPersistenceMetadata {
   updatedAt: string;
   /** Persistence container schema version (PERSISTENCE_SCHEMA_VERSION = 1). */
   schemaVersion: number;
-  /** Book Model schema version (BOOK_MODEL_SCHEMA_VERSION = 1). */
+  /** Book Model schema version (BOOK_MODEL_SCHEMA_VERSION; version-1 rows are upgraded on read). */
   bookSchemaVersion: number;
 }
 

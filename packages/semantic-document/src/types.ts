@@ -58,7 +58,8 @@ export type SemanticBlock =
   | { type: "heading"; id: string; level: 1 | 2 | 3 | 4 | 5 | 6; inlines: SemanticInline[] }
   | { type: "quote"; id: string; inlines: SemanticInline[] }
   | { type: "list"; id: string; ordered: boolean; items: SemanticInline[][] }
-  | { type: "image"; id: string; assetId: string; caption: SemanticInline[] };
+  | { type: "image"; id: string; assetId: string; caption: SemanticInline[] }
+  | { type: "callout"; id: string; title: string; inlines: SemanticInline[] };
 
 export interface SemanticSection {
   id: string;
