@@ -1,6 +1,6 @@
 # Next Domain Selection: Print-Ready Paperback PDF
 
-- **Status:** Selected; ADR-0042 accepted (PR #209); Slice 1 awaits authorization
+- **Status:** Selected; ADR-0042 accepted (PR #209); Slice 1 in progress (`docs/adr-0042-slice-1-print-profile.md`)
 - **Date:** 2026-11-05
 - **Baseline:** `main` at `6b5ba06` (PR #208 — ADR-0041 Kindle Previewer result)
 - **Prior records:** `docs/adr-0041-closure-reconciliation.md` (§4 real-book check, §6 Kindle); `docs/adr-0038-closure-reconciliation.md` (§7 "leave the cover out" PDF deferred)

@@ -29,3 +29,11 @@ export {
 export { serializeBookToTypst, escapeTypstText, typstLanguage } from "./typst-serializer.js";
 export { compileTypstToPdf } from "./typst-runner.js";
 export { DEFAULT_PDF_PROFILE } from "./default-profile.js";
+export type { PdfPrintProfile, PdfProfile, PrintTrimId, PrintTrimSize } from "./print-profile.js";
+export {
+  InvalidPdfProfileError,
+  PRINT_MAX_PAGES,
+  PRINT_PAGE_LIMIT_MESSAGE,
+  PRINT_TRIM_SIZES,
+  printTrimSize,
+} from "./print-profile.js";
