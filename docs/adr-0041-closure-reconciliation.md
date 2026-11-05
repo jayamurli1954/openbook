@@ -90,13 +90,25 @@ Checked in the running app. No other problems were found.
 
 ## 6. Kindle Previewer
 
-Not run by the time of closure; the maintainer chose to close without waiting ("Close without waiting", 2026-11-02).
+Not run by the time of closure; the maintainer chose to close without waiting ("Close without waiting", 2026-11-02). The maintainer ran it the same day, after the merge; the result is recorded here.
 
-- **File:** `D:\Download\Little_Krishnas_Wisdom_lesson-boxes.epub`.
-- **Steps:** open it in Kindle Previewer (File → Open). Look at a story's end on the Tablet and Phone views, and check that the box shows its frame and the bold "What We Learned" title.
-- **If Kindle shows a problem,** the fix is a separately authorized change.
+- **File:** the real book's EPUB with 25 boxes (§4), kept locally beside the maintainer's Word file.
+- **Tool:** Kindle Previewer 4, Enhanced Typesetting on; 431 locations.
+- **Checked:** the end of Stories 1 and 2 on Tablet, Phone, and Kindle E-reader, at text sizes 4, 7, and 8.
+
+| Device | Size 4 | Size 7 | Size 8 |
+|---|---|---|---|
+| Tablet | Frame, bold title, text inside | Same; box moved whole to the next page | Same |
+| Phone | Frame, bold title, text inside | Same | Same; box moved whole to its own page |
+| Kindle E-reader | Frame (black on e-ink), bold title, text inside | Same | Same |
+
+Result: the lesson boxes render correctly everywhere checked and are never split across pages; Kindle draws the corners squarer than the PDF, which is expected. No Kindle-specific change is needed.
+
+Seen at the same time, unrelated to lesson boxes: at size 8, a story's full-width picture moves to the page after its heading and "Value:" line, because they no longer fit on one screen. This is ordinary Kindle reflow of large pictures. Limiting a picture's height to a share of the screen would keep them together at large sizes; that is an EPUB engine change for all pictures and needs its own proposal (§7).
 
 ## 7. Still deferred
+
+- Keeping a story's heading and picture on one screen at large Kindle text sizes (limit picture height; EPUB engine change, see §6)
 
 - A Design-step "lesson box look" choice (ADR-0041 §2.6)
 - Detecting labels during Word import (ADR-0041 §2.5)

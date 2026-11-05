@@ -160,6 +160,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0041 Slice 3 (Write controls)    [DONE — PR #202]
 ├── ADR-0041 Slice 4 (book-wide convert) [DONE — PR #204]
 ├── ADR-0041 Slice 5 (hardening, closure) [DONE — PR #206; sequence closed]
+├── Selection + ADR-0042 (print-ready paperback PDF) [PROPOSED — awaits maintainer decision]
 ├── Write header section-title fix       [IN PROGRESS — ADR-0039 presentation]
 │
 DTP & TYPOGRAPHY (FUTURE)
