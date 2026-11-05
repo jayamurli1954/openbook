@@ -20,7 +20,7 @@ Slices 1–4 (PRs #196, #198, #202, #204) were each tested on their own. The pro
    - a version 1 package that opens and converts
 2. **Panel styling only:** the Label field and buttons match the Find-in-book row; the match list stays inside the panel.
 3. **No-box byte identity** is checked locally against engines built from `4a06d32`, the `main` before ADR-0041.
-4. **Kindle Previewer** is recorded as "not run". The boxed EPUB is left for the maintainer.
+4. **Kindle Previewer** was recorded as "not run" at merge. The maintainer then ran it (Kindle Previewer 4): boxes correct on Tablet, Phone, and E-reader at text sizes 4, 7, and 8, never split. At size 8, story pictures move to the page after their heading — ordinary reflow, unrelated to boxes, noted as a possible picture-height change.
 5. **ADR-0041** is marked "Slices 1–5 implemented; sequencing closed".
 6. **Process:** Draft PR → CI/DCO → merge only on the maintainer's authorization.
 
