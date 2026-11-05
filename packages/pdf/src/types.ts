@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { AssetRef } from "@openbook/book-model";
+import type { PdfProfile } from "./print-profile.js";
 
 /**
  * Injected asynchronous resolver for retrieving raw asset bytes outside the Book Model.
@@ -65,6 +66,9 @@ export interface PdfBuildOptions {
    * Working directory for intermediate Typst/image files. Defaults to an OS temp dir.
    */
   workDirectory?: string;
+
+  /** ADR-0042: reading PDF (default) or a paperback interior at a trim size. */
+  profile?: PdfProfile;
 }
 
 export class UnsupportedContentError extends Error {

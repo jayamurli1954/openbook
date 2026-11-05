@@ -2,6 +2,7 @@
 
 import type { Book } from "@openbook/book-model";
 import { processBookAssets } from "./assets/asset-pipeline.js";
+import { PRINT_PAGE_LIMIT_MESSAGE, printTrimSize } from "./print-profile.js";
 import { resolveProductionTypstRuntime } from "./resolve-typst.js";
 import { serializeBookToTypst } from "./typst-serializer.js";
 import { compileTypstToPdf } from "./typst-runner.js";
@@ -51,6 +52,9 @@ export async function buildPdf(
   book: Readonly<Book>,
   options?: PdfBuildOptions,
 ): Promise<PdfPublication> {
+  const profile = options?.profile ?? { kind: "reading" };
+  if (profile.kind === "print") printTrimSize(profile.trim);
+
   const assetResult = await processBookAssets(
     book,
     options?.assetResolver,
@@ -74,17 +78,26 @@ export async function buildPdf(
     );
   }
 
-  const typstSource = serializeBookToTypst(book, assetResult.resolvedImagesByAssetId);
+  const typstSource = serializeBookToTypst(book, assetResult.resolvedImagesByAssetId, profile);
   const creationTimestamp = resolveCreationTimestamp(book, options?.creationTimestamp);
 
-  const compiled = await compileTypstToPdf({
-    typstExecutablePath,
-    fontPath,
-    typstSource,
-    creationTimestamp,
-    resolvedImages: assetResult.resolvedImagesByAssetId,
-    workDirectory: options?.workDirectory,
-  });
+  let compiled;
+  try {
+    compiled = await compileTypstToPdf({
+      typstExecutablePath,
+      fontPath,
+      typstSource,
+      creationTimestamp,
+      resolvedImages: assetResult.resolvedImagesByAssetId,
+      workDirectory: options?.workDirectory,
+    });
+  } catch (err: unknown) {
+    // ADR-0042 §2.1: the print source refuses books past the page limit with a plain message.
+    if (err instanceof TypstRuntimeError && err.message.includes(PRINT_PAGE_LIMIT_MESSAGE)) {
+      throw new TypstRuntimeError("PRINT_PAGE_LIMIT_EXCEEDED", PRINT_PAGE_LIMIT_MESSAGE, { cause: err });
+    }
+    throw err;
+  }
 
   return {
     pdf: compiled.pdf,
