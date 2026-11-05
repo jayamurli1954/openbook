@@ -1,6 +1,6 @@
 # ADR-0042 Slice 1: Print Profile in the PDF Engine — Implementation Proposal
 
-- **Status:** In progress (this PR)
+- **Status:** Implemented on main (PR #211)
 - **Date:** 2026-11-05
 - **Parent architecture:** ADR-0042 — Print-Ready Paperback PDF Architecture, §2.1, §4 invariants 1–4 and 6–7, §7 Slice 1
 - **Scope:** the PDF engine (`@openbook/pdf`) learns a print profile: trim size, mirrored margins, page numbers, no cover page, and a page limit. No desktop change (Slice 3), no picture check (Slice 2).
