@@ -2,6 +2,7 @@
 
 import type { Book } from "@openbook/book-model";
 import { processBookAssets } from "./assets/asset-pipeline.js";
+import { checkPrintImages } from "./print-image-check.js";
 import { PRINT_PAGE_LIMIT_MESSAGE, printTrimSize } from "./print-profile.js";
 import { resolveProductionTypstRuntime } from "./resolve-typst.js";
 import { serializeBookToTypst } from "./typst-serializer.js";
@@ -99,9 +100,18 @@ export async function buildPdf(
     throw err;
   }
 
+  const diagnostics = [...assetResult.diagnostics];
+  if (profile.kind === "print") {
+    // ADR-0042 §2.2: how sharp each picture prints, measured in the rendered PDF. Never blocks.
+    for (const diagnostic of checkPrintImages(book, compiled.pdf, assetResult.resolvedImagesByAssetId)) {
+      diagnostics.push(diagnostic);
+      options?.onDiagnostic?.(diagnostic);
+    }
+  }
+
   return {
     pdf: compiled.pdf,
-    diagnostics: assetResult.diagnostics,
+    diagnostics,
     typstSource,
   };
 }

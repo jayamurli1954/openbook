@@ -29,6 +29,15 @@ export {
 export { serializeBookToTypst, escapeTypstText, typstLanguage } from "./typst-serializer.js";
 export { compileTypstToPdf } from "./typst-runner.js";
 export { DEFAULT_PDF_PROFILE } from "./default-profile.js";
+export type { PlacedImage } from "./print-image-check.js";
+export {
+  checkPrintImages,
+  imagePixelSize,
+  readImagePlacements,
+  PRINT_IMAGE_IDEAL_DPI,
+  PRINT_IMAGE_MIN_DPI,
+  PRINT_IMAGE_UNCHECKED_MESSAGE,
+} from "./print-image-check.js";
 export type { PdfPrintProfile, PdfProfile, PrintTrimId, PrintTrimSize } from "./print-profile.js";
 export {
   InvalidPdfProfileError,
