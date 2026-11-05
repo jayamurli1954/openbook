@@ -1,6 +1,6 @@
 # ADR-0042: Print-Ready Paperback PDF Architecture
 
-- **Status:** Proposed; trim-size storage decided (maintainer, 2026-11-05: "Per book, this computer")
+- **Status:** Accepted (PR #209); trim-size storage decided (maintainer, 2026-11-05: "Per book, this computer"); implementation not authorized
 - **Date:** 2026-11-05
 - **Phase:** ROADMAP Phase 2 print, narrowed to flow-based paperback interiors
 - **Area:** PDF Publishing Engine / Desktop Export
