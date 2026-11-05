@@ -6,6 +6,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import * as zlib from "node:zlib";
 import {
   createBook,
   parseBook,
@@ -31,6 +32,10 @@ import {
   PRINT_PAGE_LIMIT_MESSAGE,
   PRINT_TRIM_SIZES,
   type PdfProfile,
+  checkPrintImages,
+  imagePixelSize,
+  readImagePlacements,
+  PRINT_IMAGE_UNCHECKED_MESSAGE,
 } from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -691,5 +696,149 @@ test(
       (err: unknown) =>
         err instanceof TypstRuntimeError && err.code === "PRINT_PAGE_LIMIT_EXCEEDED" && err.message === PRINT_PAGE_LIMIT_MESSAGE,
     );
+  },
+);
+
+// --- ADR-0042 Slice 2: picture check for print ---------------------------------
+
+/** A minimal PDF in the shape Typst writes: catalog, pages, page resources, content streams. */
+function tinyPdf(pages: { content: string; images: Record<string, [number, number]>; compress?: boolean }[]): Uint8Array {
+  const objects: string[] = [];
+  const add = (body: string) => {
+    objects.push(body);
+    return objects.length;
+  };
+  const catalog = add("");
+  const pagesNode = add("");
+  const kids: number[] = [];
+  for (const page of pages) {
+    const xobjects = Object.entries(page.images)
+      .map(([name, [w, h]]) => `/${name} ${add(`<</Type/XObject/Subtype/Image/Width ${w}/Height ${h}/Length 0>>\nstream\n\nendstream`)} 0 R`)
+      .join("");
+    const data = page.compress ? zlib.deflateSync(Buffer.from(page.content, "latin1")).toString("latin1") : page.content;
+    const content = add(`<</Length ${Buffer.byteLength(data, "latin1")}${page.compress ? "/Filter/FlateDecode" : ""}>>\nstream\n${data}\nendstream`);
+    const resources = add(`<</XObject<<${xobjects}>>>>`);
+    kids.push(add(`<</Type/Page/Resources ${resources} 0 R/MediaBox[0 0 396 612]/Parent ${pagesNode} 0 R/Contents ${content} 0 R>>`));
+  }
+  objects[catalog - 1] = `<</Type/Catalog/Pages ${pagesNode} 0 R>>`;
+  objects[pagesNode - 1] = `<</Type/Pages/Count ${kids.length}/Kids[${kids.map((k) => `${k} 0 R`).join(" ")}]>>`;
+  const body = objects.map((o, i) => `${i + 1} 0 obj\n${o}\nendobj\n`).join("");
+  return new Uint8Array(Buffer.from(`%PDF-1.7\n${body}trailer\n<</Root ${catalog} 0 R>>\n`, "latin1"));
+}
+
+/** A real PNG of the given pixel size (solid grey), built with node:zlib. */
+function pngOfSize(width: number, height: number): Uint8Array {
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc = (buf: Buffer) => {
+    let c = 0xffffffff;
+    for (const byte of buf) c = crcTable[(c ^ byte) & 0xff]! ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type: string, data: Buffer) => {
+    const typed = Buffer.concat([Buffer.from(type, "latin1"), data]);
+    const out = Buffer.alloc(8 + data.length + 4);
+    out.writeUInt32BE(data.length, 0);
+    typed.copy(out, 4);
+    out.writeUInt32BE(crc(typed), 8 + data.length);
+    return out;
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 0; // greyscale
+  const raw = Buffer.alloc((width + 1) * height, 0x80);
+  for (let y = 0; y < height; y++) raw[y * (width + 1)] = 0;
+  return new Uint8Array(
+    Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      chunk("IHDR", ihdr),
+      chunk("IDAT", zlib.deflateSync(raw)),
+      chunk("IEND", Buffer.alloc(0)),
+    ]),
+  );
+}
+
+test("picture placements are read with their printed size, through nested and saved transforms", () => {
+  const pdf = tinyPdf([
+    {
+      // 600 px drawn 2 in wide is 300 dpi; a half-size group shrinks the second picture.
+      content:
+        "q 1 0 0 -1 0 612 cm q 144 0 0 72 36 100 cm /x0 Do Q BT (cm /x1 Do \\) Tj) Tj ET q 0.5 0 0 0.5 0 0 cm q 144 0 0 144 0 0 cm /x1 Do Q Q Q",
+      images: { x0: [600, 300], x1: [400, 400] },
+    },
+    { content: "q 72 0 0 72 10 10 cm /x0 Do Q", images: { x0: [600, 300] }, compress: true },
+  ]);
+  assert.deepEqual(
+    readImagePlacements(pdf).map((p) => [p.page, p.pixelWidth, p.pixelHeight, +p.widthIn.toFixed(2), p.dpi]),
+    [
+      [1, 600, 300, 2, 300],
+      [1, 400, 400, 1, 400],
+      [2, 600, 300, 1, 300],
+    ],
+  );
+});
+
+test("picture sizes are read from PNG and JPEG headers", () => {
+  assert.deepEqual(imagePixelSize(TINY_PNG), { width: 1, height: 1 });
+  assert.deepEqual(imagePixelSize(pngOfSize(37, 21)), { width: 37, height: 21 });
+  const jpeg = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x05, 0x41, 0x42, 0x00, 0xff, 0xc0, 0x00, 0x0b, 8, 0x01, 0xf4, 0x03, 0x20, 1, 1, 0x11, 0, 0xff, 0xd9]);
+  assert.deepEqual(imagePixelSize(jpeg), { width: 800, height: 500 });
+  assert.equal(imagePixelSize(new Uint8Array([1, 2, 3])), undefined);
+});
+
+function printPictureBook(language: string, title: string, pixels: [number, number]) {
+  const book = createBook({ title: "Pictures", language });
+  book.assets = [{ id: "pic", kind: "image", fileName: "pic.png", mediaType: "image/png", altText: "A picture", licence: "test" }];
+  book.chapters[0]!.title = title;
+  book.chapters[0]!.blocks = [
+    { type: "paragraph", id: "p1", inlines: [{ type: "text", text: "Before." }] },
+    { type: "image", id: "img1", assetId: "pic", caption: [] },
+  ];
+  const png = pngOfSize(...pixels);
+  return { book, png, resolver: { resolve: async () => png } };
+}
+
+test("a mismatch between pictures and what was drawn gives one note instead of a wrong section", () => {
+  const { book, png } = printPictureBook("en", "Story", [100, 100]);
+  const images = new Map([["pic", { asset: book.assets[0]!, fileName: "pic.png", relativePath: "assets/pic.png", content: png, altText: "A picture" }]]);
+  const unchecked = [{ code: "PRINT_IMAGE_UNCHECKED", severity: "info", message: PRINT_IMAGE_UNCHECKED_MESSAGE }];
+  assert.deepEqual(checkPrintImages(book, tinyPdf([{ content: "", images: {} }]), images), unchecked);
+  assert.deepEqual(checkPrintImages(book, tinyPdf([{ content: "q 72 0 0 72 0 0 cm /x0 Do Q", images: { x0: [50, 50] } }]), images), unchecked);
+  assert.deepEqual(checkPrintImages(book, tinyPdf([{ content: "q 18 0 0 18 0 0 cm /x0 Do Q", images: { x0: [100, 100] } }]), images), [], "400 dpi says nothing");
+  const note = checkPrintImages(book, tinyPdf([{ content: "q 30 0 0 30 0 0 cm /x0 Do Q", images: { x0: [100, 100] } }]), images);
+  assert.deepEqual(note, [
+    { code: "PRINT_IMAGE_BELOW_IDEAL", severity: "info", message: "A picture in “Story” prints at 240 dpi. It should look fine; 300 dpi is ideal.", assetId: "pic", blockId: "img1" },
+  ]);
+});
+
+test(
+  "a paperback PDF warns about a blurry picture by section, and says nothing for a sharp one",
+  { skip: !hasRuntime },
+  async () => {
+    for (const [language, title] of [["en", "Story 3: The Honest Fruit Seller"], ["kn", "ಪ್ರಾಮಾಣಿಕ ಹಣ್ಣು ಮಾರುವವನು"]] as const) {
+      const low = printPictureBook(language, title, [300, 200]);
+      const first = await buildPdf(low.book, { assetResolver: low.resolver, profile: { kind: "print", trim: "5.5x8.5" } });
+      const again = await buildPdf(low.book, { assetResolver: low.resolver, profile: { kind: "print", trim: "5.5x8.5" } });
+      const warning = first.diagnostics.find((d) => d.code === "PRINT_IMAGE_LOW_RESOLUTION");
+      assert.ok(warning, JSON.stringify(first.diagnostics));
+      assert.equal(warning.severity, "warning");
+      assert.equal(warning.assetId, "pic");
+      assert.equal(warning.blockId, "img1");
+      const measured = readImagePlacements(first.pdf)[0]!;
+      assert.ok(measured.dpi < 200);
+      assert.ok(warning.message.startsWith(`A picture in “${title}” may print blurry (${measured.dpi} dpi).`), warning.message);
+      assert.deepEqual(again.diagnostics, first.diagnostics);
+      const reading = await buildPdf(low.book, { assetResolver: low.resolver });
+      assert.equal(reading.diagnostics.filter((d) => d.code.startsWith("PRINT_IMAGE")).length, 0, "reading PDF: no picture check");
+    }
+    const sharp = printPictureBook("en", "Story 1", [2400, 1600]);
+    const pub = await buildPdf(sharp.book, { assetResolver: sharp.resolver, profile: { kind: "print", trim: "5.5x8.5" } });
+    assert.ok(readImagePlacements(pub.pdf)[0]!.dpi >= 300);
+    assert.equal(pub.diagnostics.filter((d) => d.code.startsWith("PRINT_IMAGE")).length, 0);
   },
 );

@@ -162,7 +162,7 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0041 Slice 5 (hardening, closure) [DONE — PR #206; sequence closed]
 ├── Selection + ADR-0042 (print-ready paperback PDF) [DONE — PR #209; accepted]
 ├── ADR-0042 Slice 1 (print profile in the PDF engine) [DONE — PR #211]
-├── ADR-0042 Slice 2 (picture check for print) [NEXT — awaits authorization]
+├── ADR-0042 Slice 2 (picture check for print) [IN PROGRESS — this PR]
 │
 DTP & TYPOGRAPHY (FUTURE)
 ├── page model                   [requirements exist; NOT STARTED]
