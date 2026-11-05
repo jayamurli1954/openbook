@@ -58,3 +58,18 @@ export function buildStudioOutline(
 export function isOutlineChapter(book: Book, sectionId: string | null): boolean {
   return sectionId !== null && book.chapters.some((chapter) => chapter.id === sectionId);
 }
+
+/**
+ * Title of any section (front matter, chapter, or back matter) for author-facing
+ * notes such as "Selected “Publisher’s Note”". Never returns an internal id.
+ */
+export function outlineSectionTitle(book: Book, sectionId: string | null): string {
+  if (sectionId !== null) {
+    for (const group of GROUPS) {
+      const section = book[group.key].find((candidate) => candidate.id === sectionId);
+      const title = section?.title.trim();
+      if (title) return title;
+    }
+  }
+  return "Untitled section";
+}
