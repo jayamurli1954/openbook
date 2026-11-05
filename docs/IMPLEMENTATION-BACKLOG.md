@@ -2,7 +2,7 @@
 
 - **Status:** Planning backlog only
 - **Date:** 2026-10-14
-- **Reconciled to:** `main` at `92674f4` after ADR-0041 Slice 5 (#206); ADR-0041 closed
+- **Reconciled to:** `main` at `b7a794e` after ADR-0042 Slice 1 (#211)
 - **Rule:** Nothing here is authorized merely by appearing on this list. Each major area needs its architecture gate. Do not expand beyond authorized foundation slices without a new authorization.
 
 Related: `docs/FOUNDATION-READINESS-REPORT.md`, `docs/decisions/ARCHITECTURE-DECISION-INDEX.md`, `docs/adr/0014-end-to-end-book-production-workflow-architecture.md`, `docs/adr/0018-book-doctor-validation-coordinator-architecture.md`, `docs/adr/0028-release-compliance-architecture.md`, `docs/adr/0029-project-package-filesystem-persistence-architecture.md`.
@@ -161,7 +161,8 @@ PHASE 1 MVP (GUIDED BOOK CREATION)
 ├── ADR-0041 Slice 4 (book-wide convert) [DONE — PR #204]
 ├── ADR-0041 Slice 5 (hardening, closure) [DONE — PR #206; sequence closed]
 ├── Selection + ADR-0042 (print-ready paperback PDF) [DONE — PR #209; accepted]
-├── ADR-0042 Slice 1 (print profile in the PDF engine) [IN PROGRESS — this PR]
+├── ADR-0042 Slice 1 (print profile in the PDF engine) [DONE — PR #211]
+├── ADR-0042 Slice 2 (picture check for print) [NEXT — awaits authorization]
 ├── Write header section-title fix       [IN PROGRESS — ADR-0039 presentation]
 │
 DTP & TYPOGRAPHY (FUTURE)

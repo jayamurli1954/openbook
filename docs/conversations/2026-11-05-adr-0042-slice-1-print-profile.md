@@ -24,6 +24,7 @@ ADR-0042 was accepted in PR #209. The Slice 1 proposal asked where page 1 should
 ## Outcomes
 
 - Branch `feat/adr-0042-slice-1-print-profile`.
+- Merged as PR #211 (merge commit `b7a794e`) on 2026-11-05 after the maintainer authorized the merge; all four checks passed.
 - **Tests:** `@openbook/pdf` 39 pass, rendered tests included.
 - **Reading PDF:** byte-identical to `main` for the four fixtures and for the maintainer's book.
 - **Real-book check at 5.5 × 8.5 in:** 69 pages; numbers on pages 2–69; text and pictures at least 0.68 in from the inside edge and 0.43 in from the outside edge (hanging punctuation); 25 lesson boxes; no cover page.
