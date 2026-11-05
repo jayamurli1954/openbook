@@ -15,3 +15,7 @@ After ADR-0041 closed, the maintainer published the paperback of *Little Krishna
 2. Trim size, margins, and page numbers stay out of the Book Model (ADR-0013 §9).
 3. Trim-size storage (ADR-0042 §6): the maintainer chose "Per book, this computer" — remembered locally per book; no Book Model or package change.
 4. Process: Draft PR → CI/DCO → acceptance and merge only on the maintainer's authorization; each slice separately authorized.
+
+## Outcomes
+
+- Merged as PR #209 (merge commit `7fa47d0`) on 2026-11-05 after the maintainer authorized it; all four checks passed. ADR-0042 is accepted; Slice 1 awaits authorization.

@@ -1,11 +1,11 @@
 # Next Domain Selection: Print-Ready Paperback PDF
 
-- **Status:** Proposed; ADR-0042 trim-size storage decided ("Per book, this computer"); awaiting acceptance
+- **Status:** Selected; ADR-0042 accepted (PR #209); Slice 1 awaits authorization
 - **Date:** 2026-11-05
 - **Baseline:** `main` at `6b5ba06` (PR #208 — ADR-0041 Kindle Previewer result)
 - **Prior records:** `docs/adr-0041-closure-reconciliation.md` (§4 real-book check, §6 Kindle); `docs/adr-0038-closure-reconciliation.md` (§7 "leave the cover out" PDF deferred)
 - **Selected domain:** a **paperback interior PDF** that print-on-demand services accept as is (ROADMAP Phase 2 print, narrowed to what a flow-based book needs)
-- **Architecture ADR:** ADR-0042 (proposed in this PR). Selection alone does not authorize a slice.
+- **Architecture ADR:** ADR-0042 (accepted in PR #209). Selection alone does not authorize a slice.
 
 ## 1. Why this domain
 
