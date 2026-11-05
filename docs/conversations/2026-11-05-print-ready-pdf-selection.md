@@ -13,5 +13,5 @@ After ADR-0041 closed, the maintainer published the paperback of *Little Krishna
 
 1. Proposed domain: a "PDF for a paperback" choice beside today's reading PDF, with a trim-size list, mirrored margins, page numbers, no cover page, a picture-resolution check, and the page count after export.
 2. Trim size, margins, and page numbers stay out of the Book Model (ADR-0013 §9).
-3. Open question for the maintainer (ADR-0042 §6): keep the trim choice per book on this computer (recommended), or save it in the project package.
+3. Trim-size storage (ADR-0042 §6): the maintainer chose "Per book, this computer" — remembered locally per book; no Book Model or package change.
 4. Process: Draft PR → CI/DCO → acceptance and merge only on the maintainer's authorization; each slice separately authorized.

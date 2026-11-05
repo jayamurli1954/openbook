@@ -1,6 +1,6 @@
 # Next Domain Selection: Print-Ready Paperback PDF
 
-- **Status:** Proposed; awaiting maintainer decision on ADR-0042
+- **Status:** Proposed; ADR-0042 trim-size storage decided ("Per book, this computer"); awaiting acceptance
 - **Date:** 2026-11-05
 - **Baseline:** `main` at `6b5ba06` (PR #208 — ADR-0041 Kindle Previewer result)
 - **Prior records:** `docs/adr-0041-closure-reconciliation.md` (§4 real-book check, §6 Kindle); `docs/adr-0038-closure-reconciliation.md` (§7 "leave the cover out" PDF deferred)

@@ -1,6 +1,6 @@
 # ADR-0042: Print-Ready Paperback PDF Architecture
 
-- **Status:** Proposed
+- **Status:** Proposed; trim-size storage decided (maintainer, 2026-11-05: "Per book, this computer")
 - **Date:** 2026-11-05
 - **Phase:** ROADMAP Phase 2 print, narrowed to flow-based paperback interiors
 - **Area:** PDF Publishing Engine / Desktop Export
@@ -71,7 +71,7 @@ Before export, each picture's resolution at its printed width is computed from i
   - the page count;
   - a reminder that the cover is uploaded separately;
   - any picture warnings.
-- **Where the trim choice is kept** — see §6. In no case does it go into the Book Model (ADR-0013 §9).
+- **Where the trim choice is kept:** per book, on this computer (§6). It never goes into the Book Model (ADR-0013 §9) or the project package.
 
 ## 3. Explicit exclusions
 
@@ -108,9 +108,12 @@ Before export, each picture's resolution at its printed width is computed from i
 - Fixed margins are not tuned per page count. They are safe up to 700 pages, which covers most books.
 - Page numbers on blank or picture-only pages are kept. Hiding them is a later refinement.
 
-## 6. Decision for the maintainer: where to keep the trim size
+## 6. Decision: where to keep the trim size
 
-- **Recommended: chosen in the Export step and remembered on this computer per book.**
+**Decided 2026-11-05 by the maintainer: "Per book, this computer."** The options considered:
+
+
+- **Chosen: chosen in the Export step and remembered on this computer per book.**
   - Nothing changes in the Book or the project package.
   - The same book reopened on another computer asks again, which takes one click.
 - **Alternative: saved inside the project package** as a print setting next to the book.
